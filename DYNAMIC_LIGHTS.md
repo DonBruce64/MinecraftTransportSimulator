@@ -1,6 +1,6 @@
 # Dynamic Lights
 
-Added dynamic lights. A light's blendable component can now light the world on its own: blocks, mobs and vehicles in its cone get lit, it casts shadows, and it draws a volumetric beam in the air and a corona on the lens. It's a port of the MCS light pass. It works on every version: 1.12.2, 1.16.5, 1.18.2, 1.19.2, 1.20.1 and 1.21.1.
+Added dynamic lights. A light's blendable component can now light the world on its own: blocks, mobs and vehicles in its cone get lit, it casts shadows, and it draws a volumetric beam in the air and a corona on the lens. It works on every version: 1.12.2, 1.16.5, 1.18.2, 1.19.2, 1.20.1 and 1.21.1.
 
 Nothing changes for existing packs. A component is only dynamic if the pack says so. Everything else renders like it always has.
 
@@ -63,7 +63,7 @@ The light is still turned on and off by the light's own `brightnessAnimations`. 
 All fields go on a `blendableComponents` entry. All are optional.
 
 - `isDynamicLight`: makes the component a dynamic light.
-- `lightPreset`: also makes it a dynamic light, with MCS values. The fields below override what the preset sets. Switch presets with `brightnessAnimations` on your own high beam variable.
+- `lightPreset`: also makes it a dynamic light, with preset values. The fields below override what the preset sets. Switch presets with `brightnessAnimations` on your own high beam variable.
   - `headlight_low`: intensity 1.4, reach 28, 25 degree cone.
   - `headlight_high`: intensity 1.8, reach 60, 25 degree cone.
   - `brake_light`: intensity 1.0, reach 4, 150 degree cone. For stop, tail, signal and marker lamps.
@@ -71,13 +71,13 @@ All fields go on a `blendableComponents` entry. All are optional.
 - `pos`, `axis`: where the light comes from and where it points. No axis, or a `beamDiameter` of 0, makes a point light that shines in all directions.
 - `beamDiameter`, `beamLength`: the cone. `beamLength` is how far the light reaches, and `beamDiameter` is the size of the spot at that distance.
 - `lightAngle`, `lightReach`: the cone angle in degrees and the reach in blocks, set directly. Use these to keep a different regular beam for players with dynamic lights off.
-- `beamSoftness`: 0 is a hard cone edge, 1 fades out from the center. Default 0.4.
+- `beamSoftness`: 0 to 1, how much of the cone's outer edge fades out. 0 or unset means 0.4; for a hard edge use a small value such as 0.01.
 - `beamIntensity`: how bright the light is. 1.4 is a dipped headlight, 1.8 a main beam, 2 to 4 a strong spotlight. Also works on regular components.
 - `color`: color of this component only. Also works on regular components.
 - `brightnessAnimations`: brightness of this component only, multiplied with the light's. Use it to blink one lamp while the others stay on. Also works on regular components.
 - `flareWidth`, `flareHeight`: above 0 draws a corona at the lamp.
-- `bloomIntensity`: corona size and strength, 0 to 999. Default 1, 0 for none.
-- `lightBeamLength`: how much of the reach shows as a beam in the air, 0 to 1. Default 0.45 of the reach, at most 24 blocks. This doesn't change what gets lit.
+- `bloomIntensity`: corona size and strength, 0 to 999. 0 or unset means 1, a negative value draws no bloom.
+- `lightBeamLength`: how much of the reach shows as a beam in the air, 0 to 1. 0 or unset means 0.45 of the reach, at most 24 blocks; a negative value shows no beam. This doesn't change what gets lit.
 - `shadowStartDistance`: geometry closer to the lamp than this casts no shadow from it. Use it for lamps placed behind a lens, a grille or a housing. Default and minimum 0.35 blocks.
 - `hideWhenDynLightActive`: hides this flare or beam while dynamic lights are on or a shader pack is active. Use it for stand-in flares and beams meant only for players without dynamic lights.
 

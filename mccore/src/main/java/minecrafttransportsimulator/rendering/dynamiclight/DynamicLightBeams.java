@@ -3,7 +3,7 @@ package minecrafttransportsimulator.rendering.dynamiclight;
 /**
  * This frame's lamp beams seen in the air: each a cone from its lens, integrated per pixel by the
  * light pass, which leaves what the lamp's shadow tile hides from it dark.  Keeps the densest, as many as the frame
- * draws lights ({@link #clear}, at most {@link #CAPACITY}).  Port of the MCS lamp beam list.  Render thread only.
+ * draws lights ({@link #clear}, at most {@link #CAPACITY}).  Render thread only.
  */
 public final class DynamicLightBeams {
     /** Most beams one frame draws: the rows of the beam shader's data texture. */

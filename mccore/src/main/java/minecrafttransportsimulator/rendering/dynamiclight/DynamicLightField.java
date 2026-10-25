@@ -8,7 +8,7 @@ import java.util.Map;
 
 /**
  * Block light raised by dynamic lights, for a shader pack that lights the world from the
- * lightmap.  Port of the MCS lamp field. The render thread submits every lit lamp each frame between {@link #beginFrame()} and
+ * lightmap.  The render thread submits every lit lamp each frame between {@link #beginFrame()} and
  * {@link #endFrame()}; {@link #levelAt} reads the last published snapshot from any thread, lock-free.
  * {@link #dirtyBoxes} (client thread) names the blocks whose meshes must be rebuilt.
  */

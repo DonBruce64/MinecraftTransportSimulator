@@ -3,27 +3,27 @@ package minecrafttransportsimulator.rendering.dynamiclight;
 import java.util.HashMap;
 import java.util.Map;
 
-import minecrafttransportsimulator.mcinterface.IDynamicLightGL;
+import minecrafttransportsimulator.mcinterface.IInterfaceDynamicLightingGL;
 
 /**
- * One dynamic light GLSL program, built by the version's {@link IDynamicLightGL} from the shared sources
+ * One dynamic light GLSL program, built by the version's {@link IInterfaceDynamicLightingGL} from the shared sources
  * ({@link DynamicLightShaders}) rather than MC's shader system, so the same files work on every version.
  * {@code Position} is bound to attribute 0.  Uniform locations are cached by name.
  */
 final class DynamicLightProgram {
     final String name;
     final int id;
-    private final IDynamicLightGL gl;
+    private final IInterfaceDynamicLightingGL gl;
     private final Map<String, Integer> locations = new HashMap<>();
 
-    private DynamicLightProgram(IDynamicLightGL gl, String name, int id) {
+    private DynamicLightProgram(IInterfaceDynamicLightingGL gl, String name, int id) {
         this.gl = gl;
         this.name = name;
         this.id = id;
     }
 
     /** Compiles and links a program, or returns null (logged) if a stage fails. */
-    static DynamicLightProgram create(IDynamicLightGL gl, String vertexName, String fragmentName) {
+    static DynamicLightProgram create(IInterfaceDynamicLightingGL gl, String vertexName, String fragmentName) {
         String vertexSource = DynamicLightShaders.getSource(vertexName, gl.legacyContext());
         String fragmentSource = DynamicLightShaders.getSource(fragmentName, gl.legacyContext());
         if (vertexSource == null || fragmentSource == null) {

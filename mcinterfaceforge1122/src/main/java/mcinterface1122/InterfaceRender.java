@@ -23,18 +23,23 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IDynamicLightGL;
+import minecrafttransportsimulator.mcinterface.IInterfaceDynamicLightingGL;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableVertices;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightBlockShapes;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightFrustum;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightMatrix;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightVoxelWindow;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockPane;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -45,9 +50,22 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.BlockRenderLayer;
+import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.IWorldEventListener;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -158,7 +176,7 @@ public class InterfaceRender implements IInterfaceRender {
             int cachedVertexIndex = cachedIndexMap.computeIfAbsent(data.vertexObject, k -> {
                 int newIndex = GL11.glGenLists(1);
                 GL11.glNewList(newIndex, GL11.GL_COMPILE);
-                renderVertices(data.vertexObject.vertices, DynamicLightGL.supported());
+                renderVertices(data.vertexObject.vertices, InterfaceDynamicLightingGL.supported());
                 GL11.glEndList();
                 cachedRadiusMap.put(data.vertexObject, getVerticesRadius(data.vertexObject.vertices));
                 return newIndex;
@@ -192,8 +210,8 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     /**
-     * Whether {@code data} draws blended (translucent or bright blending), as 1.20.1's blended render types: such faces
-     * hide nothing, so they are no dynamic light shadow body.
+     * Whether {@code data} draws blended (translucent or bright blending): such faces hide nothing, so they are no
+     * dynamic light shadow body.
      */
     private static boolean isBlended(RenderableData data) {
         return data.isTranslucent || data.enableBrightBlending;
@@ -304,7 +322,7 @@ public class InterfaceRender implements IInterfaceRender {
      * <p>
      * The camera matrix of 1.12.2 is not rotation alone: it carries the third person distance, the eye height and
      * view bobbing as a translation in eye space ({@code eye = R * (p - feet) + t}).  The camera sits at
-     * {@code feet - R^T t}; the view mccore gets is {@code R} alone, relative to that point, as on the other versions.
+     * {@code feet - R^T t}; the view mccore gets is {@code R} alone, relative to that point.
      */
     protected static void renderDynamicLightFrame(float partialTicks) {
         if (dynamicLightFrameDrawn == dynamicLightFrame) {
@@ -371,8 +389,185 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     @Override
-    public IDynamicLightGL getDynamicLightGL() {
-        return DynamicLightGL.supported() ? DynamicLightGL.INSTANCE : null;
+    public float getDaylight(AWrapperWorld world, Point3D position) {
+        World mcWorld = ((WrapperWorld) world).world;
+        //Sky light alone is 15 at midnight too; the sun's height (weather included) brings it down: 0 at night.
+        float open = mcWorld.getLightFor(EnumSkyBlock.SKY, new BlockPos(position.x, position.y, position.z)) / 15F;
+        return open * Math.max(0F, Math.min(1F, mcWorld.getSunBrightnessFactor(1F)));
+    }
+
+    @Override
+    public float getRainLevel(AWrapperWorld world, float partialTicks) {
+        return ((WrapperWorld) world).world.getRainStrength(partialTicks);
+    }
+
+    @Override
+    public boolean readDynamicLightSection(AWrapperWorld world, int sx, int sy, int sz, DynamicLightVoxelWindow window) {
+        World mcWorld = ((WrapperWorld) world).world;
+        Chunk chunk = mcWorld.getChunkProvider().getLoadedChunk(sx, sz);
+        ExtendedBlockStorage[] storages = chunk != null ? chunk.getBlockStorageArray() : null;
+        ExtendedBlockStorage storage = storages != null && sy >= 0 && sy < storages.length ? storages[sy] : null;
+        if (storage == null || storage == Chunk.NULL_BLOCK_STORAGE || storage.isEmpty()) {
+            window.fillSection(sx, sy, sz, false);
+            return true;
+        }
+        int x0 = sx << 4;
+        int y0 = sy << 4;
+        int z0 = sz << 4;
+        for (int y = 0; y < 16; y++) {
+            for (int z = 0; z < 16; z++) {
+                for (int x = 0; x < 16; x++) {
+                    lightProbe.setPos(x0 + x, y0 + y, z0 + z);
+                    window.setShape(x0 + x, y0 + y, z0 + z, shadowByte(mcWorld, storage.get(x, y, z), window));
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * {@code state}'s byte in the dynamic light grid, worked out once per state at {@link #lightProbe}: a full block
+     * casts a full shadow; one that is not (slabs, stairs, fences, doors, hoppers, chests, beds, banners, signs, mob
+     * heads) casts its collision boxes' (its bounding box when it has none); none for air, IV's own blocks, blocks
+     * without a block model and without a tile entity to draw them (barriers), see-through blocks (glass, leaves,
+     * bars and panes, the translucent layer, ladders, vines, spawners), liquids, blocks with neither a collision box
+     * nor a solid layer (plants, torches, rails) and blocks drawn at a random offset.  A state's boxes are read in the world at the first position it is seen at, so a block whose shape
+     * follows its neighbours (fence arms) keeps the shape of that first position.
+     */
+    private int shadowByte(World world, IBlockState state, DynamicLightVoxelWindow window) {
+        DynamicLightBlockShapes shapes = window.shapes();
+        int value = shapes.byteOf(state);
+        if (value < 0) {
+            shapes.begin();
+            if (state.getBlock() == Blocks.AIR || state.getBlock() instanceof BuilderBlock || (state.getRenderType() == EnumBlockRenderType.INVISIBLE && !state.getBlock().hasTileEntity(state))) {
+                //No boxes: IV's own blocks are drawn by the entity renderer, whose bodies cast the shadow; barriers and
+                //other blocks without a block model, even full ones, show nothing to shade with.  A tile entity block
+                //(sign, mob head, banner) is invisible to the chunk mesh too, but its tile entity renderer draws it, so
+                //it goes on to cast its shape.
+            } else if (state.isOpaqueCube() && state.isFullCube()) {
+                shapes.box(0, 0, 0, 1, 1, 1);
+            } else if (castsShapedShadow(world, state)) {
+                collisionBoxesAtProbe(world, state);
+                for (AxisAlignedBB box : lightBoxes) {
+                    shapes.box(box.minX - lightProbe.getX(), box.minY - lightProbe.getY(), box.minZ - lightProbe.getZ(), box.maxX - lightProbe.getX(), box.maxY - lightProbe.getY(), box.maxZ - lightProbe.getZ());
+                }
+                if (lightBoxes.isEmpty()) {
+                    //Banners and signs have a shape but nothing to collide with.
+                    AxisAlignedBB box = state.getBoundingBox(world, lightProbe);
+                    if (box != null) {
+                        shapes.box(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+                    }
+                }
+            }
+            value = window.endShape(state);
+        }
+        return value;
+    }
+
+    /** Whether {@code state}, visible but not a full block, casts its shape's shadow: see {@link #shadowByte}. */
+    private boolean castsShapedShadow(World world, IBlockState state) {
+        Block block = state.getBlock();
+        Material material = state.getMaterial();
+        if (material == Material.GLASS || material == Material.LEAVES || material.isLiquid() || block.getOffsetType() != Block.EnumOffsetType.NONE) {
+            return false;
+        }
+        //Ladders and spawners are mostly holes, which the grid cannot see: their box would shade as a wall.
+        if (block == Blocks.MOB_SPAWNER || block.isLadder(state, world, lightProbe, null)) {
+            return false;
+        }
+        if (state.getRenderType() != EnumBlockRenderType.MODEL) {
+            //Drawn by a tile entity renderer (chests, beds, signs, heads, banners): solid things.
+            return true;
+        }
+        //Bars and panes are mostly holes; they share the cutout mipped layer with solid things like hoppers, so the
+        //layer cannot tell them apart.
+        if (block instanceof BlockPane || block.canRenderInLayer(state, BlockRenderLayer.TRANSLUCENT)) {
+            return false;
+        }
+        if (block.canRenderInLayer(state, BlockRenderLayer.SOLID)) {
+            return true;
+        }
+        collisionBoxesAtProbe(world, state);
+        return !lightBoxes.isEmpty();
+    }
+
+    /** Fills {@link #lightBoxes} with {@code state}'s collision boxes at {@link #lightProbe}, in world space. */
+    private void collisionBoxesAtProbe(World world, IBlockState state) {
+        lightBoxes.clear();
+        state.addCollisionBoxToList(world, lightProbe, new AxisAlignedBB(lightProbe).grow(1), lightBoxes, null, false);
+    }
+
+    private final BlockPos.MutableBlockPos lightProbe = new BlockPos.MutableBlockPos();
+    private final List<AxisAlignedBB> lightBoxes = new ArrayList<>();
+
+    /**
+     * A client world appeared: its block changes mark the dynamic light block grid, so shadows follow them.  The
+     * server's worlds are skipped; each client world fires this once.
+     */
+    @SubscribeEvent
+    public static void onIVWorldLoad(WorldEvent.Load event) {
+        if (event.getWorld().isRemote) {
+            event.getWorld().addEventListener(new DynamicLightBlockListener());
+        }
+    }
+
+    /** A client block change: the dynamic light block grid reads its section again, so shadows follow it. */
+    private static final class DynamicLightBlockListener implements IWorldEventListener {
+        @Override
+        public void notifyBlockUpdate(World world, BlockPos pos, IBlockState oldState, IBlockState newState, int flags) {
+            if (oldState != newState) {
+                DynamicLightSystem.markBlock(pos.getX(), pos.getY(), pos.getZ());
+            }
+        }
+
+        @Override
+        public void notifyLightSet(BlockPos pos) {
+        }
+
+        @Override
+        public void markBlockRangeForRenderUpdate(int x1, int y1, int z1, int x2, int y2, int z2) {
+        }
+
+        @Override
+        public void playSoundToAllNearExcept(EntityPlayer player, SoundEvent sound, SoundCategory category, double x, double y, double z, float volume, float pitch) {
+        }
+
+        @Override
+        public void playRecord(SoundEvent sound, BlockPos pos) {
+        }
+
+        @Override
+        public void spawnParticle(int particleID, boolean ignoreRange, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, int... parameters) {
+        }
+
+        @Override
+        public void spawnParticle(int id, boolean ignoreRange, boolean minimiseParticleLevel, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, int... parameters) {
+        }
+
+        @Override
+        public void onEntityAdded(Entity entity) {
+        }
+
+        @Override
+        public void onEntityRemoved(Entity entity) {
+        }
+
+        @Override
+        public void broadcastSound(int soundID, BlockPos pos, int data) {
+        }
+
+        @Override
+        public void playEvent(EntityPlayer player, int type, BlockPos pos, int data) {
+        }
+
+        @Override
+        public void sendBlockBreakProgress(int breakerId, BlockPos pos, int progress) {
+        }
+    }
+
+    @Override
+    public IInterfaceDynamicLightingGL getDynamicLightGL() {
+        return InterfaceDynamicLightingGL.supported() ? InterfaceDynamicLightingGL.INSTANCE : null;
     }
 
     @Override
@@ -383,7 +578,7 @@ public class InterfaceRender implements IInterfaceRender {
     /**
      * Renders a set of raw vertices without any caching.  With {@code shadowUVs} (a display list the dynamic light
      * shadow pass will call) each vertex's texture coordinates also go to generic attribute
-     * {@link DynamicLightGL#UV_ATTRIBUTE}, which that pass's program reads; fixed function ignores it.
+     * {@link InterfaceDynamicLightingGL#UV_ATTRIBUTE}, which that pass's program reads; fixed function ignores it.
      */
     private static void renderVertices(FloatBuffer vertices, boolean shadowUVs) {
         GL11.glBegin(GL11.GL_TRIANGLES);
@@ -393,7 +588,7 @@ public class InterfaceRender implements IInterfaceRender {
             float v = vertices.get();
             GL11.glTexCoord2f(u, v);
             if (shadowUVs) {
-                GL20.glVertexAttrib2f(DynamicLightGL.UV_ATTRIBUTE, u, v);
+                GL20.glVertexAttrib2f(InterfaceDynamicLightingGL.UV_ATTRIBUTE, u, v);
             }
             GL11.glVertex3f(vertices.get(), vertices.get(), vertices.get());
         }

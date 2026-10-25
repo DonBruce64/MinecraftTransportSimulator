@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Turns a frame's lit lamps into the small ranked list the light pass can afford: frustum-culled by
  * their reach, nearby point lights merged into one, then the N strongest by {@code intensity / distance^2}.
- * Port of the MCS emission budget.  Pure logic, render thread only.
+ * The emission budget.  Pure logic, render thread only.
  */
 public final class DynamicLightBudget {
     private final List<DynamicLightEmitter> visible = new ArrayList<>();

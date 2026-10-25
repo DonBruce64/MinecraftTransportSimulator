@@ -1,14 +1,14 @@
 package minecrafttransportsimulator.rendering.dynamiclight;
 
-import minecrafttransportsimulator.mcinterface.IDynamicLightGL;
+import minecrafttransportsimulator.mcinterface.IInterfaceDynamicLightingGL;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
- * Draws one frame's dynamic lights onto the main target (port of the MCS light pass): copies the depth, traces
+ * Draws one frame's dynamic lights onto the main target: copies the depth, traces
  * the lamps' shadow tiles ({@link DynamicLightShadowAtlas}), hands the lights to the light pass as a float texture
  * (a row each, up to {@link DynamicLightFrame#CAPACITY}), works the light out per pixel into a float target and
  * lays it over the picture twice ({@code dst * (1 + 4 light) + 0.45 light}), then adds the beams (ray-marched at half
- * size) and the coronas.  Every GL call goes through the version's {@link IDynamicLightGL}, which leaves GL as MC
+ * size) and the coronas.  Every GL call goes through the version's {@link IInterfaceDynamicLightingGL}, which leaves GL as MC
  * expects it when done.  Called by {@link DynamicLightSystem#renderFrame} after IV's solid pass and before its
  * blended pass.  Render thread only.
  */
@@ -29,7 +29,7 @@ public final class DynamicLightRenderer {
     /** The beams' air is worked out at 1/this of the screen: soft by nature, a quarter of the work. */
     private static final int BEAM_DIVISOR = 2;
 
-    private static IDynamicLightGL gl;
+    private static IInterfaceDynamicLightingGL gl;
     private static boolean failed;
     private static DynamicLightProgram light;
     private static DynamicLightProgram composite;
@@ -81,7 +81,7 @@ public final class DynamicLightRenderer {
     }
 
     /** Draws {@code frame} with {@code glCalls}; anything that fails to build leaves the world as it was. */
-    static void render(DynamicLightFrame frame, IDynamicLightGL glCalls) {
+    static void render(DynamicLightFrame frame, IInterfaceDynamicLightingGL glCalls) {
         if (gl != glCalls) {
             gl = glCalls;
             initialize();
@@ -217,16 +217,16 @@ public final class DynamicLightRenderer {
             gl.bindTexture(2, DynamicLightShadowAtlas.depthTexture(gl));
             gl.bindTexture(3, lightTexture);
             light.use();
-            gl.drawFullscreen(IDynamicLightGL.DRAW_REPLACE);
+            gl.drawFullscreen(IInterfaceDynamicLightingGL.DRAW_REPLACE);
 
             gl.bindTarget(null, true);
             gl.bindTexture(0, gl.colorTexture(lightTarget.handle));
             composite.use();
             composite.set("sourceScale", 1F);
             composite.set("lightScale", SURFACE_GAIN);
-            gl.drawFullscreen(IDynamicLightGL.DRAW_SURFACE);
+            gl.drawFullscreen(IInterfaceDynamicLightingGL.DRAW_SURFACE);
             composite.set("lightScale", LIGHT_FLAT);
-            gl.drawFullscreen(IDynamicLightGL.DRAW_ADD);
+            gl.drawFullscreen(IInterfaceDynamicLightingGL.DRAW_ADD);
         }
         if (beams && pushBeams(frame)) {
             beamTarget.resize(width, height);
@@ -237,21 +237,21 @@ public final class DynamicLightRenderer {
             gl.bindTexture(3, beamTexture);
             beam.use();
             beam.set("beamScale", (float) BEAM_DIVISOR);
-            gl.drawFullscreen(IDynamicLightGL.DRAW_REPLACE);
+            gl.drawFullscreen(IInterfaceDynamicLightingGL.DRAW_REPLACE);
 
             gl.bindTarget(null, true);
             gl.bindTexture(0, gl.colorTexture(beamTarget.handle));
             composite.use();
             composite.set("sourceScale", (float) BEAM_DIVISOR);
             composite.set("lightScale", 1F);
-            gl.drawFullscreen(IDynamicLightGL.DRAW_ADD);
+            gl.drawFullscreen(IInterfaceDynamicLightingGL.DRAW_ADD);
         }
         if (coronas && pushCoronas(frame, width, height)) {
             gl.bindTarget(null, true);
             gl.bindTexture(0, depth);
             gl.bindTexture(3, coronaTexture);
             corona.use();
-            gl.drawFullscreen(IDynamicLightGL.DRAW_ADD);
+            gl.drawFullscreen(IInterfaceDynamicLightingGL.DRAW_ADD);
         }
     }
 
@@ -414,7 +414,7 @@ public final class DynamicLightRenderer {
         gl.bindTarget(to, true);
         gl.bindTexture(0, from);
         copy.use();
-        gl.drawFullscreen(IDynamicLightGL.DRAW_DEPTH);
+        gl.drawFullscreen(IInterfaceDynamicLightingGL.DRAW_DEPTH);
     }
 
     /** A target the size of the screen over {@link #divisor}, made or remade on first use and on a resize. */

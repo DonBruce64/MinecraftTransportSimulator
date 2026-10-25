@@ -3,7 +3,7 @@ package minecrafttransportsimulator.rendering.dynamiclight;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
 
-import minecrafttransportsimulator.mcinterface.IDynamicLightGL;
+import minecrafttransportsimulator.mcinterface.IInterfaceDynamicLightingGL;
 
 /**
  * One body that casts dynamic light shadows this frame: an IV vertex buffer the solid pass drew (its version's own
@@ -52,7 +52,7 @@ public final class DynamicLightBody {
     public float[] quadUVs = new float[2 * 4096];
     public float[] triangleUVs = new float[2 * 4096];
     /**
-     * Whether a body's corners are on the GPU this frame; {@link IDynamicLightGL#drawBody} sets it and keeps its own
+     * Whether a body's corners are on the GPU this frame; {@link IInterfaceDynamicLightingGL#drawBody} sets it and keeps its own
      * GL objects in {@link #gpu}, which outlives the frame with the pooled body.
      */
     public boolean uploaded;

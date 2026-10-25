@@ -18,7 +18,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GLContext;
 
-import minecrafttransportsimulator.mcinterface.IDynamicLightGL;
+import minecrafttransportsimulator.mcinterface.IInterfaceDynamicLightingGL;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightBody;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
@@ -53,7 +53,7 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 /**
  * 1.12.2's GL calls for the shared dynamic light renderer (mccore {@code DynamicLightRenderer}): LWJGL 2 raw GL on the
  * game's own (compatibility) context, through {@link GlStateManager} wherever MC caches the state.  Needs GL 3.2 (GLSL
- * 1.50, framebuffers, RGBA16F), or GL 2.1 with the extensions {@link IDynamicLightGL#legacyContext} names (macOS gives
+ * 1.50, framebuffers, RGBA16F), or GL 2.1 with the extensions {@link IInterfaceDynamicLightingGL#legacyContext} names (macOS gives
  * 1.12.2 that one); {@link #supported} says which.  On GL 2.1 the framebuffer calls are ARB_framebuffer_object's
  * (LWJGL 2 loads GL 3.0's only on a 3.0 context and throws on them otherwise), and there are no vertex arrays: every
  * draw goes through attribute 0 on vertex array 0.
@@ -67,8 +67,8 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
  * the texture and alpha cut of each marked in the stream ({@link MarkingTextures}, {@link MarkedLayer}), so a face
  * shadows only where its texture shows.  Render thread only.
  */
-final class DynamicLightGL implements IDynamicLightGL {
-    static final DynamicLightGL INSTANCE = new DynamicLightGL();
+final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
+    static final InterfaceDynamicLightingGL INSTANCE = new InterfaceDynamicLightingGL();
 
     /**
      * {@code lamp_body}'s {@code UV0}: a generic attribute no driver aliases to a fixed function one (NVIDIA's 2 is
@@ -141,12 +141,12 @@ final class DynamicLightGL implements IDynamicLightGL {
     private float savedAlphaRef;
     private boolean savedCull;
 
-    private DynamicLightGL() {
+    private InterfaceDynamicLightingGL() {
     }
 
     /**
      * Whether this context can run the shared passes: GL 3.2 (core features in a compatibility context), or GL 2.1 with
-     * the extensions of {@link IDynamicLightGL#legacyContext}.  Without either mccore lights the world in its fallback
+     * the extensions of {@link IInterfaceDynamicLightingGL#legacyContext}.  Without either mccore lights the world in its fallback
      * mode.
      */
     static boolean supported() {
@@ -832,7 +832,7 @@ final class DynamicLightGL implements IDynamicLightGL {
     /**
      * Layers left out of a living shadow: held and worn items, which draw through the Tessellator's client arrays that
      * crash some drivers in feedback mode, and the additively blended ones (glowing eyes, a charged creeper's swirl,
-     * the wither's aura, the dragon's death rays), which hide nothing, as on 1.20.1.  The one alpha blended layer, a
+     * the wither's aura, the dragon's death rays), which hide nothing.  The one alpha blended layer, a
      * slime's outer jelly, is kept and marked ({@link MarkedLayer}); enchantment glint is dropped by its texture
      * ({@link MarkingTextures}).  Nothing else in 1.12.2 blends by alpha: players, mobs, armor, wool and saddles are
      * alpha tested.
@@ -1064,7 +1064,7 @@ final class DynamicLightGL implements IDynamicLightGL {
 
     /**
      * A layer that blends by alpha, marked in the feedback stream so its polygons cast at
-     * {@link DynamicLightBody#CUT_BLENDED}: a slime's outer jelly (alpha 0.7) casts nothing, as on 1.20.1.
+     * {@link DynamicLightBody#CUT_BLENDED}: a slime's outer jelly (alpha 0.7) casts nothing.
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private static final class MarkedLayer implements LayerRenderer {

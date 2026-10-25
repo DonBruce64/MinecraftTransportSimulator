@@ -666,7 +666,7 @@ public class EntityParticle extends AEntityC_Renderable {
     }
 
     /**
-     * A particle the world lights (not bright) also takes the dynamic lights around it, as an MCS puff does: its
+     * A particle the world lights (not bright) also takes the dynamic lights around it: its
      * block light rises to their strength and its color tints toward theirs.  Sets the tinted color and returns the
      * light value to draw with.  Light values are MC's packed form, block light in bits 4 to 7, in every version.
      */
@@ -728,7 +728,7 @@ public class EntityParticle extends AEntityC_Renderable {
     }
 
     /**
-     * The light's share of its intensity over the particle's life, as MCS scales a particle's emission: transparency
+     * The light's share of its intensity over the particle's life: transparency
      * and toTransparency clamped to 0..1 before the lerp (so a toTransparency of -0.001 fades to exactly 0), the
      * transparency fades, and daytimeReductionFactor against the daylight on the particle (open sky times the sun),
      * not the block light the sprite's reduction also counts.
@@ -749,7 +749,7 @@ public class EntityParticle extends AEntityC_Renderable {
             alpha *= (maxAge - ticksExisted) / (float) definition.fadeOutTransparencyTime;
         }
         if (definition.daytimeReductionFactor != 0) {
-            alpha *= 1F - definition.daytimeReductionFactor * world.getDaylight(position);
+            alpha *= 1F - definition.daytimeReductionFactor * InterfaceManager.renderingInterface.getDaylight(world, position);
         }
         return Math.max(0F, Math.min(1F, alpha));
     }

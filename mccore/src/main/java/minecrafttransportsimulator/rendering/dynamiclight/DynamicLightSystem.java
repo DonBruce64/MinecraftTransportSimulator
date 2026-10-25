@@ -25,7 +25,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * current, and hands the frame to {@link DynamicLightRenderer}.  Under a shader pack the
  * deferred pass cannot draw (the pack replaces the pipeline it reads), nor on a context it cannot run on, so the lamps raise block light
  * through {@link DynamicLightField} instead, and {@link RenderableModelObject} draws a simple cone and
- * flare.  Port of the MCS light pass logic.  Everything is client-side and derived from synced
+ * flare.  Everything is client-side and derived from synced
  * variables.  Render thread only, except {@link #blockLightAt}, which mesher threads call.
  */
 public final class DynamicLightSystem {
@@ -43,7 +43,7 @@ public final class DynamicLightSystem {
     private static final float MERGE_DISTANCE = 1.5F;
     /** Budget and corona rank of particle lights: below every lamp, so particles never push out headlights. */
     public static final float PARTICLE_PRIORITY = 0.25F;
-    /** At most this many particle lights a frame; the budget merges a burst's point lights as MCS does. */
+    /** At most this many particle lights a frame; the budget merges a burst's point lights. */
     private static final int PARTICLE_MAX = 256;
     /**
      * Share of a light's intensity taken away in full daylight at its lamp: a lamp in a cave lights it however bright
@@ -183,7 +183,7 @@ public final class DynamicLightSystem {
             frame.shadows = ConfigSystem.client.renderingSettings.DynL_shadows.value;
             updateVoxels(world, cameraX, cameraY, cameraZ);
 
-            frame.rain = world.getGlobalRainLevel(partialTicks);
+            frame.rain = InterfaceManager.renderingInterface.getRainLevel(world, partialTicks);
             cameraFrustum = frustum;
 
             submitted.clear();
@@ -239,8 +239,7 @@ public final class DynamicLightSystem {
      * Adds one light for this frame from something with no model object (a particle's {@code light}): the component's
      * cone, reach, corona and intensity over its preset, at world {@code x, y, z} aimed along the unit {@code dx, dy, dz}
      * (zero: a point light), in {@code color} at {@code brightness} (times the component's intensity).  Call it while
-     * the solid pass draws, before {@link #renderFrame}.  Each call is its own light, as each MCS particle is its own
-     * emitter: the budget then merges a burst's point lights within {@link #MERGE_DISTANCE} into one (added intensity,
+     * the solid pass draws, before {@link #renderFrame}.  Each call is its own light: the budget then merges a burst's point lights within {@link #MERGE_DISTANCE} into one (added intensity,
      * no cap).  At most {@link #PARTICLE_MAX} a frame.
      */
     public static void submitLight(JSONLightBlendableComponent component, double x, double y, double z, float dx, float dy, float dz, ColorRGB color, float brightness, float priority) {
@@ -272,8 +271,7 @@ public final class DynamicLightSystem {
 
     /**
      * The light pass's lights at a world point, dimmed by daylight at each lamp, into {@code rgb} (overwritten, 0 and up): what a
-     * volume the pass cannot see on the depth buffer (a smoke puff) takes from them, as MCS's
-     * {@code OpticsLightPass.lightAt}.  The same falloff and cone as light_pass.fsh, without surface shading or
+     * volume the pass cannot see on the depth buffer (a smoke puff) takes from them.  The same falloff and cone as light_pass.fsh, without surface shading or
      * shadows.  Reads the latest selection, so at most a frame old; zero with no lights selected (dynamic lights off,
      * or a shader pack, whose block light already lights the puff).  Render thread only.
      */
@@ -321,7 +319,7 @@ public final class DynamicLightSystem {
             return;
         }
         daylightProbe.set(lamp.x, lamp.y, lamp.z);
-        float daylight = Math.max(0F, Math.min(1F, world.getDaylight(daylightProbe)));
+        float daylight = Math.max(0F, Math.min(1F, InterfaceManager.renderingInterface.getDaylight(world, daylightProbe)));
         float dim = Math.max(0F, 1F - DAYLIGHT_DIM * daylight);
         float red = lamp.color.red;
         float green = lamp.color.green;
@@ -402,7 +400,7 @@ public final class DynamicLightSystem {
                 float length = lamp.beamShare >= 0 ? emitter.radius * lamp.beamShare : Math.min(BEAM_MAX, emitter.radius * BEAM_LENGTH);
                 float tan = DynamicLightAim.beamTan(lamp.angle, lamp.soft);
                 if (!(length > 0)) {
-                    //lightBeamLength 0: no beam in the air.
+                    //A negative lightBeamLength: no beam in the air.
                 } else if (mode == Mode.DEFERRED) {
                     //Drawn if the budget keeps the light.
                     emitter.beamLength = length;
@@ -427,7 +425,7 @@ public final class DynamicLightSystem {
         frame.voxels = voxels;
         long end = System.nanoTime() + VOXEL_BUDGET_NANOS;
         while (voxels.poll(section)) {
-            if (!world.readDynamicLightSection(section[0], section[1], section[2], voxels)) {
+            if (!InterfaceManager.renderingInterface.readDynamicLightSection(world, section[0], section[1], section[2], voxels)) {
                 voxels.fillSection(section[0], section[1], section[2], false);
             }
             if (System.nanoTime() > end) {

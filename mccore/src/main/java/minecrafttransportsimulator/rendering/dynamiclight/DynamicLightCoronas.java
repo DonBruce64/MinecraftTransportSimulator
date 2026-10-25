@@ -3,8 +3,7 @@ package minecrafttransportsimulator.rendering.dynamiclight;
 /**
  * This frame's lamp coronas: the round glow of each lit lamp a viewer sees, drawn over the picture
  * where the scene's depth shows the lamp's lens, so a hull in front hides it.  Keeps the strongest, as many as the
- * frame draws lights ({@link #clear}, at most {@link #CAPACITY}).  Port of the MCS lamp corona list.  Render thread
- * only.
+ * frame draws lights ({@link #clear}, at most {@link #CAPACITY}).  Render thread only.
  */
 public final class DynamicLightCoronas {
     /** Most coronas one frame draws: the rows of the corona shader's data texture. */

@@ -29,7 +29,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
-import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
@@ -83,8 +82,8 @@ public class JSONParser {
 
         @Override
         public void write(JsonWriter writer, Boolean value) throws IOException {
-            //Only write booleans that are true to save space.  Primitive fields reach this adapter boxed.
-            if (value == null || !value) {
+            //Only write booleans that are true to save space.
+            if (!value) {
                 writer.nullValue();
             } else {
                 writer.value(value);
@@ -106,7 +105,7 @@ public class JSONParser {
         @Override
         public void write(JsonWriter writer, Integer value) throws IOException {
             //Only write non-zero integers to save space.
-            if (value == null || value == 0) {
+            if (value == 0) {
                 writer.nullValue();
             } else {
                 writer.value(value);
@@ -128,35 +127,13 @@ public class JSONParser {
         @Override
         public void write(JsonWriter writer, Float value) throws IOException {
             //Only write non-zero floats to save space.
-            if (value == null || value == 0) {
+            if (value == 0) {
                 writer.nullValue();
             } else {
                 writer.value(value);
             }
         }
     };
-
-    /**
-     * Float adapter for boxed fields whose null means unset and whose 0 is a real value, put on the
-     * field with {@link JsonAdapter}.  It writes every set value, so an explicit 0 survives export.
-     * The annotation is needed because Gson otherwise picks the adapter by the value's runtime type,
-     * which is {@link Float} for primitive fields too.
-     */
-    public static class ExplicitFloatAdapter extends TypeAdapter<Float> {
-        @Override
-        public Float read(JsonReader reader) throws IOException {
-            return floatAdapter.read(reader);
-        }
-
-        @Override
-        public void write(JsonWriter writer, Float value) throws IOException {
-            if (value == null) {
-                writer.nullValue();
-            } else {
-                writer.value(value);
-            }
-        }
-    }
 
     private static final TypeAdapter<Point3D> point3DAdapter = new TypeAdapter<Point3D>() {
         @Override

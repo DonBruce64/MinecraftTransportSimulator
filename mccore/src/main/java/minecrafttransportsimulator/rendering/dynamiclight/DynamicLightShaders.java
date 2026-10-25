@@ -5,14 +5,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import minecrafttransportsimulator.mcinterface.IDynamicLightGL;
+import minecrafttransportsimulator.mcinterface.IInterfaceDynamicLightingGL;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
  * Loads the shared dynamic light GLSL from {@code /assets/mts/shaders/dynamiclight/}.  The files carry no
  * {@code #version} line and write their stage interface through macros ({@code ATTRIBUTE}, {@code VARYING},
  * {@code fragColor}): the loader puts the header of the calling version's dialect in front, GLSL 1.50, or GLSL 1.20
- * with {@code EXT_gpu_shader4} on a GL 2.1 context ({@link IDynamicLightGL#legacyContext}), which renames the 1.50
+ * with {@code EXT_gpu_shader4} on a GL 2.1 context ({@link IInterfaceDynamicLightingGL#legacyContext}), which renames the 1.50
  * texture calls to that extension's.  So every interface module compiles the same sources with its own raw GL calls,
  * and the sources keep to what both dialects have (no integer {@code min}/{@code clamp}, no {@code mix} by a
  * {@code bvec}, array constructors with their size).  A line {@code #include <file>} is replaced by that file of the

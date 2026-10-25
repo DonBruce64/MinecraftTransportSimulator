@@ -490,7 +490,7 @@ public class RenderableModelObject {
 
     /**
      * The renderables of one component with its own lighting: its regular flare and beam, and for a dynamic light
-     * the cone mesh and flare billboard it draws under a shader pack (ported from the MCS lamp fallback).
+     * the cone mesh and flare billboard it draws under a shader pack.
      */
     private static class ComponentRenderables {
         private static final int CONE_SIDES = 16;

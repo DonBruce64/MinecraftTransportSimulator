@@ -5,17 +5,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import minecrafttransportsimulator.mcinterface.IDynamicLightGL;
+import minecrafttransportsimulator.mcinterface.IInterfaceDynamicLightingGL;
 
 /**
- * The dynamic lights' shadow tiles (port of the MCS shadow maps): a depth tile seen from the lamp holding what
+ * The dynamic lights' shadow tiles: a depth tile seen from the lamp holding what
  * stops its light, one per spot light and six per point light (+X -X +Y -Y +Z -Z), while {@link #SLOTS} last.  A
  * spot wider than {@link #WIDE_COS} takes six faces as a point light does: one perspective tile near 180 degrees
  * spreads each texel over a quarter block or more, so its shadows break into squares.
  * The blocks are traced into it ({@code lamp_trace.fsh}, from the block grid); the bodies in its cone are drawn
  * over them, so a shadow takes a body's real shape: an IV entity by the vertex buffers its solid pass drew this
  * frame ({@link #captureBody}, or {@link #captureVertices} in the Slow rendering mode), a living entity by its own
- * renderer ({@link IDynamicLightGL#captureLiving}).  A body shades only beyond the lamp's clearance
+ * renderer ({@link IInterfaceDynamicLightingGL#captureLiving}).  A body shades only beyond the lamp's clearance
  * ({@link DynamicLightEmitter#clearance}) and only where its texture shows ({@code lamp_body.fsh}), so a lamp's own
  * lens and housing never hide it, nor does an invisible part, a window's clear glass or a grille's holes.  A
  * tile out of the camera's view, or whose lamp, blocks and bodies are as last frame, is not drawn again; whoever reads
@@ -91,7 +91,7 @@ public final class DynamicLightShadowAtlas {
     private static final List<DynamicLightBody> BODIES_IN_TILE = new ArrayList<>();
     private static boolean capturing;
     private static boolean rendering;
-    private static IDynamicLightGL gl;
+    private static IInterfaceDynamicLightingGL gl;
     private static Object target;
     /** The atlas of blocks alone; the body tiles start from it.  Laid out as {@link #target}. */
     private static Object blocks;
@@ -158,7 +158,7 @@ public final class DynamicLightShadowAtlas {
 
     /**
      * One living entity (the version's own type) that may cast a shadow this frame, centred at world {@code x, y, z}
-     * within {@code radius}; called from {@link IDynamicLightGL#listLivingBodies}.
+     * within {@code radius}; called from {@link IInterfaceDynamicLightingGL#listLivingBodies}.
      */
     public static void addCandidate(Object entity, double x, double y, double z, float radius) {
         DynamicLightBody body = POOL.isEmpty() ? new DynamicLightBody() : POOL.remove(POOL.size() - 1);
@@ -193,7 +193,7 @@ public final class DynamicLightShadowAtlas {
      * uniforms already set by the caller), bodies drawn over a copy of the blocks; a tile out of {@code visible} is
      * left.  {@code view} is this frame's camera rotation.
      */
-    static void render(IDynamicLightGL glCalls, DynamicLightFrame currentFrame, float[] view, DynamicLightFrustum visible, DynamicLightProgram trace, DynamicLightProgram copy, DynamicLightProgram body, int voxelTexture) {
+    static void render(IInterfaceDynamicLightingGL glCalls, DynamicLightFrame currentFrame, float[] view, DynamicLightFrustum visible, DynamicLightProgram trace, DynamicLightProgram copy, DynamicLightProgram body, int voxelTexture) {
         gl = glCalls;
         frame = currentFrame;
         frustum = visible;
@@ -421,7 +421,7 @@ public final class DynamicLightShadowAtlas {
         copy.use();
         copy.set("Sampler0", 0);
         gl.bindTexture(0, gl.depthTexture(blocks));
-        gl.drawFullscreen(IDynamicLightGL.DRAW_DEPTH);
+        gl.drawFullscreen(IInterfaceDynamicLightingGL.DRAW_DEPTH);
     }
 
     /** Whether the camera sees any of the pyramid from {@code lamp} along {@code d}, {@code tan} wide, to {@code far}. */
@@ -508,7 +508,7 @@ public final class DynamicLightShadowAtlas {
     }
 
     /** The depth atlas: 8 x 8 tiles, slot {@code s} at column {@code s % 8}, row {@code s / 8}. */
-    static int depthTexture(IDynamicLightGL glCalls) {
+    static int depthTexture(IInterfaceDynamicLightingGL glCalls) {
         return target == null ? 0 : glCalls.depthTexture(target);
     }
 
@@ -624,7 +624,7 @@ public final class DynamicLightShadowAtlas {
         trace.set("lampDepth", tileProjection[10], tileProjection[14]);
         trace.set("lampClearance", clearance);
         gl.bindTexture(1, voxelTexture);
-        gl.drawFullscreen(IDynamicLightGL.DRAW_DEPTH_NEARER);
+        gl.drawFullscreen(IInterfaceDynamicLightingGL.DRAW_DEPTH_NEARER);
     }
 
     /** {@link #BODIES_IN_TILE} seen from slot {@code s}'s lamp into its tile, over its blocks. */
@@ -632,7 +632,7 @@ public final class DynamicLightShadowAtlas {
         float[] lampView = DynamicLightMatrix.translate(lampView(DIR[s][0], DIR[s][1], DIR[s][2], scratch), (float) (frame.cameraX - LAMP[s][0]), (float) (frame.cameraY - LAMP[s][1]), (float) (frame.cameraZ - LAMP[s][2]));
         program.use();
         program.setMatrix("ProjMat", projection((float) Math.atan(TAN[s]), FAR[s]));
-        //Each body binds its own texture on unit 0 and sets the alpha cut of each run (IDynamicLightGL#drawBody).
+        //Each body binds its own texture on unit 0 and sets the alpha cut of each run (IInterfaceDynamicLightingGL#drawBody).
         program.set("Sampler0", 0);
         program.set("lampClearance", clearance);
         int cutLocation = program.location("alphaCut");

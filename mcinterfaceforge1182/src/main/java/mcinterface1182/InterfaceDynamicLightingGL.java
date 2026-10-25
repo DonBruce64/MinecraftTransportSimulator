@@ -1,14 +1,11 @@
-package mcinterface1165;
+package mcinterface1182;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL15;
@@ -17,88 +14,48 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexBuffer;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
 
-import mcinterface1165.mixin.client.RenderTypeStateMixin;
-import mcinterface1165.mixin.client.RenderTypeTypeMixin;
-import mcinterface1165.mixin.client.TextureStateMixin;
-import minecrafttransportsimulator.mcinterface.IDynamicLightGL;
+import mcinterface1182.mixin.client.CompositeRenderTypeMixin;
+import mcinterface1182.mixin.client.CompositeStateMixin;
+import mcinterface1182.mixin.client.EmptyTextureStateShardMixin;
+import minecrafttransportsimulator.mcinterface.IInterfaceDynamicLightingGL;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightBody;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.RenderState;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.texture.Texture;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.shader.Framebuffer;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 
 /**
- * 1.16.5's GL calls for the shared dynamic light renderer (mccore {@code DynamicLightRenderer}): LWJGL 3 raw GL,
- * through {@link GlStateManager}/{@link RenderSystem} wherever MC caches the state.  1.16.5 draws with the fixed
- * function pipeline in a compatibility context, so every pass here runs with a program of ours, a vertex array of
- * ours (MC's client-side arrays live on vertex array 0 and stay untouched) and alpha test off
- * ({@link InterfaceRender#renderDynamicLightFrame} handles that one around the frame).  Targets are
- * {@link Framebuffer}s; captured bodies are IV's cached {@link InterfaceRender.BufferData} (a
- * {@link net.minecraft.client.renderer.vertex.VertexBuffer} of quads); living bodies are drawn by their own
- * {@link EntityRenderer}.  A body's faces keep the texture and alpha cut of their render type
- * ({@link #shadowTexture}, {@link #shadowCut}), so they shadow only where it shows.  Needs GL 3.2, or GL 2.1 with the extensions {@link IDynamicLightGL#legacyContext} names
- * ({@link #supported}): macOS gives 1.16.5 that one, and there every draw goes through attributes 0 and 2 on vertex
- * array 0 instead of a vertex array of ours.  Render thread only.
+ * 1.18.2's GL calls for the shared dynamic light renderer (mccore {@code DynamicLightRenderer}): LWJGL 3 raw GL,
+ * through {@link GlStateManager}/{@link RenderSystem} wherever MC caches the state.  Targets are {@link RenderTarget}s;
+ * captured bodies are IV's {@link VertexBuffer}s; entity bodies are drawn by their own {@link EntityRenderer}.  A body's
+ * faces keep the texture and alpha cut of their render type ({@link #shadowTexture}, {@link #shadowCut}), so they
+ * shadow only where it shows.
+ * Render thread only.
  */
-final class DynamicLightGL implements IDynamicLightGL {
-    /** Where UV0 sits in an IV buffer's {@code NEW_ENTITY} vertex, after the position and the colour. */
-    private static final int UV_OFFSET = DefaultVertexFormats.NEW_ENTITY.getOffset(DefaultVertexFormats.NEW_ENTITY.getElements().indexOf(DefaultVertexFormats.ELEMENT_UV0));
-    static final DynamicLightGL INSTANCE = new DynamicLightGL();
-    private static Boolean supported;
-    private static boolean legacy;
+final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
+    static final InterfaceDynamicLightingGL INSTANCE = new InterfaceDynamicLightingGL();
 
     private int emptyArray;
     private ByteBuffer byteStaging;
     private FloatBuffer floatStaging;
-    /** The one vertex array captured IV bodies are drawn through: attributes 0 and 2 over whichever buffer is bound. */
-    private int bodyArray;
-    /** GL 2.1: three corners for the fullscreen triangle, which draws nothing without an enabled array. */
-    private int triangleBuffer;
 
-    private DynamicLightGL() {
-    }
-
-    /**
-     * Whether this context can run the shared passes: GL 3.2 (core features in a compatibility context), or GL 2.1 with
-     * the extensions of {@link IDynamicLightGL#legacyContext} (macOS gives 1.16.5 a legacy GL 2.1 context).  LWJGL 3
-     * crashes the JVM on a call the context lacks, so without either no pass may run at all; mccore then lights the
-     * world in its fallback mode.
-     */
-    static boolean supported() {
-        if (supported == null) {
-            GLCapabilities caps = null;
-            try {
-                caps = GL.getCapabilities();
-            } catch (Throwable e) {
-                //No context to ask; stays unsupported.
-            }
-            boolean modern = caps != null && caps.OpenGL32;
-            legacy = !modern && caps != null && caps.OpenGL21 && caps.GL_EXT_gpu_shader4 && caps.GL_ARB_texture_float && caps.GL_ARB_texture_rg && (caps.OpenGL30 || caps.GL_ARB_framebuffer_object);
-            if (!modern && !legacy) {
-                InterfaceManager.coreInterface.logError("Dynamic lights draw in their simple mode: this context has neither OpenGL 3.2 nor OpenGL 2.1 with EXT_gpu_shader4, ARB_texture_float, ARB_texture_rg and ARB_framebuffer_object.");
-            }
-            supported = modern || legacy;
-        }
-        return supported;
-    }
-
-    @Override
-    public boolean legacyContext() {
-        return legacy;
+    private InterfaceDynamicLightingGL() {
     }
 
     @Override
@@ -112,8 +69,7 @@ final class DynamicLightGL implements IDynamicLightGL {
         GL20.glAttachShader(program, vertex);
         GL20.glAttachShader(program, fragment);
         GL20.glBindAttribLocation(program, 0, "Position");
-        //lamp_body's texture coordinates, on the location the later versions' NEW_ENTITY gives UV0.  1.16.5 feeds its
-        //own buffers through fixed-function arrays, so drawBody points this attribute itself.
+        //lamp_body's texture coordinates: MC's UV0 is location 2 of an IV buffer's NEW_ENTITY format.
         GL20.glBindAttribLocation(program, 2, "UV0");
         GL20.glLinkProgram(program);
         GL20.glDetachShader(program, vertex);
@@ -277,7 +233,7 @@ final class DynamicLightGL implements IDynamicLightGL {
 
     @Override
     public Object createTarget(int width, int height, boolean depth, boolean floatColor, boolean linear) {
-        Framebuffer made = floatColor ? new FloatTarget(width, height, depth) : new Framebuffer(width, height, depth, Minecraft.ON_OSX);
+        RenderTarget made = floatColor ? new FloatTarget(width, height, depth) : new TextureTarget(width, height, depth, Minecraft.ON_OSX);
         if (linear) {
             made.setFilterMode(GL11.GL_LINEAR);
         }
@@ -286,29 +242,29 @@ final class DynamicLightGL implements IDynamicLightGL {
 
     @Override
     public void deleteTarget(Object target) {
-        ((Framebuffer) target).destroyBuffers();
+        ((RenderTarget) target).destroyBuffers();
     }
 
     @Override
     public void bindTarget(Object target, boolean viewport) {
-        (target == null ? Minecraft.getInstance().getMainRenderTarget() : (Framebuffer) target).bindWrite(viewport);
+        (target == null ? Minecraft.getInstance().getMainRenderTarget() : (RenderTarget) target).bindWrite(viewport);
     }
 
     @Override
     public void clearTarget(Object target) {
-        Framebuffer t = (Framebuffer) target;
+        RenderTarget t = (RenderTarget) target;
         t.setClearColor(0F, 0F, 0F, 0F);
         t.clear(Minecraft.ON_OSX);
     }
 
     @Override
     public int colorTexture(Object target) {
-        return ((Framebuffer) target).getColorTextureId();
+        return ((RenderTarget) target).getColorTextureId();
     }
 
     @Override
     public int depthTexture(Object target) {
-        return ((Framebuffer) target).getDepthTextureId();
+        return ((RenderTarget) target).getDepthTextureId();
     }
 
     @Override
@@ -323,7 +279,6 @@ final class DynamicLightGL implements IDynamicLightGL {
 
     @Override
     public int mainDepthTexture() {
-        //1.16.5's Framebuffer keeps its depth in a texture (also with Forge's combined depth-stencil format).
         return Minecraft.getInstance().getMainRenderTarget().getDepthTextureId();
     }
 
@@ -370,21 +325,12 @@ final class DynamicLightGL implements IDynamicLightGL {
         RenderSystem.depthMask(true);
     }
 
-    /** One triangle over the viewport from {@code gl_VertexID} ({@code fullscreen.vsh}): no vertex buffer but on GL 2.1. */
+    /** One triangle over the viewport from {@code gl_VertexID} ({@code fullscreen.vsh}): no vertex buffer. */
     private void drawTriangle() {
-        if (legacy) {
-            if (triangleBuffer == 0) {
-                triangleBuffer = GlStateManager._glGenBuffers();
-                GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, triangleBuffer);
-                GL15.glBufferData(GL15.GL_ARRAY_BUFFER, new float[9], GL15.GL_STATIC_DRAW);
-            }
-            drawArray(triangleBuffer, 12, -1, GL11.GL_TRIANGLES, 0, 3);
-            return;
-        }
         if (emptyArray == 0) {
-            emptyArray = GL30.glGenVertexArrays();
+            emptyArray = GlStateManager._glGenVertexArrays();
         }
-        GL30.glBindVertexArray(emptyArray);
+        GlStateManager._glBindVertexArray(emptyArray);
         GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 3);
     }
 
@@ -397,7 +343,7 @@ final class DynamicLightGL implements IDynamicLightGL {
             if (!(entity instanceof ABuilderEntityBase) && !(entity.getVehicle() instanceof BuilderEntityLinkedSeat) && !entity.isInvisible()) {
                 float h = entity.getBbHeight();
                 float w = entity.getBbWidth();
-                DynamicLightShadowAtlas.addCandidate(entity, MathHelper.lerp(partialTicks, entity.xOld, entity.getX()), MathHelper.lerp(partialTicks, entity.yOld, entity.getY()) + h * 0.5, MathHelper.lerp(partialTicks, entity.zOld, entity.getZ()), (float) Math.sqrt(w * w * 0.25F + h * h * 0.25F));
+                DynamicLightShadowAtlas.addCandidate(entity, Mth.lerp(partialTicks, entity.xo, entity.getX()), Mth.lerp(partialTicks, entity.yo, entity.getY()) + h * 0.5, Mth.lerp(partialTicks, entity.zo, entity.getZ()), (float) Math.sqrt(w * w * 0.25F + h * h * 0.25F));
             }
         }
     }
@@ -406,77 +352,72 @@ final class DynamicLightGL implements IDynamicLightGL {
     @SuppressWarnings("unchecked")
     public void captureLiving(DynamicLightBody body, double cameraX, double cameraY, double cameraZ, float partialTicks) {
         Entity entity = (Entity) body.entity;
-        double x = MathHelper.lerp(partialTicks, entity.xOld, entity.getX());
-        double y = MathHelper.lerp(partialTicks, entity.yOld, entity.getY());
-        double z = MathHelper.lerp(partialTicks, entity.zOld, entity.getZ());
+        double x = Mth.lerp(partialTicks, entity.xo, entity.getX());
+        double y = Mth.lerp(partialTicks, entity.yo, entity.getY());
+        double z = Mth.lerp(partialTicks, entity.zo, entity.getZ());
         EntityRenderer<Entity> renderer = (EntityRenderer<Entity>) Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entity);
-        MatrixStack poses = new MatrixStack();
+        PoseStack poses = new PoseStack();
         poses.translate(x - cameraX, y - cameraY, z - cameraZ);
-        Map<RenderType, IVertexBuilder> views = new IdentityHashMap<>();
-        renderer.render(entity, MathHelper.lerp(partialTicks, entity.yRotO, entity.yRot), partialTicks, poses, type -> views.computeIfAbsent(type, t -> {
+        Map<RenderType, VertexConsumer> views = new IdentityHashMap<>();
+        renderer.render(entity, Mth.lerp(partialTicks, entity.yRotO, entity.getYRot()), partialTicks, poses, type -> views.computeIfAbsent(type, t -> {
             int texture = shadowTexture(t);
             if (texture < 0) {
                 return new Ignore();
             }
             switch (t.mode()) {
-                case GL11.GL_QUADS:
+                case QUADS:
                     return new View(body, true, texture, shadowCut(t));
-                case GL11.GL_TRIANGLES:
+                case TRIANGLES:
                     return new View(body, false, texture, shadowCut(t));
                 default:
                     return new Ignore();
             }
-        }), LightTexture.pack(15, 15));
+        }), LightTexture.FULL_BRIGHT);
     }
 
     /**
-     * The GL texture whose alpha cuts {@code type}'s faces out of a shadow, as its alpha test discards them: 0 for a
-     * type without a texture (or one not loaded yet, which casts whole until its first draw loads it), -1 for a type
-     * whose faces hide nothing: blended other than by alpha (glowing eyes, a charged creeper's swirl, enchantment glint).
-     * A type that blends by alpha (entityTranslucent: players, a slime's jelly) casts where its texture is opaque enough
-     * ({@link #shadowCut}).
+     * The GL texture whose alpha cuts {@code type}'s faces out of a shadow, as its cutout shader discards them: 0 for a
+     * type without one texture, -1 for a type whose faces hide nothing: blended other than by alpha (glowing eyes, a
+     * charged creeper's swirl, enchantment glint, lightning).  A type that blends by alpha (entityTranslucent: players,
+     * a slime's jelly; the translucent item sheet) casts where its texture is opaque enough ({@link #shadowCut}).
      */
     static int shadowTexture(RenderType type) {
-        if (!(type instanceof RenderTypeTypeMixin)) {
+        if (!(type instanceof CompositeRenderTypeMixin)) {
             return 0;
         }
-        RenderTypeStateMixin state = (RenderTypeStateMixin) (Object) ((RenderTypeTypeMixin) type).get_state();
-        if (!States.opaque(state.get_transparencyState()) && !States.alphaBlended(state.get_transparencyState())) {
+        RenderType.CompositeState state = ((CompositeRenderTypeMixin) type).invoke_state();
+        RenderStateShard.TransparencyStateShard transparency = ((CompositeStateMixin) (Object) state).get_transparencyState();
+        if (!Shards.opaque(transparency) && !Shards.alphaBlended(transparency)) {
             return -1;
         }
-        Optional<ResourceLocation> texture = ((TextureStateMixin) state.get_textureState()).invoke_texture();
-        if (!texture.isPresent()) {
-            return 0;
-        }
-        //Unlike 1.18+, getTexture does not load: a texture never bound yet reads 0, so it casts whole until first drawn.
-        Texture loaded = Minecraft.getInstance().getTextureManager().getTexture(texture.get());
-        return loaded != null ? loaded.getId() : 0;
+        Optional<ResourceLocation> texture = ((EmptyTextureStateShardMixin) ((CompositeStateMixin) (Object) state).get_textureState()).invoke_cutoutTexture();
+        return texture.isPresent() ? Minecraft.getInstance().getTextureManager().getTexture(texture.get()).getId() : 0;
     }
 
     /**
      * The alpha below which {@code type}'s texture casts nothing: {@link DynamicLightBody#CUT_BLENDED} for a type that
      * blends by alpha, so a slime's outer jelly (alpha 0.7) casts nothing while a player's skin and an item sprite
-     * (alpha 0 or 1) cast exactly, else the cutout types' {@link DynamicLightBody#CUT_CUTOUT}.
+     * (alpha 0 or 1) cast exactly, else the cutout shaders' {@link DynamicLightBody#CUT_CUTOUT}.
      */
     static float shadowCut(RenderType type) {
-        if (type instanceof RenderTypeTypeMixin && States.alphaBlended(((RenderTypeStateMixin) (Object) ((RenderTypeTypeMixin) type).get_state()).get_transparencyState())) {
+        if (type instanceof CompositeRenderTypeMixin && Shards.alphaBlended(((CompositeStateMixin) (Object) ((CompositeRenderTypeMixin) type).invoke_state()).get_transparencyState())) {
             return DynamicLightBody.CUT_BLENDED;
         }
         return DynamicLightBody.CUT_CUTOUT;
     }
 
-    /** Only here to reach MC's protected transparency states. */
-    private static final class States extends RenderState {
-        private States() {
+    /** Only here to reach MC's protected transparency shards. */
+    private static final class Shards extends RenderStateShard {
+        private Shards() {
             super(null, null, null);
             throw new IllegalStateException("This class must not be instantiated.");
         }
 
-        static boolean opaque(RenderState.TransparencyState transparency) {
+        static boolean opaque(RenderStateShard.TransparencyStateShard transparency) {
             return transparency == NO_TRANSPARENCY;
         }
 
-        static boolean alphaBlended(RenderState.TransparencyState transparency) {
+        static boolean alphaBlended(RenderStateShard.TransparencyStateShard transparency) {
             return transparency == TRANSLUCENT_TRANSPARENCY;
         }
     }
@@ -494,45 +435,27 @@ final class DynamicLightGL implements IDynamicLightGL {
     @Override
     public void drawBody(DynamicLightBody body, int cutLocation) {
         if (body.buffer != null) {
-            //IV's cached buffer: quads in MC's NEW_ENTITY format, whose position is the first three floats of each vertex
-            //and UV0 two floats at UV_OFFSET.  Its own vertex array, since MC's vertex state is client-side arrays on
-            //vertex array 0.
-            InterfaceRender.BufferData data = (InterfaceRender.BufferData) body.buffer;
             bindTexture(0, body.texture);
             setCut(cutLocation, body.cut);
-            if (legacy) {
-                data.buffer.bind();
-                drawArray(0, data.stride, UV_OFFSET, GL11.GL_QUADS, 0, data.vertexCount);
-                return;
-            }
-            if (bodyArray == 0) {
-                bodyArray = GL30.glGenVertexArrays();
-            }
-            GL30.glBindVertexArray(bodyArray);
-            data.buffer.bind();
-            GL20.glEnableVertexAttribArray(0);
-            GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, data.stride, 0L);
-            GL20.glEnableVertexAttribArray(2);
-            GL20.glVertexAttribPointer(2, 2, GL11.GL_FLOAT, false, data.stride, UV_OFFSET);
-            GL11.glDrawArrays(GL11.GL_QUADS, 0, data.vertexCount);
+            VertexBuffer buffer = (VertexBuffer) body.buffer;
+            //drawChunkLayer binds the buffer's own vertex array, buffers and format (1.18.2's draw() assumes they are bound).
+            buffer.drawChunkLayer();
             return;
         }
         Corners gpu = (Corners) body.gpu;
         if (gpu == null) {
             body.gpu = gpu = new Corners();
+            gpu.array = GlStateManager._glGenVertexArrays();
             gpu.positions = GlStateManager._glGenBuffers();
-            if (!legacy) {
-                gpu.array = GL30.glGenVertexArrays();
-                GL30.glBindVertexArray(gpu.array);
-                GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, gpu.positions);
-                //lamp_body's Position (location 0) and UV0 (location 2), interleaved.
-                GL20.glEnableVertexAttribArray(0);
-                GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 20, 0L);
-                GL20.glEnableVertexAttribArray(2);
-                GL20.glVertexAttribPointer(2, 2, GL11.GL_FLOAT, false, 20, 12L);
-            }
-        } else if (!legacy) {
-            GL30.glBindVertexArray(gpu.array);
+            GlStateManager._glBindVertexArray(gpu.array);
+            GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, gpu.positions);
+            //lamp_body's Position (location 0) and UV0 (location 2), interleaved.
+            GL20.glEnableVertexAttribArray(0);
+            GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 20, 0L);
+            GL20.glEnableVertexAttribArray(2);
+            GL20.glVertexAttribPointer(2, 2, GL11.GL_FLOAT, false, 20, 12L);
+        } else {
+            GlStateManager._glBindVertexArray(gpu.array);
         }
         int quadCorners = body.quadCorners();
         int triangleCorners = body.triangleCorners();
@@ -552,15 +475,18 @@ final class DynamicLightGL implements IDynamicLightGL {
             GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, gpu.positions);
             GL15.glBufferData(GL15.GL_ARRAY_BUFFER, gpu.staging, GL15.GL_DYNAMIC_DRAW);
         }
-        //A draw per run of one texture and cut, bound on unit 0: quads as quads (the compatibility context has them),
-        //then the triangles after them.
-        for (int run = 0; run < body.runs(true); run++) {
-            int first = body.runStart(true, run) / 4 * 4;
-            int count = body.runEnd(true, run) / 4 * 4 - first;
-            if (count > 0) {
-                bindTexture(0, body.runTexture(true, run));
-                setCut(cutLocation, body.runCut(true, run));
-                drawCorners(gpu, GL11.GL_QUADS, first, count);
+        if (quadCorners > 0) {
+            //Each quad as two triangles, by the shared index buffer every quad draw uses.
+            RenderSystem.AutoStorageIndexBuffer index = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS, quadCorners / 4 * 6);
+            GlStateManager._glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, index.name());
+            for (int run = 0; run < body.runs(true); run++) {
+                int first = body.runStart(true, run) / 4 * 6;
+                int count = body.runEnd(true, run) / 4 * 6 - first;
+                if (count > 0) {
+                    bindTexture(0, body.runTexture(true, run));
+                    setCut(cutLocation, body.runCut(true, run));
+                    GL11.glDrawElements(GL11.GL_TRIANGLES, count, index.type().asGLType, (long) first * index.type().bytes);
+                }
             }
         }
         for (int run = 0; run < body.runs(false); run++) {
@@ -569,24 +495,14 @@ final class DynamicLightGL implements IDynamicLightGL {
             if (count > 0) {
                 bindTexture(0, body.runTexture(false, run));
                 setCut(cutLocation, body.runCut(false, run));
-                drawCorners(gpu, GL11.GL_TRIANGLES, quadCorners + first, count);
+                GL11.glDrawArrays(GL11.GL_TRIANGLES, quadCorners + first, count);
             }
         }
     }
 
-    /** The alpha cut {@code lamp_body} discards under (its {@code alphaCut} uniform); -1: the program has none. */
     private static void setCut(int location, float cut) {
         if (location >= 0) {
             GL20.glUniform1f(location, cut);
-        }
-    }
-
-    /** {@code count} of a living body's corners from {@code first}: through its vertex array, or on GL 2.1 its buffer. */
-    private void drawCorners(Corners gpu, int mode, int first, int count) {
-        if (legacy) {
-            drawArray(gpu.positions, 20, 12, mode, first, count);
-        } else {
-            GL11.glDrawArrays(mode, first, count);
         }
     }
 
@@ -597,44 +513,24 @@ final class DynamicLightGL implements IDynamicLightGL {
         }
     }
 
-    /**
-     * GL 2.1: draws {@code count} corners from {@code first} with attribute 0 (three floats at the start of each
-     * {@code stride}-byte vertex) and, unless {@code uvOffset} is negative, attribute 2 (two floats at {@code uvOffset})
-     * over {@code buffer} (0: the one bound) on vertex array 0, then turns them off again, since MC's own client-side
-     * arrays live there.
-     */
-    private static void drawArray(int buffer, int stride, int uvOffset, int mode, int first, int count) {
-        if (buffer != 0) {
-            GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, buffer);
-        }
-        GL20.glEnableVertexAttribArray(0);
-        GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, stride, 0L);
-        if (uvOffset >= 0) {
-            GL20.glEnableVertexAttribArray(2);
-            GL20.glVertexAttribPointer(2, 2, GL11.GL_FLOAT, false, stride, uvOffset);
-        }
-        GL11.glDrawArrays(mode, first, count);
-        GL20.glDisableVertexAttribArray(0);
-        if (uvOffset >= 0) {
-            GL20.glDisableVertexAttribArray(2);
-        }
-    }
-
     @Override
     public void endBodies() {
-        GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        VertexBuffer.unbindVertexArray();
+        VertexBuffer.unbind();
         RenderSystem.colorMask(true, true, true, true);
         RenderSystem.enableCull();
     }
 
     @Override
     public void restore() {
-        GlStateManager._glUseProgram(0);
-        //Back to vertex array 0, where MC's client-side vertex state lives, and no buffer bound.
-        if (!legacy) {
-            GL30.glBindVertexArray(0);
+        //ShaderInstance caches the last program it used; clear() resets that cache along with the program.
+        if (GameRenderer.getPositionShader() != null) {
+            GameRenderer.getPositionShader().clear();
+        } else {
+            GlStateManager._glUseProgram(0);
         }
-        GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        VertexBuffer.unbindVertexArray();
+        VertexBuffer.unbind();
         //Units 0 to 4: DynamicLightRenderer's samplers.
         for (int unit = 4; unit >= 0; unit--) {
             bindTexture(unit, 0);
@@ -651,8 +547,8 @@ final class DynamicLightGL implements IDynamicLightGL {
     }
 
     /**
-     * A living body's corners on the GPU: a vertex array (none on GL 2.1) over one buffer of positions and texture
-     * coordinates, quads then triangles.
+     * A living body's corners on the GPU: a vertex array over one buffer of positions and texture coordinates, quads
+     * then triangles.
      */
     private static final class Corners {
         int array;
@@ -661,7 +557,7 @@ final class DynamicLightGL implements IDynamicLightGL {
     }
 
     /** A colour target of 16-bit floats: the light runs past 1 near a lamp. */
-    private static final class FloatTarget extends Framebuffer {
+    private static final class FloatTarget extends TextureTarget {
         FloatTarget(int width, int height, boolean depth) {
             super(width, height, depth, Minecraft.ON_OSX);
         }
@@ -669,16 +565,16 @@ final class DynamicLightGL implements IDynamicLightGL {
         @Override
         public void createBuffers(int width, int height, boolean onOsx) {
             super.createBuffers(width, height, onOsx);
-            GlStateManager._bindTexture(getColorTextureId());
-            GlStateManager._texImage2D(GL11.GL_TEXTURE_2D, 0, GL30.GL_RGBA16F, this.width, this.height, 0, GL11.GL_RGBA, GL11.GL_FLOAT, (IntBuffer) null);
+            GlStateManager._bindTexture(this.colorTextureId);
+            GlStateManager._texImage2D(GL11.GL_TEXTURE_2D, 0, GL30.GL_RGBA16F, this.width, this.height, 0, GL11.GL_RGBA, GL11.GL_FLOAT, (java.nio.IntBuffer) null);
             GlStateManager._bindTexture(0);
         }
     }
 
     /** Takes nothing. */
-    private static class Ignore implements IVertexBuilder {
+    private static class Ignore implements VertexConsumer {
         @Override
-        public IVertexBuilder vertex(double x, double y, double z) {
+        public VertexConsumer vertex(double x, double y, double z) {
             return this;
         }
 
@@ -687,28 +583,36 @@ final class DynamicLightGL implements IDynamicLightGL {
         }
 
         @Override
-        public IVertexBuilder color(int r, int g, int b, int a) {
+        public VertexConsumer color(int r, int g, int b, int a) {
             return this;
         }
 
         @Override
-        public IVertexBuilder uv(float u, float v) {
+        public VertexConsumer uv(float u, float v) {
             return this;
         }
 
         @Override
-        public IVertexBuilder overlayCoords(int u, int v) {
+        public VertexConsumer overlayCoords(int u, int v) {
             return this;
         }
 
         @Override
-        public IVertexBuilder uv2(int u, int v) {
+        public VertexConsumer uv2(int u, int v) {
             return this;
         }
 
         @Override
-        public IVertexBuilder normal(float x, float y, float z) {
+        public VertexConsumer normal(float x, float y, float z) {
             return this;
+        }
+
+        @Override
+        public void defaultColor(int r, int g, int b, int a) {
+        }
+
+        @Override
+        public void unsetDefaultColor() {
         }
     }
 
@@ -735,7 +639,7 @@ final class DynamicLightGL implements IDynamicLightGL {
         }
 
         @Override
-        public IVertexBuilder vertex(double x, double y, double z) {
+        public VertexConsumer vertex(double x, double y, double z) {
             this.x = (float) x;
             this.y = (float) y;
             this.z = (float) z;
@@ -743,7 +647,7 @@ final class DynamicLightGL implements IDynamicLightGL {
         }
 
         @Override
-        public IVertexBuilder uv(float u, float v) {
+        public VertexConsumer uv(float u, float v) {
             this.u = u;
             this.v = v;
             return this;

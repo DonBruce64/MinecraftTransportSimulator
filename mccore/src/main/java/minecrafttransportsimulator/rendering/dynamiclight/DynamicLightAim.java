@@ -3,10 +3,10 @@ package minecrafttransportsimulator.rendering.dynamiclight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
 
 /**
- * Cone math of one dynamic light component, ported from the MCS lamp aim.  A component with a
+ * Cone math of one dynamic light component.  A component with a
  * {@code beamDiameter} above 0 is a spot whose full cone angle makes a spot of that diameter at
  * {@code beamLength}; one without is a point light.  {@code beamSoftness} is the outer share of
- * the half-angle that fades out.  {@link Preset} holds the MCS lamp presets a {@code lightPreset} names.
+ * the half-angle that fades out.  {@link Preset} holds the lamp presets a {@code lightPreset} names.
  */
 public final class DynamicLightAim {
     /** Budget rank of headlight presets against other lamps: the headlights win over a tail lamp nearer the camera. */
@@ -19,12 +19,12 @@ public final class DynamicLightAim {
      */
     public static final float LAMP_CLEARANCE = 0.35F;
 
-    /** The MCS lamp presets, by {@code lightPreset} name. */
+    /** The lamp presets, by {@code lightPreset} name. */
     public enum Preset {
         HEADLIGHT_LOW("headlight_low", 1.4F, 28F, 25F, 0.4F, 1.0F),
         HEADLIGHT_HIGH("headlight_high", 1.8F, 60F, 25F, 0.4F, 1.1F),
         /**
-         * Stop, tail, turn signal and marker lamps.  The MCS brake light's cone, brighter and longer (MCS 0.6, 3): IV
+         * Stop, tail, turn signal and marker lamps.  A wide cone, brighter and longer than a plain brake light: IV
          * cars' lamps sit lower and aim up off the road.
          */
         BRAKE_LIGHT("brake_light", 1.0F, 4F, 150F, 0.5F, 0.7F),
@@ -105,7 +105,7 @@ public final class DynamicLightAim {
         boolean aimed = component.axis != null && component.axis.length() > 1e-6;
         float angle = component.lightAngle > 0 ? component.lightAngle : (cone ? angle(component) : (aimed ? preset.angle : 0));
         float reach = component.lightReach > 0 ? component.lightReach : (component.beamLength > 0 ? component.beamLength : preset.reach);
-        return new Beam(component.beamIntensity != 0 ? component.beamIntensity : preset.intensity, angle, component.beamSoftness != null ? component.getSoftness() : preset.soft, reach, flare > 0 ? flare : preset.corona, component.getBloom(), component.getBeamShare(), component.getShadowStart());
+        return new Beam(component.beamIntensity != 0 ? component.beamIntensity : preset.intensity, angle, component.beamSoftness != 0 ? component.getSoftness() : preset.soft, reach, flare > 0 ? flare : preset.corona, component.getBloom(), component.getBeamShare(), component.getShadowStart());
     }
 
     /** How much wider than the beam's half angle the corona stays visible. */

@@ -20,7 +20,6 @@ import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightVoxelWindow;
 
 /**
  * IWrapper to a world instance.  This contains many common methods that
@@ -423,28 +422,4 @@ public abstract class AWrapperWorld extends EntityManager {
      * Spawns an explosion of the specified strength at the passed-in point.
      */
     public abstract void spawnExplosion(Point3D location, double strength, boolean flames, boolean damageBlocks);
-
-    /**
-     * Daylight at this point, 0..1: its open-sky share times the sun's height, weather included.  0 at night even
-     * in the open.  Dims dynamic lights by day.  Versions without their own answer use the sunlight brightness.
-     */
-    public float getDaylight(Point3D position) {
-        return Math.max(0F, Math.min(1F, getLightBrightness(position, false)));
-    }
-
-    /**
-     * The world's rain level, 0..1, independent of position.  Thickens the air dynamic light beams show in.
-     */
-    public float getGlobalRainLevel(float partialTicks) {
-        return 0;
-    }
-
-    /**
-     * Reads which blocks of the 16-block section {@code sx, sy, sz} are solid into the dynamic light block grid,
-     * with {@link DynamicLightVoxelWindow#set} or {@link DynamicLightVoxelWindow#fillSection}.  Returns false if this
-     * version cannot, which leaves the section empty (no block shadows).
-     */
-    public boolean readDynamicLightSection(int sx, int sy, int sz, DynamicLightVoxelWindow window) {
-        return false;
-    }
 }

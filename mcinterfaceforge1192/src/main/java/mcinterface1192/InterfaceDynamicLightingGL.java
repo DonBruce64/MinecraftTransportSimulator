@@ -1,4 +1,4 @@
-package mcinterface1211;
+package mcinterface1192;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -23,10 +23,10 @@ import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
-import mcinterface1211.mixin.client.CompositeRenderTypeMixin;
-import mcinterface1211.mixin.client.CompositeStateMixin;
-import mcinterface1211.mixin.client.EmptyTextureStateShardMixin;
-import minecrafttransportsimulator.mcinterface.IDynamicLightGL;
+import mcinterface1192.mixin.client.CompositeRenderTypeMixin;
+import mcinterface1192.mixin.client.CompositeStateMixin;
+import mcinterface1192.mixin.client.EmptyTextureStateShardMixin;
+import minecrafttransportsimulator.mcinterface.IInterfaceDynamicLightingGL;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightBody;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
@@ -41,21 +41,21 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 
 /**
- * 1.21.1's GL calls for the shared dynamic light renderer (mccore {@code DynamicLightRenderer}): LWJGL 3 raw GL,
+ * 1.19.2's GL calls for the shared dynamic light renderer (mccore {@code DynamicLightRenderer}): LWJGL 3 raw GL,
  * through {@link GlStateManager}/{@link RenderSystem} wherever MC caches the state.  Targets are {@link RenderTarget}s;
- * captured bodies are IV's {@link VertexBuffer}s; entity bodies are drawn by their own {@link EntityRenderer}.  A body's
- * faces keep the texture and alpha cut of their render type ({@link #shadowTexture}, {@link #shadowCut}), so they
- * shadow only where it shows.
+ * captured bodies are IV's {@link VertexBuffer}s; entity bodies are drawn by their own {@link EntityRenderer}.  A
+ * body's faces keep the texture and alpha cut of their render type ({@link #shadowTexture}, {@link #shadowCut}), so
+ * they shadow only where it shows.
  * Render thread only.
  */
-final class DynamicLightGL implements IDynamicLightGL {
-    static final DynamicLightGL INSTANCE = new DynamicLightGL();
+final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
+    static final InterfaceDynamicLightingGL INSTANCE = new InterfaceDynamicLightingGL();
 
     private int emptyArray;
     private ByteBuffer byteStaging;
     private FloatBuffer floatStaging;
 
-    private DynamicLightGL() {
+    private InterfaceDynamicLightingGL() {
     }
 
     @Override
@@ -387,9 +387,8 @@ final class DynamicLightGL implements IDynamicLightGL {
             return 0;
         }
         RenderType.CompositeState state = ((CompositeRenderTypeMixin) type).invoke_state();
-        //NO_TRANSPARENCY and TRANSLUCENT_TRANSPARENCY are public through NeoForge's access transformer.
         RenderStateShard.TransparencyStateShard transparency = ((CompositeStateMixin) (Object) state).get_transparencyState();
-        if (transparency != RenderStateShard.NO_TRANSPARENCY && transparency != RenderStateShard.TRANSLUCENT_TRANSPARENCY) {
+        if (!Shards.opaque(transparency) && !Shards.alphaBlended(transparency)) {
             return -1;
         }
         Optional<ResourceLocation> texture = ((EmptyTextureStateShardMixin) ((CompositeStateMixin) (Object) state).get_textureState()).invoke_cutoutTexture();
@@ -402,10 +401,26 @@ final class DynamicLightGL implements IDynamicLightGL {
      * (alpha 0 or 1) cast exactly, else the cutout shaders' {@link DynamicLightBody#CUT_CUTOUT}.
      */
     static float shadowCut(RenderType type) {
-        if (type instanceof CompositeRenderTypeMixin && ((CompositeStateMixin) (Object) ((CompositeRenderTypeMixin) type).invoke_state()).get_transparencyState() == RenderStateShard.TRANSLUCENT_TRANSPARENCY) {
+        if (type instanceof CompositeRenderTypeMixin && Shards.alphaBlended(((CompositeStateMixin) (Object) ((CompositeRenderTypeMixin) type).invoke_state()).get_transparencyState())) {
             return DynamicLightBody.CUT_BLENDED;
         }
         return DynamicLightBody.CUT_CUTOUT;
+    }
+
+    /** Only here to reach MC's protected transparency shards. */
+    private static final class Shards extends RenderStateShard {
+        private Shards() {
+            super(null, null, null);
+            throw new IllegalStateException("This class must not be instantiated.");
+        }
+
+        static boolean opaque(RenderStateShard.TransparencyStateShard transparency) {
+            return transparency == NO_TRANSPARENCY;
+        }
+
+        static boolean alphaBlended(RenderStateShard.TransparencyStateShard transparency) {
+            return transparency == TRANSLUCENT_TRANSPARENCY;
+        }
     }
 
     @Override
@@ -558,47 +573,62 @@ final class DynamicLightGL implements IDynamicLightGL {
     /** Takes nothing. */
     private static class Ignore implements VertexConsumer {
         @Override
-        public VertexConsumer addVertex(float x, float y, float z) {
+        public VertexConsumer vertex(double x, double y, double z) {
             return this;
         }
 
         @Override
-        public VertexConsumer setColor(int r, int g, int b, int a) {
+        public void endVertex() {
+        }
+
+        @Override
+        public VertexConsumer color(int r, int g, int b, int a) {
             return this;
         }
 
         @Override
-        public VertexConsumer setUv(float u, float v) {
+        public VertexConsumer uv(float u, float v) {
             return this;
         }
 
         @Override
-        public VertexConsumer setUv1(int u, int v) {
+        public VertexConsumer overlayCoords(int u, int v) {
             return this;
         }
 
         @Override
-        public VertexConsumer setUv2(int u, int v) {
+        public VertexConsumer uv2(int u, int v) {
             return this;
         }
 
         @Override
-        public VertexConsumer setNormal(float x, float y, float z) {
+        public VertexConsumer normal(float x, float y, float z) {
             return this;
+        }
+
+        @Override
+        public void defaultColor(int r, int g, int b, int a) {
+        }
+
+        @Override
+        public void unsetDefaultColor() {
         }
     }
 
     /**
-     * One render type's way into a body's quads or triangles, with that type's texture.  A 1.21 vertex has no end
-     * call and sets its texture coordinates after its position, so {@code addVertex} adds the corner at once and
-     * {@code setUv} fills in that corner's coordinates (its own corner, even when another view's came in between).
+     * One render type's way into a body's quads or triangles, with that type's texture: a corner of its own until it
+     * ends, so two fed as one still add whole corners.
      */
     private static final class View extends Ignore {
         private final DynamicLightBody body;
         private final boolean quads;
         private final int texture;
         private final float cut;
-        private int corner = -1;
+        private float x;
+        private float y;
+        private float z;
+        private float u;
+        private float v;
 
         View(DynamicLightBody body, boolean quads, int texture, float cut) {
             this.body = body;
@@ -608,25 +638,36 @@ final class DynamicLightGL implements IDynamicLightGL {
         }
 
         @Override
-        public VertexConsumer addVertex(float x, float y, float z) {
-            if (quads) {
-                body.addQuadCorner(x, y, z, 0, 0, texture, cut);
-                corner = body.quadCount - 1;
-            } else {
-                body.addTriangleCorner(x, y, z, 0, 0, texture, cut);
-                corner = body.triangleCount - 1;
-            }
+        public VertexConsumer vertex(double x, double y, double z) {
+            this.x = (float) x;
+            this.y = (float) y;
+            this.z = (float) z;
             return this;
         }
 
         @Override
-        public VertexConsumer setUv(float u, float v) {
-            if (corner >= 0) {
-                float[] uvs = quads ? body.quadUVs : body.triangleUVs;
-                uvs[2 * corner] = u;
-                uvs[2 * corner + 1] = v;
-            }
+        public VertexConsumer uv(float u, float v) {
+            this.u = u;
+            this.v = v;
             return this;
+        }
+
+        @Override
+        public void endVertex() {
+            add(x, y, z, u, v);
+        }
+
+        @Override
+        public void vertex(float x, float y, float z, float r, float g, float b, float a, float u, float v, int overlay, int light, float nx, float ny, float nz) {
+            add(x, y, z, u, v);
+        }
+
+        private void add(float x, float y, float z, float u, float v) {
+            if (quads) {
+                body.addQuadCorner(x, y, z, u, v, texture, cut);
+            } else {
+                body.addTriangleCorner(x, y, z, u, v, texture, cut);
+            }
         }
     }
 }

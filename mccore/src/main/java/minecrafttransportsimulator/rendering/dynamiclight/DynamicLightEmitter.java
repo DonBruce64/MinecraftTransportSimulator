@@ -2,7 +2,7 @@ package minecrafttransportsimulator.rendering.dynamiclight;
 
 /**
  * One lit lamp this frame: a point or a spot at a world position, with its color, intensity and reach.
- * Port of the MCS emitter (shape plus light) as one mutable object, so a frame reuses its emitters
+ * An emitter (shape plus light) as one mutable object, so a frame reuses its emitters
  * instead of allocating them.  Render thread only.
  */
 public final class DynamicLightEmitter {

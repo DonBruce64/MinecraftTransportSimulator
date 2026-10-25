@@ -38,9 +38,6 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
 import minecrafttransportsimulator.packloading.PackParser;
-import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightBlockShapes;
-import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
-import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightVoxelWindow;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
@@ -50,7 +47,6 @@ import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockDirt;
 import net.minecraft.block.BlockFarmland;
 import net.minecraft.block.BlockLiquid;
-import net.minecraft.block.BlockPane;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.material.MapColor;
@@ -72,22 +68,16 @@ import net.minecraft.item.ItemDye;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.SoundEvent;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.IWorldEventListener;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.GetCollisionBoxesEvent;
@@ -142,7 +132,6 @@ public class WrapperWorld extends AWrapperWorld {
             //Send packet to server to request data for this world.
             this.savedData = InterfaceManager.coreInterface.getNewNBTWrapper();
             InterfaceManager.packetInterface.sendToServer(new PacketWorldSavedDataRequest(InterfaceManager.clientInterface.getClientPlayer()));
-            world.addEventListener(new DynamicLightBlockListener());
         } else {
             //Load data from disk.
             try {
@@ -156,11 +145,7 @@ public class WrapperWorld extends AWrapperWorld {
                 throw new IllegalStateException("Could not load saved data from disk!  This will result in data loss if we continue!");
             }
         }
-        //The client and the integrated server thread each make a wrapper as their world appears; Forge's event handler class
-        //generator is not thread safe, and two registrations at once define the same handler class twice (LinkageError).
-        synchronized (WrapperWorld.class) {
-            MinecraftForge.EVENT_BUS.register(this);
-        }
+        MinecraftForge.EVENT_BUS.register(this);
     }
 
     @Override
@@ -1132,173 +1117,6 @@ public class WrapperWorld extends AWrapperWorld {
             } else {
                 tickAll(false);
             }
-        }
-    }
-
-    @Override
-    public float getDaylight(Point3D position) {
-        if (!world.isRemote) {
-            return super.getDaylight(position);
-        }
-        //Sky light alone is 15 at midnight too; the sun's height (weather included) brings it down: 0 at night.
-        float open = world.getLightFor(EnumSkyBlock.SKY, new BlockPos(position.x, position.y, position.z)) / 15F;
-        return open * Math.max(0F, Math.min(1F, world.getSunBrightnessFactor(1F)));
-    }
-
-    @Override
-    public float getGlobalRainLevel(float partialTicks) {
-        return world.getRainStrength(partialTicks);
-    }
-
-    @Override
-    public boolean readDynamicLightSection(int sx, int sy, int sz, DynamicLightVoxelWindow window) {
-        Chunk chunk = world.getChunkProvider().getLoadedChunk(sx, sz);
-        ExtendedBlockStorage[] storages = chunk != null ? chunk.getBlockStorageArray() : null;
-        ExtendedBlockStorage storage = storages != null && sy >= 0 && sy < storages.length ? storages[sy] : null;
-        if (storage == null || storage == Chunk.NULL_BLOCK_STORAGE || storage.isEmpty()) {
-            window.fillSection(sx, sy, sz, false);
-            return true;
-        }
-        int x0 = sx << 4;
-        int y0 = sy << 4;
-        int z0 = sz << 4;
-        for (int y = 0; y < 16; y++) {
-            for (int z = 0; z < 16; z++) {
-                for (int x = 0; x < 16; x++) {
-                    lightProbe.setPos(x0 + x, y0 + y, z0 + z);
-                    window.setShape(x0 + x, y0 + y, z0 + z, shadowByte(storage.get(x, y, z), window));
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
-     * {@code state}'s byte in the dynamic light grid, worked out once per state at {@link #lightProbe}: a full block
-     * casts a full shadow; one that is not (slabs, stairs, fences, doors, hoppers, chests, beds, banners, signs, mob
-     * heads) casts its collision boxes' (its bounding box when it has none); none for air, IV's own blocks, blocks
-     * without a block model and without a tile entity to draw them (barriers), see-through blocks (glass, leaves,
-     * bars and panes, the translucent layer, ladders, vines, spawners), liquids, blocks with neither a collision box
-     * nor a solid layer (plants, torches, rails) and blocks drawn at a random offset.  A state's boxes are read in the world at the first position it is seen at, so a block whose shape
-     * follows its neighbours (fence arms) keeps the shape of that first position.
-     */
-    private int shadowByte(IBlockState state, DynamicLightVoxelWindow window) {
-        DynamicLightBlockShapes shapes = window.shapes();
-        int value = shapes.byteOf(state);
-        if (value < 0) {
-            shapes.begin();
-            if (state.getBlock() == Blocks.AIR || state.getBlock() instanceof BuilderBlock || (state.getRenderType() == EnumBlockRenderType.INVISIBLE && !state.getBlock().hasTileEntity(state))) {
-                //No boxes: IV's own blocks are drawn by the entity renderer, whose bodies cast the shadow; barriers and
-                //other blocks without a block model, even full ones, show nothing to shade with.  A tile entity block
-                //(sign, mob head, banner) is invisible to the chunk mesh too, but its tile entity renderer draws it, so
-                //it goes on to cast its shape.
-            } else if (state.isOpaqueCube() && state.isFullCube()) {
-                shapes.box(0, 0, 0, 1, 1, 1);
-            } else if (castsShapedShadow(state)) {
-                collisionBoxesAtProbe(state);
-                for (AxisAlignedBB box : lightBoxes) {
-                    shapes.box(box.minX - lightProbe.getX(), box.minY - lightProbe.getY(), box.minZ - lightProbe.getZ(), box.maxX - lightProbe.getX(), box.maxY - lightProbe.getY(), box.maxZ - lightProbe.getZ());
-                }
-                if (lightBoxes.isEmpty()) {
-                    //Banners and signs have a shape but nothing to collide with.
-                    AxisAlignedBB box = state.getBoundingBox(world, lightProbe);
-                    if (box != null) {
-                        shapes.box(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
-                    }
-                }
-            }
-            value = window.endShape(state);
-        }
-        return value;
-    }
-
-    /** Whether {@code state}, visible but not a full block, casts its shape's shadow: see {@link #shadowByte}. */
-    private boolean castsShapedShadow(IBlockState state) {
-        Block block = state.getBlock();
-        Material material = state.getMaterial();
-        if (material == Material.GLASS || material == Material.LEAVES || material.isLiquid() || block.getOffsetType() != Block.EnumOffsetType.NONE) {
-            return false;
-        }
-        //Ladders and spawners are mostly holes, which the grid cannot see: their box would shade as a wall.
-        if (block == Blocks.MOB_SPAWNER || block.isLadder(state, world, lightProbe, null)) {
-            return false;
-        }
-        if (state.getRenderType() != EnumBlockRenderType.MODEL) {
-            //Drawn by a tile entity renderer (chests, beds, signs, heads, banners): solid things.
-            return true;
-        }
-        //Bars and panes are mostly holes; they share the cutout mipped layer with solid things like hoppers, so the
-        //layer cannot tell them apart.
-        if (block instanceof BlockPane || block.canRenderInLayer(state, BlockRenderLayer.TRANSLUCENT)) {
-            return false;
-        }
-        if (block.canRenderInLayer(state, BlockRenderLayer.SOLID)) {
-            return true;
-        }
-        collisionBoxesAtProbe(state);
-        return !lightBoxes.isEmpty();
-    }
-
-    /** Fills {@link #lightBoxes} with {@code state}'s collision boxes at {@link #lightProbe}, in world space. */
-    private void collisionBoxesAtProbe(IBlockState state) {
-        lightBoxes.clear();
-        state.addCollisionBoxToList(world, lightProbe, new AxisAlignedBB(lightProbe).grow(1), lightBoxes, null, false);
-    }
-
-    private final BlockPos.MutableBlockPos lightProbe = new BlockPos.MutableBlockPos();
-    private final List<AxisAlignedBB> lightBoxes = new ArrayList<>();
-
-    /** A client block change: the dynamic light block grid reads its section again, so shadows follow it. */
-    private static final class DynamicLightBlockListener implements IWorldEventListener {
-        @Override
-        public void notifyBlockUpdate(World world, BlockPos pos, IBlockState oldState, IBlockState newState, int flags) {
-            if (oldState != newState) {
-                DynamicLightSystem.markBlock(pos.getX(), pos.getY(), pos.getZ());
-            }
-        }
-
-        @Override
-        public void notifyLightSet(BlockPos pos) {
-        }
-
-        @Override
-        public void markBlockRangeForRenderUpdate(int x1, int y1, int z1, int x2, int y2, int z2) {
-        }
-
-        @Override
-        public void playSoundToAllNearExcept(EntityPlayer player, SoundEvent sound, SoundCategory category, double x, double y, double z, float volume, float pitch) {
-        }
-
-        @Override
-        public void playRecord(SoundEvent sound, BlockPos pos) {
-        }
-
-        @Override
-        public void spawnParticle(int particleID, boolean ignoreRange, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, int... parameters) {
-        }
-
-        @Override
-        public void spawnParticle(int id, boolean ignoreRange, boolean minimiseParticleLevel, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, int... parameters) {
-        }
-
-        @Override
-        public void onEntityAdded(Entity entity) {
-        }
-
-        @Override
-        public void onEntityRemoved(Entity entity) {
-        }
-
-        @Override
-        public void broadcastSound(int soundID, BlockPos pos, int data) {
-        }
-
-        @Override
-        public void playEvent(EntityPlayer player, int type, BlockPos pos, int data) {
-        }
-
-        @Override
-        public void sendBlockBreakProgress(int breakerId, BlockPos pos, int progress) {
         }
     }
 

@@ -12,7 +12,7 @@ import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtla
  * finds GL as it thinks) and the bodies that cast shadows.  Matrices are 16 floats, column-major.  Textures and
  * programs are GL names; targets are the version's own framebuffer objects.  Render thread only.
  */
-public interface IDynamicLightGL {
+public interface IInterfaceDynamicLightingGL {
     /** {@link #drawFullscreen}: replaces what is under it. */
     int DRAW_REPLACE = 0;
     /** {@link #drawFullscreen}: {@code dst * (1 + src)}. */

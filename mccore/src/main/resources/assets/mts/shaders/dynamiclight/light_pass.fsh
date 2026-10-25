@@ -1,4 +1,4 @@
-// Dynamic light pass (port of the MCS light pass). Reads a copy of the depth buffer taken after the world is drawn,
+// Dynamic light pass. Reads a copy of the depth buffer taken after the world is drawn,
 // reconstructs each pixel's camera-relative position and normal, and accumulates up to 256 point/spot lights (the
 // budgeted DynamicLightSystem frame, capped by the DynL_MaxLights config), read from a float texture a row a light
 // (DynamicLightFrame.lightData). One fullscreen draw: every pixel pays lightCount iterations of accumulate() however

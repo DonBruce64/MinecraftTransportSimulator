@@ -1,4 +1,4 @@
-package mcinterface1192;
+package mcinterface1201;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -23,10 +23,10 @@ import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
-import mcinterface1192.mixin.client.CompositeRenderTypeMixin;
-import mcinterface1192.mixin.client.CompositeStateMixin;
-import mcinterface1192.mixin.client.EmptyTextureStateShardMixin;
-import minecrafttransportsimulator.mcinterface.IDynamicLightGL;
+import mcinterface1201.mixin.client.CompositeRenderTypeMixin;
+import mcinterface1201.mixin.client.CompositeStateMixin;
+import mcinterface1201.mixin.client.EmptyTextureStateShardMixin;
+import minecrafttransportsimulator.mcinterface.IInterfaceDynamicLightingGL;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightBody;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
@@ -41,21 +41,21 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 
 /**
- * 1.19.2's GL calls for the shared dynamic light renderer (mccore {@code DynamicLightRenderer}): LWJGL 3 raw GL,
+ * 1.20.1's GL calls for the shared dynamic light renderer (mccore {@code DynamicLightRenderer}): LWJGL 3 raw GL,
  * through {@link GlStateManager}/{@link RenderSystem} wherever MC caches the state.  Targets are {@link RenderTarget}s;
  * captured bodies are IV's {@link VertexBuffer}s; entity bodies are drawn by their own {@link EntityRenderer}.  A
  * body's faces keep the texture and alpha cut of their render type ({@link #shadowTexture}, {@link #shadowCut}), so
  * they shadow only where it shows.
  * Render thread only.
  */
-final class DynamicLightGL implements IDynamicLightGL {
-    static final DynamicLightGL INSTANCE = new DynamicLightGL();
+final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
+    static final InterfaceDynamicLightingGL INSTANCE = new InterfaceDynamicLightingGL();
 
     private int emptyArray;
     private ByteBuffer byteStaging;
     private FloatBuffer floatStaging;
 
-    private DynamicLightGL() {
+    private InterfaceDynamicLightingGL() {
     }
 
     @Override
