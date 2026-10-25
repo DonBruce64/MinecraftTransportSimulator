@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
@@ -427,12 +428,12 @@ public class VehicleGroundDeviceBox {
      */
     private boolean checkEntityCollisions(Point3D collisionMotion) {
         boolean didCollision = false;
-        for (EntityVehicleF_Physics otherVehicle : vehicle.world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
-            if (!otherVehicle.equals(vehicle) && vehicle.canCollideWith(otherVehicle) && !otherVehicle.collidedEntities.contains(vehicle) && otherVehicle.encompassingBox.intersects(solidBox)) {
+        for (AEntityF_Multipart<?> otherEntity : vehicle.world.getEntitiesExtendingType(AEntityF_Multipart.class)) {
+            if (!otherEntity.equals(vehicle) && vehicle.canCollideWith(otherEntity) && !otherEntity.collidedEntities.contains(vehicle) && otherEntity.encompassingBox.intersects(solidBox)) {
                 //We know we could have hit this entity.  Check if we actually did.
                 BoundingBox collidingBox = null;
                 double boxCollisionDepth;
-                for (BoundingBox box : otherVehicle.allCollisionBoxes) {
+                for (BoundingBox box : otherEntity.allCollisionBoxes) {
                     if (box.collisionTypes.contains(CollisionType.VEHICLE) && box.intersects(solidBox)) {
                         if (collisionMotion.y > 0) {
                             boxCollisionDepth = solidBox.globalCenter.y + solidBox.heightRadius - (box.globalCenter.y - box.heightRadius);
@@ -451,7 +452,7 @@ public class VehicleGroundDeviceBox {
                     }
                 }
                 if (collidingBox != null) {
-                    vehicle.collidedEntities.add(otherVehicle);
+                    vehicle.collidedEntities.add(otherEntity);
                     didCollision = true;
                 }
             }
