@@ -6,9 +6,9 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "5.1.+", changing: true
-        classpath group: "org.parchmentmc", name: "librarian", version: "1.+"
-        classpath group: "org.spongepowered", name: "mixingradle", version: "0.7.+"
+        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: project.forge_gradle_version
+        classpath group: "org.parchmentmc", name: "librarian", version: project.librarian_version
+        classpath group: "org.spongepowered", name: "mixingradle", version: project.mixin_gradle_version
     }
 }
 
@@ -69,6 +69,7 @@ minecraft {
 repositories {
     //JEI
     maven { url = "https://dvs1.progwml6.com/files/maven/" }
+    maven { url = "https://maven.blamejared.com/" }
 	//Jade
     maven { url = "https://www.cursemaven.com" }
 }
@@ -84,7 +85,7 @@ dependencies {
     //Minecraft to use.
     minecraft "net.minecraftforge:forge:${project.mc_version}-${project.forge_version}"
     //Make mixin annotations actually do something
-    annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
+    annotationProcessor "org.spongepowered:mixin:${project.mixin_version}:processor"
 
     //Core to use.
     embed(project(":mccore"))
