@@ -487,7 +487,7 @@ public class WrapperEntity implements IWrapperEntity {
     public static void onIVAttackEntity(AttackEntityEvent event) {
         if (event.getTarget() instanceof BuilderEntityExisting) {
             AEntityB_Existing riding = WrapperPlayer.getWrapperFor(event.getPlayer()).getEntityRiding();
-            if (riding instanceof PartSeat && ((PartSeat) riding).masterEntity == ((BuilderEntityExisting) event.getTarget()).entity) {
+            if (riding instanceof PartSeat && ((PartSeat) riding).masterEntity.equals(((BuilderEntityExisting) event.getTarget()).entity)) {
                 event.setCanceled(true);
             }
         }

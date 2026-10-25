@@ -144,7 +144,7 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
             //Do not let riders punch their own vehicle or remove its parts by hand.
             if (player.getEntityRiding() instanceof APart) {
                 AEntityF_Multipart<?> riddenEntity = ((APart) player.getEntityRiding()).masterEntity;
-                if (riddenEntity == (entity instanceof APart ? ((APart) entity).masterEntity : entity)) {
+                if (riddenEntity.equals(entity instanceof APart ? ((APart) entity).masterEntity : entity)) {
                     return false;
                 }
             }
