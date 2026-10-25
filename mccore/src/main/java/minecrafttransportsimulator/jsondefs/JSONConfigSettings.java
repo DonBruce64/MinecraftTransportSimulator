@@ -33,6 +33,7 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Boolean> opSignEditingOnly = new JSONConfigEntry<>(false, "If true, only OPs will be able to edit signs on servers.  Does not affect client worlds.");
         public JSONConfigEntry<Boolean> opPickupVehiclesOnly = new JSONConfigEntry<>(false, "If true, only OPs will be able to pick up vehicles with wrenches.  Does not affect client worlds.");
         public JSONConfigEntry<Boolean> creativePickupVehiclesOnly = new JSONConfigEntry<>(false, "If true, vehicles can only be picked up in creative mode.");
+        public JSONConfigEntry<Boolean> preventBlockBreakingWhileRiding = new JSONConfigEntry<>(false, "If true, players seated in vehicles or mounted parts cannot break blocks by hand or with held tools.");
         public JSONConfigEntry<Boolean> keyRequiredToStartVehicles = new JSONConfigEntry<>(false, "If true, vehicles can only be started if the player has the key in their hand.");
         public JSONConfigEntry<Boolean> noclipVehicles = new JSONConfigEntry<>(false, "If true, vehicles will not be able to collide with blocks.  This also prevents them from moving if they do not have wheels on them, as otherwise they would phase through the ground into the void.");
         public JSONConfigEntry<Boolean> chunkloadVehicles = new JSONConfigEntry<>(true, "If true, vehicles will be chunkloaded when on roads/tracks.  This allows them to travel into unloaded chunks.");
@@ -101,6 +102,8 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Double> blockCrashDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage received by vehicles when they crash into blocks and use crash speed thresholds.");
         public JSONConfigEntry<Double> crashDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage received by players when their vehicle explodes in a crash.");
         public JSONConfigEntry<Double> bulletDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by bullets on vehicles.");
+        public JSONConfigEntry<Double> cameraShakeFactor = new JSONConfigEntry<>(1.0D, "Factor applied to camera shake from nearby bullet explosions.  Set this to 0 to disable explosion camera shake.");
+        public JSONConfigEntry<Double> gunCameraShakeFactor = new JSONConfigEntry<>(0.25D, "Factor applied to camera shake from nearby gunshots.  Set this to 0 to disable gunshot camera shake.");
         public JSONConfigEntry<Double> wheelDamageMinimumVelocity = new JSONConfigEntry<>(0.2D, "Minimum velocity (blocks/second) which vehicles must be going to damage entities with their wheels.");
         public JSONConfigEntry<Map<String, Double>> packBulletDamageFactors = new JSONConfigEntry<>(new HashMap<>(), "A mapping of pack-speciifc bullet damage factors.  These values will apply to all bullets in a pack when they hit something, be it a vehicle or entity.");
     }

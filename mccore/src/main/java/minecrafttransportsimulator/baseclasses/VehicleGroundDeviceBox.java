@@ -105,7 +105,8 @@ public class VehicleGroundDeviceBox {
         float totalClimbHeight = 0;
         for (APart part : vehicle.allParts) {
             if (part instanceof PartGroundDevice) {
-                if (!part.isSpare && part.isActiveVar.isActive) {
+                //Inactive ground devices still support the vehicle; only engine drive requires them to be active.
+                if (!part.isSpare) {
                     PartGroundDevice ground = (PartGroundDevice) part;
                     APart currentPart = part;
 

@@ -98,6 +98,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public final ComputedVariable ballastVolumeVar;
     public final ComputedVariable waterBallastFactorVar;
     public final ComputedVariable arcadeFlightModeVar;
+    public final ComputedVariable blimpSkidSteerVar;
+    public final ComputedVariable blimpLevelFactorVar;
+    public final ComputedVariable blimpLevelMaxRateVar;
+    public static final double BLIMP_LEVEL_SNAP_ANGLE = 0.01;
     public final ComputedVariable gravityFactorVar;
     public final ComputedVariable axleRatioVar;
 
@@ -164,6 +168,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         addVariable(this.ballastVolumeVar = new ComputedVariable(this, "ballastVolume"));
         addVariable(this.waterBallastFactorVar = new ComputedVariable(this, "waterBallastFactor"));
         addVariable(this.arcadeFlightModeVar = new ComputedVariable(this, "arcadeFlightMode"));
+        addVariable(this.blimpSkidSteerVar = new ComputedVariable(this, "blimpSkidSteer"));
+        addVariable(this.blimpLevelFactorVar = new ComputedVariable(this, "blimpLevelFactor"));
+        addVariable(this.blimpLevelMaxRateVar = new ComputedVariable(this, "blimpLevelMaxRate"));
         addVariable(this.gravityFactorVar = new ComputedVariable(this, "gravityFactor"));
         addVariable(this.axleRatioVar = new ComputedVariable(this, "axleRatio"));
     }
@@ -261,6 +268,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         ballastVolumeVar.setTo(definition.motorized.ballastVolume, false);
         waterBallastFactorVar.setTo(definition.motorized.waterBallastFactor, false);
         arcadeFlightModeVar.setTo(definition.motorized.arcadeFlightMode, false);
+        blimpSkidSteerVar.setTo(definition.motorized.blimpSkidSteer, false);
+        blimpLevelFactorVar.setTo(definition.motorized.blimpLevelFactor, false);
+        blimpLevelMaxRateVar.setTo(definition.motorized.blimpLevelMaxRate, false);
         if (definition.motorized.gravityFactor != 0) {
             gravityFactorVar.setTo(definition.motorized.gravityFactor,false);
         } else if (!definition.motorized.isAircraft) {
@@ -519,6 +529,20 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 totalTorque.y /= (1.0 + q * rudderAreaVar.currentValue * definition.motorized.tailDistance * definition.motorized.tailDistance * 4.0 / momentYaw);
                 totalTorque.z /= (1.0 + q * aileronAreaVar.currentValue * rollArm * rollArm * 4.0 / momentRoll);
             }
+
+            //If we have skid-steer, yaw directly off the rudder.  This doesn't depend on airspeed, so it lets us turn in place.
+            if (blimpSkidSteerVar.isActive && !outOfHealth) {
+                totalTorque.y -= blimpSkidSteerVar.currentValue * (rudderAngleVar.currentValue + rudderTrimVar.currentValue) / MAX_RUDDER_ANGLE;
+            }
+
+            //If we have levelling, ease pitch and roll back to level while airborne.
+            //Like skid-steer, this doesn't need airflow over the control surfaces.
+            //Clamp the factor to 0-1 so a pack can't make us overshoot past level.
+            double levelFactor = Math.max(0, Math.min(1, blimpLevelFactorVar.currentValue));
+            if (levelFactor > 0 && !outOfHealth && groundDeviceCollective.groundedGroundDevices.isEmpty()) {
+                totalTorque.x -= getLevelCorrection(orientation.angles.x, levelFactor);
+                totalTorque.z -= getLevelCorrection(orientation.angles.z, levelFactor);
+            }
             rotation.angles.set(totalTorque).add(rotorRotation);
         } else if (!lockedOnRoad) {
             towedByConnection.hookupPriorPosition.set(towedByConnection.hookupCurrentPosition);
@@ -731,6 +755,20 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             return null;
         }
         return definition.packID + ":" + definition.systemName + (isArcadeFlightDefault() ? "|arcade" : "|standard");
+     * Returns how many degrees to rotate back towards level this tick for the passed-in tilt.
+     * Removes the passed-in fraction of the tilt, capped by blimpLevelMaxRate if set.
+     * Tilts under {@link #BLIMP_LEVEL_SNAP_ANGLE} are removed entirely so we stop at exactly level.
+     */
+    private double getLevelCorrection(double tilt, double levelFactor) {
+        if (Math.abs(tilt) < BLIMP_LEVEL_SNAP_ANGLE) {
+            return tilt;
+        }
+        double correction = tilt * levelFactor;
+        if (blimpLevelMaxRateVar.isActive) {
+            double maxRate = Math.abs(blimpLevelMaxRateVar.currentValue);
+            correction = Math.max(-maxRate, Math.min(maxRate, correction));
+        }
+        return correction;
     }
 
     protected static double getLiftCoeff(double angleOfAttack, double maxLiftCoeff) {
