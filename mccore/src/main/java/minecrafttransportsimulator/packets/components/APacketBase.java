@@ -35,7 +35,6 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
-import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Add;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Remove;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
@@ -253,7 +252,6 @@ public abstract class APacketBase {
 
         //Inventory container packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketInventoryContainerChange.class);
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketItemInteractable.class);
 
         //Furnace packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketCrafterFuelAdd.class);
