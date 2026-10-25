@@ -18,6 +18,8 @@ import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -35,6 +37,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderSpecificHandEvent;
+import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -189,6 +192,26 @@ public class InterfaceEventsEntityRendering {
                 lastScreenHeight = screenHeight;
             }
             InterfaceRender.renderGUI(mouseX, mouseY, screenWidth, screenHeight, partialTicks, updateGUIs);
+        }
+    }
+
+    /**
+     * A chunk arrived on the client: the dynamic light block grid reads its sections again.
+     */
+    @SubscribeEvent
+    public static void onIVChunkLoad(ChunkEvent.Load event) {
+        if (event.getWorld().isRemote) {
+            DynamicLightSystem.markColumn(event.getChunk().x, event.getChunk().z);
+        }
+    }
+
+    /**
+     * No name tag inside a dynamic light shadow tile: the shadow of a living entity is drawn by its own renderer.
+     */
+    @SubscribeEvent
+    public static void onIVRenderLivingSpecials(@SuppressWarnings("rawtypes") RenderLivingEvent.Specials.Pre event) {
+        if (DynamicLightShadowAtlas.isRendering()) {
+            event.setCanceled(true);
         }
     }
 

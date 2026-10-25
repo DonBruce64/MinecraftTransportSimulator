@@ -45,6 +45,7 @@ minecraft {
         client {
             workingDirectory project.file("run")
             arg "-mixin.config=mts.mixins.json"
+            arg "-mixin.config=mts-embeddium.mixins.json"
 
             mods {
                 minecrafttransportsimulator {
@@ -72,6 +73,11 @@ repositories {
 		maven { url = "https://maven.blamejared.com/" }
 		// location of the maven that hosts Jade files
 		maven { url = "https://www.cursemaven.com" }
+    // Embeddium, compile-only for its optional mixin
+    maven {
+        url = "https://api.modrinth.com/maven"
+        content { includeGroup "maven.modrinth" }
+    }
 }
 
 //Configuration that holds jars to include in the jar
@@ -98,11 +104,14 @@ dependencies {
     runtimeOnly fg.deobf("mezz.jei:${project.jei_run_version}")
     //Compile against the Jade API but do not include it at runtime
     compileOnly fg.deobf("curse.maven:jade-324717:${project.jade_file_id}")
+    //Compile against Embeddium for the optional dynamic light mixin; it is never shipped or required.
+    compileOnly "maven.modrinth:embeddium:${project.embeddium_version}"
 }
 
 mixin {
     add sourceSets.main, project.mixin_refmap
     config project.mixin_config
+    config "mts-embeddium.mixins.json"
 }
 
 //Here is where we zip up all embeds and add them to our jar.

@@ -35,6 +35,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONLight;
+import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONRendering.ModelType;
 import minecrafttransportsimulator.jsondefs.JSONSound;
@@ -103,6 +104,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     private final Map<JSONSound, SoundSwitchbox> soundVolumeSwitchboxes = new HashMap<>();
     private final Map<JSONSound, SoundSwitchbox> soundPitchSwitchboxes = new HashMap<>();
     private final Map<JSONLight, LightSwitchbox> lightBrightnessSwitchboxes = new HashMap<>();
+    private final Map<JSONLightBlendableComponent, LightSwitchbox> lightComponentSwitchboxes = new HashMap<>();
     private final Map<JSONParticle, AnimationSwitchbox> particleActiveSwitchboxes = new HashMap<>();
     private final Map<JSONParticle, AnimationSwitchbox> particleSpawningSwitchboxes = new HashMap<>();
     private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<>();
@@ -139,6 +141,19 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * Maps light definitions to their current color.  This is updated every frame prior to rendering.
      **/
     public final Map<JSONLight, ColorRGB> lightColorValues = new HashMap<>();
+
+    /**
+     * Maps light components with their own lighting ({@link JSONLightBlendableComponent#hasOwnLighting()}) to their
+     * current brightness multiplier from their own brightnessAnimations (1 without them).  This does not include the
+     * light's own brightness or the component's beamIntensity.  Updated every frame with {@link #lightBrightnessValues}.
+     **/
+    public final Map<JSONLightBlendableComponent, Float> lightComponentBrightnessValues = new HashMap<>();
+
+    /**
+     * Maps light components with their own lighting to their current color: the color from their own rotation
+     * animations, else their own color, else the light's current color.  Updated every frame with {@link #lightColorValues}.
+     **/
+    public final Map<JSONLightBlendableComponent, ColorRGB> lightComponentColorValues = new HashMap<>();
 
     /**
      * Maps light (model) object names to their definitions.  This is created from the JSON definition to prevent the need to do loops.
@@ -306,6 +321,17 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     }
                     lightBrightnessValues.put(lightDef, 0F);
                     lightColorValues.put(lightDef, new ColorRGB());
+                    if (lightDef.blendableComponents != null) {
+                        for (JSONLightBlendableComponent component : lightDef.blendableComponents) {
+                            if (component.hasOwnLighting()) {
+                                if (component.brightnessAnimations != null) {
+                                    lightComponentSwitchboxes.put(component, new LightSwitchbox(this, component.brightnessAnimations));
+                                }
+                                lightComponentBrightnessValues.put(component, 0F);
+                                lightComponentColorValues.put(component, new ColorRGB());
+                            }
+                        }
+                    }
                 }
             }
 
@@ -660,7 +686,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Updates the light brightness values contained in {@link #lightBrightnessValues}.  This is done
+     * Updates the light brightness values contained in {@link #lightBrightnessValues}, and the per-component
+     * values in {@link #lightComponentBrightnessValues} and {@link #lightComponentColorValues}.  This is done
      * every frame for all light definitions to prevent excess calculations caused by multiple
      * lighting components for the light re-calculating the same value multiple times a frame.
      * An example of this is a light with a bean and flare component.
@@ -693,6 +720,33 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     lightColorValues.put(lightDef, lightDef.color);
                 } else {
                     lightColorValues.put(lightDef, ColorRGB.WHITE);
+                }
+
+                //Components with their own color or animations get their own values on top of the light's.
+                if (lightDef.blendableComponents != null) {
+                    for (JSONLightBlendableComponent component : lightDef.blendableComponents) {
+                        if (component.hasOwnLighting()) {
+                            float componentBrightness = 1;
+                            ColorRGB componentColor = null;
+                            LightSwitchbox componentSwitchbox = lightComponentSwitchboxes.get(component);
+                            if (componentSwitchbox != null) {
+                                if (!componentSwitchbox.runLight(partialTicks)) {
+                                    componentBrightness = 0;
+                                } else if (componentSwitchbox.definedBrightness) {
+                                    componentBrightness = Math.max(componentSwitchbox.brightness, 0);
+                                }
+                                componentColor = componentSwitchbox.color;
+                            }
+                            lightComponentBrightnessValues.put(component, componentBrightness);
+                            if (componentColor != null) {
+                                lightComponentColorValues.put(component, componentColor);
+                            } else if (component.color != null) {
+                                lightComponentColorValues.put(component, component.color);
+                            } else {
+                                lightComponentColorValues.put(component, lightColorValues.get(lightDef));
+                            }
+                        }
+                    }
                 }
             }
         }

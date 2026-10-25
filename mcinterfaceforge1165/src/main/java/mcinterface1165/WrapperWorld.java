@@ -40,10 +40,14 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
 import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightBlockShapes;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightVoxelWindow;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BushBlock;
 import net.minecraft.block.ConcretePowderBlock;
 import net.minecraft.block.CropsBlock;
@@ -51,10 +55,13 @@ import net.minecraft.block.FarmlandBlock;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.LadderBlock;
 import net.minecraft.block.LanternBlock;
+import net.minecraft.block.PaneBlock;
 import net.minecraft.block.PistonBlock;
 import net.minecraft.block.SlabBlock;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.material.MaterialColor;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.ItemEntity;
@@ -79,6 +86,7 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.shapes.IBooleanFunction;
@@ -88,6 +96,8 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.DimensionSavedDataManager;
 import net.minecraftforge.common.IPlantable;
@@ -1142,6 +1152,108 @@ public class WrapperWorld extends AWrapperWorld {
             }
         }
     }
+
+    @Override
+    public float getDaylight(Point3D position) {
+        if (!(world instanceof net.minecraft.client.world.ClientWorld)) {
+            return super.getDaylight(position);
+        }
+        float open = world.getBrightness(LightType.SKY, new BlockPos(position.x, position.y, position.z)) / 15F;
+        //getSkyDarken(partial) runs 0.2 (night) .. 1 (clear noon); sky light alone is 15 at midnight too.
+        float sun = MathHelper.clamp((((net.minecraft.client.world.ClientWorld) world).getSkyDarken(1F) - 0.2F) / 0.8F, 0F, 1F);
+        return open * sun;
+    }
+
+    @Override
+    public float getGlobalRainLevel(float partialTicks) {
+        return world.getRainLevel(partialTicks);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public boolean readDynamicLightSection(int sx, int sy, int sz, DynamicLightVoxelWindow window) {
+        //1.16.5 worlds are 16 sections tall from y = 0; anything else is air.
+        ChunkSection section = null;
+        Chunk chunk = world.getChunkSource().getChunk(sx, sz, false);
+        if (chunk != null && sy >= 0 && sy < chunk.getSections().length) {
+            section = chunk.getSections()[sy];
+        }
+        int x0 = sx << 4;
+        int y0 = sy << 4;
+        int z0 = sz << 4;
+        lightProbe.set(x0, y0, z0);
+        //A section of one kind (air, stone) is filled whole from its palette.
+        if (section == null || section.isEmpty() || !section.maybeHas(state -> shadowByte(state, window) != 0)) {
+            window.fillSection(sx, sy, sz, false);
+            return true;
+        }
+        if (!section.maybeHas(state -> shadowByte(state, window) != FULL_SHADOW)) {
+            window.fillSection(sx, sy, sz, true);
+            return true;
+        }
+        for (int y = 0; y < 16; y++) {
+            for (int z = 0; z < 16; z++) {
+                for (int x = 0; x < 16; x++) {
+                    lightProbe.set(x0 + x, y0 + y, z0 + z);
+                    window.setShape(x0 + x, y0 + y, z0 + z, shadowByte(section.getBlockState(x, y, z), window));
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * {@code state}'s byte in the dynamic light grid, worked out once per state at {@link #lightProbe}: a full block
+     * casts a full shadow; one that is not (slabs, stairs, fences, doors, hoppers, bells, banners, signs, mob heads,
+     * candles) casts its outline shape's; none for air, IV's own blocks, blocks without a block model and without a
+     * tile entity to draw them (liquids, barriers), see-through blocks (glass, leaves, bars and panes, the translucent
+     * layer, ladders, scaffolding and other climbables, spawners), blocks with neither a collision shape nor a solid
+     * layer (plants, torches, rails) and blocks drawn at a random offset.
+     */
+    @SuppressWarnings("deprecation")
+    private int shadowByte(BlockState state, DynamicLightVoxelWindow window) {
+        DynamicLightBlockShapes shapes = window.shapes();
+        int value = shapes.byteOf(state);
+        if (value < 0) {
+            shapes.begin();
+            if (state.isAir() || state.getBlock() instanceof BuilderBlock || (state.getRenderShape() == BlockRenderType.INVISIBLE && !state.hasTileEntity())) {
+                //No boxes: IV's own blocks are drawn by the entity renderer, whose bodies cast the shadow; liquids,
+                //barriers and other blocks without a block model, even full ones, show nothing to shade with.  A tile
+                //entity block (sign, mob head, banner) is invisible to the chunk mesh too, but its tile entity renderer
+                //draws it, so it goes on to cast its outline.
+            } else if (state.isSolidRender(world, lightProbe)) {
+                shapes.box(0, 0, 0, 1, 1, 1);
+            } else if (castsShapedShadow(state)) {
+                for (AxisAlignedBB box : state.getShape(world, lightProbe).toAabbs()) {
+                    shapes.box(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+                }
+            }
+            value = window.endShape(state);
+        }
+        return value;
+    }
+
+    /** Whether {@code state}, visible but not a full block, casts its shape's shadow: see {@link #shadowByte}. */
+    @SuppressWarnings("deprecation")
+    private boolean castsShapedShadow(BlockState state) {
+        //Climbables and spawners are mostly holes, which the grid cannot see: their box would shade as a wall.
+        if (state.getBlock().getOffsetType() != AbstractBlock.OffsetType.NONE || state.getMaterial() == Material.GLASS || state.is(BlockTags.LEAVES) || state.is(BlockTags.CLIMBABLE) || state.is(Blocks.SPAWNER)) {
+            return false;
+        }
+        if (state.getRenderShape() == BlockRenderType.ENTITYBLOCK_ANIMATED) {
+            return true;
+        }
+        //Bars and panes (glass panes, stained or not) are mostly holes; they share the cutout mipped layer with solid
+        //things like hoppers, so the layer cannot tell them apart.
+        if (state.getBlock() instanceof PaneBlock || RenderTypeLookup.canRenderInLayer(state, RenderType.translucent())) {
+            return false;
+        }
+        return RenderTypeLookup.canRenderInLayer(state, RenderType.solid()) || !state.getCollisionShape(world, lightProbe).isEmpty();
+    }
+
+    /** {@link #shadowByte} of a full block. */
+    private static final int FULL_SHADOW = DynamicLightVoxelWindow.SOLID & 0xFF;
+    private final BlockPos.Mutable lightProbe = new BlockPos.Mutable();
 
     /**
      * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.

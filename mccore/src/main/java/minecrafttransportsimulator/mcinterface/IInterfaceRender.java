@@ -6,6 +6,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightRenderer;
 import minecrafttransportsimulator.rendering.RenderableVertices;
 
 /**
@@ -80,4 +81,19 @@ public interface IInterfaceRender {
      * Returns true if bounding boxes should be rendered.
      */
     boolean shouldRenderBoundingBoxes();
+
+    /**
+     * Returns this version's GL calls for the deferred dynamic light pass ({@link DynamicLightRenderer}), or null if
+     * its context cannot draw it: dynamic lights then light the world in their fallback mode (block light, cone and flare).
+     */
+    default IDynamicLightGL getDynamicLightGL() {
+        return null;
+    }
+
+    /**
+     * Marks the chunk sections touching the passed-in block boxes for a mesh rebuild, so block light raised by
+     * dynamic lights under a shader pack shows.  Box {@code i} is {@code boxes[6i .. 6i+5]} = minX minY minZ maxX maxY maxZ, inclusive.
+     */
+    default void markLightSectionsDirty(int[] boxes, int count) {
+    }
 }

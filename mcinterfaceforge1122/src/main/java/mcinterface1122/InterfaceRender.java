@@ -14,19 +14,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IDynamicLightGL;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableVertices;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightFrustum;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightMatrix;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -34,11 +41,14 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.texture.TextureUtil;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -63,6 +73,20 @@ public class InterfaceRender implements IInterfaceRender {
     private static final Map<RenderableVertices, Set<RenderableData>> objectMap = new HashMap<>();
     private static final Map<RenderableVertices, Integer> cachedIndexMap = new HashMap<>();
     protected static int lastRenderPassActualPass;
+    /** Bounding radius of each cached display list's vertices around its origin, for the dynamic light shadow bodies. */
+    private static final Map<RenderableVertices, Float> cachedRadiusMap = new HashMap<>();
+    private static final FloatBuffer modelViewBuffer = BufferUtils.createFloatBuffer(16);
+    private static final FloatBuffer projectionBuffer = BufferUtils.createFloatBuffer(16);
+    private static final float[] dynamicLightPose = new float[16];
+    private static final float[] dynamicLightView = new float[16];
+    private static final float[] dynamicLightProjection = new float[16];
+    private static final float[] dynamicLightLeft = new float[3];
+    private static final float[] dynamicLightUp = new float[3];
+    private static final float[] dynamicLightClip = new float[16];
+    /** Whether the solid pass's cached models are being captured as dynamic light shadow bodies. */
+    private static boolean capturingBodies;
+    private static long dynamicLightFrame;
+    private static long dynamicLightFrameDrawn = -1;
 
     @Override
     public float[] getBlockBreakTexture(AWrapperWorld world, Point3D position) {
@@ -114,8 +138,10 @@ public class InterfaceRender implements IInterfaceRender {
         if (data.enableBrightBlending) {
             setBlendBright(true);
         }
+        //The GL texture drawn with, which a dynamic light shadow body cuts its faces by; 0 for none (casts whole).
+        int texture = 0;
         if (data.texture != null) {
-            bindTexture(data.texture);
+            texture = bindTexture(data.texture);
         } else {
             GL11.glDisable(GL11.GL_TEXTURE_2D);
         }
@@ -132,15 +158,25 @@ public class InterfaceRender implements IInterfaceRender {
             int cachedVertexIndex = cachedIndexMap.computeIfAbsent(data.vertexObject, k -> {
                 int newIndex = GL11.glGenLists(1);
                 GL11.glNewList(newIndex, GL11.GL_COMPILE);
-                renderVertices(data.vertexObject.vertices);
+                renderVertices(data.vertexObject.vertices, DynamicLightGL.supported());
                 GL11.glEndList();
+                cachedRadiusMap.put(data.vertexObject, getVerticesRadius(data.vertexObject.vertices));
                 return newIndex;
             });
             GL11.glCallList(cachedVertexIndex);
+            if (capturingBodies && !isBlended(data)) {
+                readModelView();
+                DynamicLightShadowAtlas.captureBody(cachedVertexIndex, dynamicLightPose, cachedRadiusMap.get(data.vertexObject), texture);
+            }
         } else if (data.vertexObject.isLines) {
             renderLines(data.vertexObject.vertices);
         } else {
-            renderVertices(data.vertexObject.vertices);
+            renderVertices(data.vertexObject.vertices, false);
+            if (capturingBodies && data.vertexObject.cacheVertices && !isBlended(data)) {
+                //The Slow rendering mode has no cached list to record: the vertices just written are the shadow body.
+                readModelView();
+                DynamicLightShadowAtlas.captureVertices(data.vertexObject.vertices, dynamicLightPose, texture);
+            }
         }
         GL11.glPopMatrix();
 
@@ -155,6 +191,21 @@ public class InterfaceRender implements IInterfaceRender {
         }
     }
 
+    /**
+     * Whether {@code data} draws blended (translucent or bright blending), as 1.20.1's blended render types: such faces
+     * hide nothing, so they are no dynamic light shadow body.
+     */
+    private static boolean isBlended(RenderableData data) {
+        return data.isTranslucent || data.enableBrightBlending;
+    }
+
+    /** Reads the current model-view (the camera's, the entity's offset and the object's transform) into {@link #dynamicLightPose}. */
+    private static void readModelView() {
+        modelViewBuffer.clear();
+        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, modelViewBuffer);
+        modelViewBuffer.get(dynamicLightPose);
+    }
+
     @Override
     public void deleteVertices(RenderableData data) {
         if (data.vertexObject.cacheVertices) {
@@ -164,6 +215,7 @@ public class InterfaceRender implements IInterfaceRender {
                 set.remove(data);
                 if (set.isEmpty()) {
                     objectMap.remove(data.vertexObject);
+                    cachedRadiusMap.remove(data.vertexObject);
                     GL11.glDeleteLists(cachedIndexMap.remove(data.vertexObject), 1);
                 }
             }
@@ -203,7 +255,124 @@ public class InterfaceRender implements IInterfaceRender {
 
     @Override
     public int getLightingAtPosition(Point3D position) {
-        return Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(position.x, position.y, position.z), 0);
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        int light = Minecraft.getMinecraft().world.getCombinedLight(pos, 0);
+        //Under a shader pack, dynamic lights raise block light: IV models take it like the world's meshes would.  Packed as sky << 20 | block << 4.
+        int raised = DynamicLightSystem.blockLightAt(pos.getX(), pos.getY(), pos.getZ());
+        if (raised > ((light >> 4) & 15)) {
+            light = (light & ~(15 << 4)) | (raised << 4);
+        }
+        return light;
+    }
+
+    /** The bounding radius of an interleaved normal, uv, position buffer round the origin, as {@link #renderVertices(FloatBuffer, boolean)} reads it. */
+    private static float getVerticesRadius(FloatBuffer vertices) {
+        float radiusSquared = 0;
+        for (int i = vertices.position(); i + 7 < vertices.limit(); i += 8) {
+            float x = vertices.get(i + 5);
+            float y = vertices.get(i + 6);
+            float z = vertices.get(i + 7);
+            radiusSquared = Math.max(radiusSquared, x * x + y * y + z * z);
+        }
+        return (float) Math.sqrt(radiusSquared);
+    }
+
+    /**
+     * Called at the start of every frame (render tick): forgets the last frame's shadow body captures, which a
+     * frame without a light pass never consumed.
+     */
+    @SubscribeEvent
+    public static void onIVRenderTick(TickEvent.RenderTickEvent event) {
+        if (event.phase == TickEvent.Phase.START) {
+            ++dynamicLightFrame;
+            DynamicLightShadowAtlas.frameEnd();
+        }
+    }
+
+    /**
+     * Whether the solid pass's cached models are drawn as dynamic light shadow bodies: set around the pass that draws
+     * the solid ({@code !blendingEnabled}) models, while the light pass is going to run and wants shadows.
+     */
+    protected static void setCapturingBodies(boolean capturing) {
+        capturingBodies = capturing && DynamicLightSystem.getMode() == DynamicLightSystem.Mode.DEFERRED && ConfigSystem.client.renderingSettings.DynL_shadows.value;
+        DynamicLightShadowAtlas.setCapturing(capturingBodies);
+    }
+
+    /**
+     * Builds and draws this frame's dynamic lights.  Called after the solid models are drawn and before IV's blended
+     * pass, once a frame, with the world render's camera still on the GL matrix stack.
+     * <p>
+     * The camera matrix of 1.12.2 is not rotation alone: it carries the third person distance, the eye height and
+     * view bobbing as a translation in eye space ({@code eye = R * (p - feet) + t}).  The camera sits at
+     * {@code feet - R^T t}; the view mccore gets is {@code R} alone, relative to that point, as on the other versions.
+     */
+    protected static void renderDynamicLightFrame(float partialTicks) {
+        if (dynamicLightFrameDrawn == dynamicLightFrame) {
+            return;
+        }
+        dynamicLightFrameDrawn = dynamicLightFrame;
+        Entity camera = Minecraft.getMinecraft().getRenderViewEntity();
+        if (camera == null) {
+            return;
+        }
+        modelViewBuffer.clear();
+        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, modelViewBuffer);
+        modelViewBuffer.get(dynamicLightView);
+        projectionBuffer.clear();
+        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, projectionBuffer);
+        projectionBuffer.get(dynamicLightProjection);
+
+        double tx = dynamicLightView[12];
+        double ty = dynamicLightView[13];
+        double tz = dynamicLightView[14];
+        //R^T t: column-major, so R's column c is view[4c..4c+2] and (R^T t)[c] is that column dotted with t.
+        double cameraX = camera.lastTickPosX + (camera.posX - camera.lastTickPosX) * partialTicks - (dynamicLightView[0] * tx + dynamicLightView[1] * ty + dynamicLightView[2] * tz);
+        double cameraY = camera.lastTickPosY + (camera.posY - camera.lastTickPosY) * partialTicks - (dynamicLightView[4] * tx + dynamicLightView[5] * ty + dynamicLightView[6] * tz);
+        double cameraZ = camera.lastTickPosZ + (camera.posZ - camera.lastTickPosZ) * partialTicks - (dynamicLightView[8] * tx + dynamicLightView[9] * ty + dynamicLightView[10] * tz);
+        //Rotation only from here on.
+        dynamicLightView[12] = 0;
+        dynamicLightView[13] = 0;
+        dynamicLightView[14] = 0;
+        //World right is R's first row, up its second: left = -right.
+        dynamicLightLeft[0] = -dynamicLightView[0];
+        dynamicLightLeft[1] = -dynamicLightView[4];
+        dynamicLightLeft[2] = -dynamicLightView[8];
+        dynamicLightUp[0] = dynamicLightView[1];
+        dynamicLightUp[1] = dynamicLightView[5];
+        dynamicLightUp[2] = dynamicLightView[9];
+
+        DynamicLightMatrix.mul(dynamicLightProjection, dynamicLightView, dynamicLightClip);
+        final double cx = cameraX;
+        final double cy = cameraY;
+        final double cz = cameraZ;
+        DynamicLightFrustum frustum = (minX, minY, minZ, maxX, maxY, maxZ) -> isBoxInClipVolume(minX - cx, minY - cy, minZ - cz, maxX - cx, maxY - cy, maxZ - cz);
+        DynamicLightSystem.renderFrame(partialTicks, frustum, cameraX, cameraY, cameraZ, dynamicLightLeft, dynamicLightUp, dynamicLightView, dynamicLightProjection);
+    }
+
+    /** Whether a camera-relative box touches the view volume of {@link #dynamicLightClip} (Gribb-Hartmann planes). */
+    private static boolean isBoxInClipVolume(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+        float[] m = dynamicLightClip;
+        for (int plane = 0; plane < 6; plane++) {
+            int axis = plane >> 1;
+            float sign = (plane & 1) == 0 ? 1F : -1F;
+            //Row 3 +- row `axis` of the column-major clip matrix.
+            double a = m[3] + sign * m[axis];
+            double b = m[7] + sign * m[4 + axis];
+            double c = m[11] + sign * m[8 + axis];
+            double d = m[15] + sign * m[12 + axis];
+            double x = a >= 0 ? maxX : minX;
+            double y = b >= 0 ? maxY : minY;
+            double z = c >= 0 ? maxZ : minZ;
+            if (a * x + b * y + c * z + d < 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public IDynamicLightGL getDynamicLightGL() {
+        return DynamicLightGL.supported() ? DynamicLightGL.INSTANCE : null;
     }
 
     @Override
@@ -212,13 +381,20 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     /**
-     * Renders a set of raw vertices without any caching.
+     * Renders a set of raw vertices without any caching.  With {@code shadowUVs} (a display list the dynamic light
+     * shadow pass will call) each vertex's texture coordinates also go to generic attribute
+     * {@link DynamicLightGL#UV_ATTRIBUTE}, which that pass's program reads; fixed function ignores it.
      */
-    private static void renderVertices(FloatBuffer vertices) {
+    private static void renderVertices(FloatBuffer vertices, boolean shadowUVs) {
         GL11.glBegin(GL11.GL_TRIANGLES);
         while (vertices.hasRemaining()) {
             GL11.glNormal3f(vertices.get(), vertices.get(), vertices.get());
-            GL11.glTexCoord2f(vertices.get(), vertices.get());
+            float u = vertices.get();
+            float v = vertices.get();
+            GL11.glTexCoord2f(u, v);
+            if (shadowUVs) {
+                GL20.glVertexAttrib2f(DynamicLightGL.UV_ATTRIBUTE, u, v);
+            }
             GL11.glVertex3f(vertices.get(), vertices.get(), vertices.get());
         }
         GL11.glEnd();
@@ -270,19 +446,23 @@ public class InterfaceRender implements IInterfaceRender {
     /**
      * Binds the passed-in texture to be rendered.  The instance of the texture is
      * cached in this class once created for later use, so feel free to not cache
-     * the string values that are passed-in.
+     * the string values that are passed-in.  Returns the bound texture's GL id.
      */
-    private static void bindTexture(String textureLocation) {
+    private static int bindTexture(String textureLocation) {
         if (animatedGIFs.containsKey(textureLocation)) {
             //Special case for GIFs.
             ParsedGIF parsedGIF = animatedGIFs.get(textureLocation);
-            GlStateManager.bindTexture(animatedGIFFrames.get(parsedGIF).get(parsedGIF.getCurrentFrame()));
+            int texture = animatedGIFFrames.get(parsedGIF).get(parsedGIF.getCurrentFrame());
+            GlStateManager.bindTexture(texture);
+            return texture;
         } else if (onlineTextures.containsKey(textureLocation)) {
             //Online texture.
-            GlStateManager.bindTexture(onlineTextures.get(textureLocation));
+            int texture = onlineTextures.get(textureLocation);
+            GlStateManager.bindTexture(texture);
+            return texture;
         } else if (textureLocation.equals(RenderableData.GLOBAL_TEXTURE_NAME)) {
             //Default texture.
-            Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+            return bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         } else {
             //Parse texture if we don't have it yet.
             if (!internalTextures.containsKey(textureLocation)) {
@@ -303,8 +483,16 @@ public class InterfaceRender implements IInterfaceRender {
                     internalTextures.put(textureLocation, MISSING_TEXTURE);
                 }
             }
-            Minecraft.getMinecraft().getTextureManager().bindTexture(internalTextures.get(textureLocation));
+            return bindTexture(internalTextures.get(textureLocation));
         }
+    }
+
+    /** Binds {@code location} through MC's texture manager, which loads it first if needed, and returns its GL id. */
+    private static int bindTexture(ResourceLocation location) {
+        TextureManager textures = Minecraft.getMinecraft().getTextureManager();
+        textures.bindTexture(location);
+        //bindTexture registered it, the missing texture when it would not load.
+        return textures.getTexture(location).getGlTextureId();
     }
 
     /**

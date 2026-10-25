@@ -11,6 +11,8 @@ import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -21,8 +23,11 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.neoforge.client.event.RenderArmEvent;
 import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
+import net.neoforged.neoforge.client.event.RenderNameTagEvent;
 import net.neoforged.neoforge.client.event.ViewportEvent.ComputeCameraAngles;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
+import net.neoforged.neoforge.common.util.TriState;
+import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 
@@ -145,6 +150,26 @@ public class InterfaceEventsEntityRendering {
         }
 
         InterfaceRender.renderGUI(event.getGuiGraphics(), mouseX, mouseY, screenWidth, screenHeight, partialTicks, updateGUIs);
+    }
+
+    /**
+     * A chunk arrived on the client: the dynamic light block grid reads its sections again.
+     */
+    @SubscribeEvent
+    public static void onIVChunkLoad(ChunkEvent.Load event) {
+        if (event.getLevel().isClientSide()) {
+            DynamicLightSystem.markColumn(event.getChunk().getPos().x, event.getChunk().getPos().z);
+        }
+    }
+
+    /**
+     * No name tag inside a dynamic light shadow tile.
+     */
+    @SubscribeEvent
+    public static void onIVRenderNameTag(RenderNameTagEvent event) {
+        if (DynamicLightShadowAtlas.isRendering()) {
+            event.setCanRender(TriState.FALSE);
+        }
     }
 
     /**
