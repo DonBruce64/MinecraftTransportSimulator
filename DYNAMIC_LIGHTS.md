@@ -11,7 +11,7 @@ Nothing changes for existing packs. A component is only dynamic if the pack says
 - Dynamic lights work on every definable with a model: vehicles, parts, decors, poles and bullets.
 - Shadows come from blocks and from models: vehicles, mobs, players, boats, minecarts and dropped items. Slabs, stairs, fences, doors and the like shadow with their real shape. Glass, grilles, invisible parts and other cut-out textures let light through their clear parts.
 - Lamps rank by distance and strength. Headlights rank first, particles last. Only the strongest lights the client allows are drawn.
-- Shader packs (Iris, Oculus, OptiFine): dynamic lights turn off and lamps draw their regular beams and flares. With `dynamicLightShaderpackFallback` on, lamps instead raise block light and draw a simple cone and flare.
+- Shader packs (Iris, Oculus, OptiFine): dynamic lights turn off and lamps draw their regular beams and flares. With `DynL_ShaderFB` on, lamps instead raise block light and draw a simple cone and flare.
 - Old GPUs: if the context can't run the shaders, lamps use the same fallback. On 1.12.2 and 1.16.5 the shaders also run on the GL 2.1 context macOS gives.
 
 ## For Players
@@ -21,10 +21,7 @@ Client config (`mtsconfigclient.json`, also in the in-game config screen):
 - `dynamicLights`: true by default. False draws the regular beams and flares.
 - `DynL_shadows`: true by default. Turn off to save GPU time.
 - `DynL_MaxLights`: 48 by default, 0 to 256. How many lights, beams and coronas are drawn at once. Lower is faster.
-
-Settings config (`mtsconfig.json`):
-
-- `dynamicLightShaderpackFallback`: false by default. Set to true to keep lamps lit under a shader pack (simple cone and flare). Each player's own file decides.
+- `DynL_ShaderFB`: false by default. Set to true to keep lamps lit under a shader pack (simple cone and flare).
 
 ## For Pack Makers
 

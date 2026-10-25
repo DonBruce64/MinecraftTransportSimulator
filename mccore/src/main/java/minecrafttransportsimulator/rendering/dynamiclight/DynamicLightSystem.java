@@ -449,7 +449,7 @@ public final class DynamicLightSystem {
             return Mode.OFF;
         }
         if (shaderPack) {
-            return ConfigSystem.settings.general.dynamicLightShaderpackFallback.value ? Mode.FALLBACK : Mode.OFF;
+            return ConfigSystem.client.renderingSettings.DynL_ShaderFB.value ? Mode.FALLBACK : Mode.OFF;
         }
         //A context the passes cannot run on (no GL 3.2 nor the GL 2.1 extensions), or whose shaders did not build,
         //still lights the world the way a shader pack frame does.
