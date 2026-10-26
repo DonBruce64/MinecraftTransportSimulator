@@ -45,7 +45,6 @@ public final class RenderInstrument {
 
         //Check if the lights are on.  If so, render the overlays and the text lit if requested.
         boolean lightsOn = entity.renderTextLit();
-        float renderAlpha = onGUI ? 1.0F : entity.getRenderAlpha();
 
         //Get scale of the instrument, before component scaling.
         float slotScale = onGUI ? slotDefinition.hudScale : slotDefinition.scale;
@@ -62,8 +61,7 @@ public final class RenderInstrument {
         for (int i = 0; i < instrument.definition.components.size(); ++i) {
             JSONInstrumentComponent component = instrument.definition.components.get(i);
             boolean renderLit = ((component.lightUpTexture && lightsOn) || component.alwaysLit) && ConfigSystem.client.renderingSettings.brightLights.value;
-            boolean correctRenderPass = component.overlayTexture && blendingEnabled || ((renderLit && !component.overlayTexture) ? (ConfigSystem.client.renderingSettings.lightsTransp.value == blendingEnabled) : (component.overlayTexture == blendingEnabled));
-            if (renderAlpha < 1.0F ? blendingEnabled : correctRenderPass) {
+            if (component.overlayTexture && blendingEnabled || ((renderLit && !component.overlayTexture) ? (ConfigSystem.client.renderingSettings.lightsTransp.value == blendingEnabled) : (component.overlayTexture == blendingEnabled))) {
                 //If we have text, do a text render.  Otherwise, do a normal instrument render.
                 if (component.textObject != null) {
                     //Also translate slightly away from the instrument location to prevent clipping.
@@ -81,7 +79,7 @@ public final class RenderInstrument {
                         } else {
                             value = String.format(component.textObject.variableFormat, getInstrumentVariableValue(entity, null, component.textObject.variableName, component.textObject.variableFactor, partialTicks) + component.textObject.variableOffset);
                         }
-                        RenderText.draw3DText(value, entity, textTransform, component.textObject, true, renderLit, renderAlpha);
+                        RenderText.draw3DText(value, entity, textTransform, component.textObject, true, renderLit);
                     }
                 } else {
                     //Init variables.
@@ -125,7 +123,6 @@ public final class RenderInstrument {
                         } else {
                             renderable.setLightMode(onGUI ? LightingMode.IGNORE_ORIENTATION_LIGHTING : LightingMode.NORMAL);
                         }
-                        renderable.setAlpha(renderAlpha);
                         
                         //Need to invert Y here since we're using pixel-based coords.
                         renderable.vertexObject.setSpritePropertiesAdvancedTexture(0, -component.textureWidth / 2, component.textureHeight / 2, component.textureWidth, component.textureHeight, (float) textureCoord1.x, (float) textureCoord1.y, (float) textureCoord2.x, (float) textureCoord2.y, (float) textureCoord3.x, (float) textureCoord3.y, (float) textureCoord4.x, (float) textureCoord4.y);

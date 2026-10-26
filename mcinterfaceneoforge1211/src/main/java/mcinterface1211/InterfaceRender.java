@@ -488,12 +488,12 @@ public class InterfaceRender implements IInterfaceRender {
             //Entities go to the main target.
             stateBuilder.setOutputState(MAIN_TARGET);
             if (renderingGUI) {
-                //GUI primitives should not inherit world render state or be clipped by the scene.
+                //Keep GUI lighting separate while preserving the Z order of markers and tooltips.
                 stateBuilder.setLightmapState(data.lightingMode.disableWorldLighting ? NO_LIGHTMAP : LIGHTMAP);
                 stateBuilder.setOverlayState(OVERLAY);
                 stateBuilder.setCullState(NO_CULL);
-                stateBuilder.setDepthTestState(NO_DEPTH_TEST);
-                stateBuilder.setWriteMaskState(COLOR_WRITE);
+                stateBuilder.setDepthTestState(LEQUAL_DEPTH_TEST);
+                stateBuilder.setWriteMaskState(data.isTranslucent && !data.writeDepth ? COLOR_WRITE : COLOR_DEPTH_WRITE);
             } else {
                 //Always need lightmaps for entities per their vertex format.
                 stateBuilder.setLightmapState(LIGHTMAP);

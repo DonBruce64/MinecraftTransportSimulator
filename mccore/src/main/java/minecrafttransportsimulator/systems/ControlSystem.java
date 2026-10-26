@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.systems;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
@@ -88,7 +87,7 @@ public final class ControlSystem {
     private static int partRemovalElapsedTicks;
     private static int partRemovalTime;
     private static int partRemovalCompletionRetryTicks;
-    private static final List<VehicleDeploymentState> vehicleDeployments = new ArrayList<>();
+    private static VehicleDeploymentState vehicleDeployment;
     private static EntityVehicleF_Physics vehiclePackingVehicle;
     private static IWrapperItemStack vehiclePackingToolStack;
     private static Point3D vehiclePackingMarkerPosition;
@@ -163,7 +162,7 @@ public final class ControlSystem {
             timedActionOverlayMessage = LanguageSystem.GUI_PARTREMOVE_REMOVING;
         } else if (isVehiclePackingInProgress() && vehiclePackingElapsedTicks < vehiclePackingTime) {
             timedActionOverlayMessage = LanguageSystem.GUI_VEHICLEPACK_PACKING;
-        } else if (hasVehicleDeploymentOverlay()) {
+        } else if (vehicleDeployment != null && vehicleDeployment.elapsedTicks < vehicleDeployment.deployTime) {
             timedActionOverlayMessage = LanguageSystem.GUI_VEHICLEDEPLOY_DEPLOYING;
         }
         if (timedActionOverlayMessage != null) {
@@ -211,50 +210,21 @@ public final class ControlSystem {
     }
 
     public static boolean isVehicleDeploymentInProgress() {
-        return !vehicleDeployments.isEmpty();
+        return vehicleDeployment != null;
     }
 
-    public static int getVehicleDeploymentCount() {
-        return vehicleDeployments.size();
-    }
-
-    public static float getVehicleDeploymentProgress(int index, float partialTicks) {
-        if (index < 0 || index >= vehicleDeployments.size()) {
+    public static float getVehicleDeploymentProgress(float partialTicks) {
+        if (vehicleDeployment == null || vehicleDeployment.operationID == 0) {
             return 0.0F;
         }
-        VehicleDeploymentState deployment = vehicleDeployments.get(index);
-        if (deployment.deployTime <= 0 || deployment.operationID == 0) {
-            return 0.0F;
-        }
-        return Math.max(0.0F, Math.min(1.0F, (deployment.elapsedTicks + partialTicks) / deployment.deployTime));
+        return Math.max(0.0F, Math.min(1.0F, (vehicleDeployment.elapsedTicks + partialTicks) / vehicleDeployment.deployTime));
     }
 
-    public static boolean getVehicleDeploymentMarkerPosition(int index, Point3D markerPosition) {
+    public static boolean getVehicleDeploymentMarkerPosition(Point3D markerPosition) {
         IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
-        if (index >= 0 && index < vehicleDeployments.size()) {
-            VehicleDeploymentState deployment = vehicleDeployments.get(index);
-            if (player != null && player.getWorld() == deployment.world) {
-                markerPosition.set(deployment.markerPosition);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean hasVehicleDeploymentOverlay() {
-        for (VehicleDeploymentState deployment : vehicleDeployments) {
-            if (deployment.elapsedTicks < deployment.deployTime || !deployment.requiresHold) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean hasVehicleDeploymentInputCaptured() {
-        for (VehicleDeploymentState deployment : vehicleDeployments) {
-            if (deployment.inputCaptured) {
-                return true;
-            }
+        if (vehicleDeployment != null && player != null && player.getWorld() == vehicleDeployment.world) {
+            markerPosition.set(vehicleDeployment.markerPosition);
+            return true;
         }
         return false;
     }
@@ -464,8 +434,8 @@ public final class ControlSystem {
             if (isPartInstallationInProgress()) {
                 cancelPartInstallation(player);
                 return;
-            } else if (hasVehicleDeploymentInputCaptured()) {
-                cancelHeldVehicleDeployment(player);
+            } else if (isVehicleDeploymentInProgress()) {
+                cancelVehicleDeployment(player);
                 return;
             }
         }
@@ -520,7 +490,7 @@ public final class ControlSystem {
             cancelPartRemoval(player);
         }
         if (isVehicleDeploymentInProgress()) {
-            cancelHeldVehicleDeployment(player);
+            cancelVehicleDeployment(player);
         }
         if (isVehiclePackingInProgress()) {
             cancelVehiclePacking(player);
@@ -596,7 +566,7 @@ public final class ControlSystem {
             cancelPartInstallation(player);
         }
         if (isVehicleDeploymentInProgress()) {
-            cancelHeldVehicleDeployment(player);
+            cancelVehicleDeployment(player);
         }
         if (isVehiclePackingInProgress()) {
             cancelVehiclePacking(player);
@@ -671,14 +641,13 @@ public final class ControlSystem {
         IWrapperItemStack heldStack = player.getHeldStack();
         int deployTime = vehicleItem.definition.motorized.deployTime;
         BlockHitResult currentTarget = player.getWorld().getBlockHit(player.getEyePosition(), player.getLineOfSight(VEHICLE_DEPLOYMENT_DISTANCE));
-        if (deployTime <= 0
+        if (vehicleDeployment != null || deployTime <= 0
                 || heldStack.getItem() != vehicleItem
                 || currentTarget == null
                 || !currentTarget.blockPosition.equals(blockPosition)
                 || currentTarget.side != blockSide) {
             return;
         }
-
         if (isPartInstallationInProgress()) {
             cancelPartInstallation(player);
         }
@@ -688,149 +657,73 @@ public final class ControlSystem {
         if (isVehiclePackingInProgress()) {
             cancelVehiclePacking(player);
         }
-
-        vehicleDeployments.add(new VehicleDeploymentState(vehicleItem, player.getWorld(), heldStack.copy(), blockPosition, blockSide, currentTarget.hitPosition, deployTime, player.getYaw()));
+        vehicleDeployment = new VehicleDeploymentState(vehicleItem, player.getWorld(), heldStack.copy(), blockPosition, blockSide, currentTarget.hitPosition, deployTime);
         clickingRight = true;
         vehicleDeploymentInputCaptured = true;
     }
 
-    public static boolean authorizeVehicleDeployment(Point3D blockPosition, Axis blockSide, int operationID, boolean requiresHold) {
-        for (VehicleDeploymentState deployment : vehicleDeployments) {
-            if (deployment.operationID == operationID) {
-                return true;
-            }
+    public static boolean authorizeVehicleDeployment(Point3D blockPosition, Axis blockSide, int operationID) {
+        if (vehicleDeployment == null || !vehicleDeployment.blockPosition.equals(blockPosition) || vehicleDeployment.blockSide != blockSide) {
+            return false;
         }
-
-        Iterator<VehicleDeploymentState> iterator = vehicleDeployments.iterator();
-        while (iterator.hasNext()) {
-            VehicleDeploymentState deployment = iterator.next();
-            if (deployment.operationID == 0
-                    && deployment.blockPosition.equals(blockPosition)
-                    && deployment.blockSide == blockSide) {
-                if (requiresHold && !deployment.inputCaptured) {
-                    deployment.removePreview();
-                    iterator.remove();
-                    return false;
-                }
-                deployment.operationID = operationID;
-                deployment.requiresHold = requiresHold;
-                deployment.elapsedTicks = requiresHold ? 0 : Math.min(deployment.grantWaitTicks, deployment.deployTime);
-                deployment.completionRetryTicks = 0;
-                deployment.validationTicks = 0;
-                deployment.grantWaitTicks = 0;
-                deployment.preview = new EntityVehiclePreview(deployment.world, deployment.item, deployment.stack, deployment.blockPosition, deployment.yaw);
-                deployment.world.addEntity(deployment.preview);
-                return true;
-            }
+        if (vehicleDeployment.operationID != 0) {
+            return vehicleDeployment.operationID == operationID;
         }
-        return false;
+        vehicleDeployment.operationID = operationID;
+        vehicleDeployment.grantWaitTicks = 0;
+        return true;
     }
 
     public static void finishVehicleDeployment(Point3D blockPosition, Axis blockSide, int operationID) {
-        Iterator<VehicleDeploymentState> iterator = vehicleDeployments.iterator();
-        while (iterator.hasNext()) {
-            VehicleDeploymentState deployment = iterator.next();
-            if (deployment.blockPosition.equals(blockPosition)
-                    && deployment.blockSide == blockSide
-                    && (operationID == 0 ? deployment.operationID == 0 : deployment.operationID == operationID)) {
-                deployment.removePreview();
-                iterator.remove();
-                return;
-            }
+        if (vehicleDeployment != null && vehicleDeployment.blockPosition.equals(blockPosition)
+                && vehicleDeployment.blockSide == blockSide && vehicleDeployment.operationID == operationID) {
+            vehicleDeployment = null;
         }
     }
 
     private static void updateVehicleDeployment(IWrapperPlayer player) {
-        Iterator<VehicleDeploymentState> iterator = vehicleDeployments.iterator();
-        while (iterator.hasNext()) {
-            VehicleDeploymentState deployment = iterator.next();
-            if (deployment.operationID == 0) {
-                if (++deployment.grantWaitTicks >= VEHICLE_DEPLOYMENT_GRANT_TIMEOUT_TICKS) {
-                    deployment.removePreview();
-                    iterator.remove();
-                }
-                continue;
+        VehicleDeploymentState deployment = vehicleDeployment;
+        if (deployment.operationID == 0) {
+            if (++deployment.grantWaitTicks >= VEHICLE_DEPLOYMENT_GRANT_TIMEOUT_TICKS) {
+                cancelVehicleDeployment(player);
             }
-            if (deployment.elapsedTicks < deployment.deployTime) {
-                ++deployment.elapsedTicks;
-            }
-            if (!deployment.requiresHold) {
-                continue;
-            }
+            return;
+        }
 
-            IWrapperItemStack heldStack = player.getHeldStack();
-            BlockHitResult currentTarget = player.getWorld().getBlockHit(player.getEyePosition(), player.getLineOfSight(VEHICLE_DEPLOYMENT_DISTANCE));
-            boolean validTarget = player.getWorld() == deployment.world
-                    && deployment.inputCaptured
-                    && currentTarget != null
-                    && currentTarget.blockPosition.equals(deployment.blockPosition)
-                    && currentTarget.side == deployment.blockSide;
-            boolean validItem = heldStack.getItem() == deployment.item
-                    && heldStack.isCompleteMatch(deployment.stack)
-                    && deployment.item.definition.motorized.deployTime == deployment.deployTime;
-            if (!validTarget || !validItem) {
-                cancelVehicleDeployment(player, deployment);
-                iterator.remove();
-                interactResult = null;
-                continue;
+        IWrapperItemStack heldStack = player.getHeldStack();
+        BlockHitResult currentTarget = player.getWorld().getBlockHit(player.getEyePosition(), player.getLineOfSight(VEHICLE_DEPLOYMENT_DISTANCE));
+        if (player.getWorld() != deployment.world || !InterfaceManager.inputInterface.isRightMouseButtonDown()
+                || currentTarget == null || !currentTarget.blockPosition.equals(deployment.blockPosition) || currentTarget.side != deployment.blockSide
+                || heldStack.getItem() != deployment.item || !heldStack.isCompleteMatch(deployment.stack)
+                || deployment.item.definition.motorized.deployTime != deployment.deployTime) {
+            cancelVehicleDeployment(player);
+            return;
+        }
+        deployment.markerPosition.set(currentTarget.hitPosition);
+        if (deployment.elapsedTicks < deployment.deployTime) {
+            ++deployment.elapsedTicks;
+        }
+        if (deployment.elapsedTicks < deployment.deployTime && ++deployment.validationTicks >= VEHICLE_ACTION_VALIDATION_INTERVAL_TICKS) {
+            InterfaceManager.packetInterface.sendToServer(new PacketVehicleDeployment(player, deployment.blockPosition, deployment.blockSide, Action.HEARTBEAT, deployment.operationID));
+            deployment.validationTicks = 0;
+        }
+        if (deployment.elapsedTicks >= deployment.deployTime) {
+            if (deployment.completionRetryTicks > 0) {
+                --deployment.completionRetryTicks;
             }
-            deployment.markerPosition.set(currentTarget.hitPosition);
-
-            if (deployment.elapsedTicks < deployment.deployTime
-                    && ++deployment.validationTicks >= VEHICLE_ACTION_VALIDATION_INTERVAL_TICKS) {
-                InterfaceManager.packetInterface.sendToServer(new PacketVehicleDeployment(player, deployment.blockPosition, deployment.blockSide, Action.HEARTBEAT, deployment.operationID));
-                deployment.validationTicks = 0;
-            }
-            if (deployment.elapsedTicks >= deployment.deployTime) {
-                if (deployment.completionRetryTicks > 0) {
-                    --deployment.completionRetryTicks;
-                }
-                if (deployment.completionRetryTicks == 0) {
-                    InterfaceManager.packetInterface.sendToServer(new PacketVehicleDeployment(player, deployment.blockPosition, deployment.blockSide, Action.COMPLETE, deployment.operationID));
-                    deployment.completionRetryTicks = TIMED_ACTION_COMPLETION_RETRY_INTERVAL_TICKS;
-                }
+            if (deployment.completionRetryTicks == 0) {
+                InterfaceManager.packetInterface.sendToServer(new PacketVehicleDeployment(player, deployment.blockPosition, deployment.blockSide, Action.COMPLETE, deployment.operationID));
+                deployment.completionRetryTicks = TIMED_ACTION_COMPLETION_RETRY_INTERVAL_TICKS;
             }
         }
-    }
-
-    private static boolean isWithinVehicleDeploymentDistance(IWrapperPlayer player, Point3D blockPosition) {
-        Point3D eyePosition = player.getEyePosition();
-        double deltaX = eyePosition.x < blockPosition.x ? blockPosition.x - eyePosition.x : eyePosition.x > blockPosition.x + 1.0D ? eyePosition.x - blockPosition.x - 1.0D : 0.0D;
-        double deltaY = eyePosition.y < blockPosition.y ? blockPosition.y - eyePosition.y : eyePosition.y > blockPosition.y + 1.0D ? eyePosition.y - blockPosition.y - 1.0D : 0.0D;
-        double deltaZ = eyePosition.z < blockPosition.z ? blockPosition.z - eyePosition.z : eyePosition.z > blockPosition.z + 1.0D ? eyePosition.z - blockPosition.z - 1.0D : 0.0D;
-        return deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ <= VEHICLE_DEPLOYMENT_DISTANCE * VEHICLE_DEPLOYMENT_DISTANCE;
     }
 
     private static void cancelVehicleDeployment(IWrapperPlayer player) {
-        for (VehicleDeploymentState deployment : vehicleDeployments) {
-            if (deployment.requiresHold) {
-                cancelVehicleDeployment(player, deployment);
-            } else {
-                deployment.removePreview();
-            }
+        if (vehicleDeployment != null && vehicleDeployment.operationID != 0) {
+            InterfaceManager.packetInterface.sendToServer(new PacketVehicleDeployment(player, vehicleDeployment.blockPosition, vehicleDeployment.blockSide, Action.CANCEL, vehicleDeployment.operationID));
         }
-        vehicleDeployments.clear();
+        vehicleDeployment = null;
         interactResult = null;
-    }
-
-    private static void cancelHeldVehicleDeployment(IWrapperPlayer player) {
-        Iterator<VehicleDeploymentState> iterator = vehicleDeployments.iterator();
-        while (iterator.hasNext()) {
-            VehicleDeploymentState deployment = iterator.next();
-            deployment.inputCaptured = false;
-            if (deployment.requiresHold && deployment.operationID != 0) {
-                cancelVehicleDeployment(player, deployment);
-                iterator.remove();
-            }
-        }
-        interactResult = null;
-    }
-
-    private static void cancelVehicleDeployment(IWrapperPlayer player, VehicleDeploymentState deployment) {
-        if (deployment.operationID != 0 && deployment.requiresHold) {
-            InterfaceManager.packetInterface.sendToServer(new PacketVehicleDeployment(player, deployment.blockPosition, deployment.blockSide, Action.CANCEL, deployment.operationID));
-        }
-        deployment.removePreview();
     }
 
     private static boolean startVehiclePacking(IWrapperPlayer player, EntityInteractResult target) {
@@ -850,7 +743,7 @@ public final class ControlSystem {
             cancelPartRemoval(player);
         }
         if (isVehicleDeploymentInProgress()) {
-            cancelHeldVehicleDeployment(player);
+            cancelVehicleDeployment(player);
         }
         vehiclePackingVehicle = vehicle;
         vehiclePackingToolStack = player.getHeldStack().copy();
@@ -968,17 +861,13 @@ public final class ControlSystem {
         private final Axis blockSide;
         private final Point3D markerPosition;
         private final int deployTime;
-        private final float yaw;
         private int elapsedTicks;
         private int completionRetryTicks;
         private int validationTicks;
         private int grantWaitTicks;
         private int operationID;
-        private boolean requiresHold = true;
-        private boolean inputCaptured = true;
-        private EntityVehiclePreview preview;
 
-        private VehicleDeploymentState(ItemVehicle item, AWrapperWorld world, IWrapperItemStack stack, Point3D blockPosition, Axis blockSide, Point3D markerPosition, int deployTime, float yaw) {
+        private VehicleDeploymentState(ItemVehicle item, AWrapperWorld world, IWrapperItemStack stack, Point3D blockPosition, Axis blockSide, Point3D markerPosition, int deployTime) {
             this.item = item;
             this.world = world;
             this.stack = stack;
@@ -986,14 +875,6 @@ public final class ControlSystem {
             this.blockSide = blockSide;
             this.markerPosition = markerPosition.copy();
             this.deployTime = deployTime;
-            this.yaw = yaw;
-        }
-
-        private void removePreview() {
-            if (preview != null && preview.isValid) {
-                preview.remove();
-            }
-            preview = null;
         }
     }
 

@@ -10,7 +10,6 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
@@ -173,8 +172,6 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     private static final Point3D mutablePosition = new Point3D();
-    private static final Point3D cameraProjectionShakeVector = new Point3D();
-    private static final RotationMatrix cameraProjectionOrientation = new RotationMatrix();
     private static final FloatBuffer worldModelViewMatrix = BufferUtils.createFloatBuffer(16);
     private static final FloatBuffer worldProjectionMatrix = BufferUtils.createFloatBuffer(16);
     private static final Point3D projectionRenderOrigin = new Point3D();
@@ -187,7 +184,7 @@ public class InterfaceClient implements IInterfaceClient {
             return;
         }
 
-        //Capture the world camera before the hand and GUI replace its matrices.
+        //Capture the world camera, including camera shake, before the hand and GUI replace its matrices.
         worldModelViewMatrix.clear();
         worldProjectionMatrix.clear();
         GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, worldModelViewMatrix);
@@ -227,30 +224,6 @@ public class InterfaceClient implements IInterfaceClient {
         if (ndcX < -1.1D || ndcX > 1.1D || ndcY < -1.1D || ndcY > 1.1D) {
             return null;
         }
-
-        double dx = worldPos.x - camX;
-        double dy = worldPos.y - camY;
-        double dz = worldPos.z - camZ;
-
-        double depth = dx * fwdX + dy * fwdY + dz * fwdZ;
-        double xView = dx * rgtX + dy * rgtY + dz * rgtZ;
-        double yView = dx * upX  + dy * upY  + dz * upZ;
-        if (InterfaceEventsEntityRendering.cameraShakeActive) {
-            cameraProjectionShakeVector.set(-xView, yView, depth).reOrigin(InterfaceEventsEntityRendering.cameraShakeProjectionRotation);
-            xView = -cameraProjectionShakeVector.x;
-            yView = cameraProjectionShakeVector.y;
-            depth = cameraProjectionShakeVector.z;
-        }
-        if (depth <= 0.001) return null;
-
-        double fovRad = Math.toRadians(getFOV());
-        double tanHalfFov = Math.tan(fovRad / 2.0);
-        double aspect = (double) screenWidth / screenHeight;
-
-        double ndcX = xView / (depth * tanHalfFov * aspect);
-        double ndcY = yView / (depth * tanHalfFov);
-
-        if (ndcX < -1.1 || ndcX > 1.1 || ndcY < -1.1 || ndcY > 1.1) return null;
 
         screenProjectionResult.set(
                 (ndcX + 1.0D) / 2.0D * screenWidth,

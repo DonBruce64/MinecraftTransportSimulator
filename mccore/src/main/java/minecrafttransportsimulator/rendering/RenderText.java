@@ -82,13 +82,6 @@ public class RenderText {
      * Essentially, this is JSON-defined rendering rather than manual entry of points.
      */
     public static void draw3DText(String text, AEntityD_Definable<?> entity, TransformationMatrix transform, JSONText definition, boolean pixelCoords, boolean renderLit) {
-        draw3DText(text, entity, transform, definition, pixelCoords, renderLit, 1.0F);
-    }
-
-    /**
-     * Alpha-aware variant of {@link #draw3DText(String, AEntityD_Definable, TransformationMatrix, JSONText, boolean, boolean)}.
-     */
-    public static void draw3DText(String text, AEntityD_Definable<?> entity, TransformationMatrix transform, JSONText definition, boolean pixelCoords, boolean renderLit, float alpha) {
         if (!text.isEmpty()) {
             //Get the actual color we will need to render with based on JSON.
             ColorRGB color = entity.getTextColor(definition.inheritedColorIndex, definition.color);
@@ -96,7 +89,7 @@ public class RenderText {
             //Render the text.
             transformHelper.set(transform);
             transformHelper.applyTranslation(definition.pos);
-            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, renderLit, entity.worldLightValue, false, alpha);
+            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, renderLit, entity.worldLightValue, false, 1.0F);
         }
     }
 

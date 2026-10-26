@@ -36,14 +36,6 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleDeployment;
 public abstract class AWrapperWorld extends EntityManager {
 
     @Override
-    public void tickAll(boolean beforePlayer) {
-        super.tickAll(beforePlayer);
-        if (beforePlayer && !isClient()) {
-            PacketVehicleDeployment.tickDeployments(this);
-        }
-    }
-
-    @Override
     public void onUnload() {
         PacketVehicleDeployment.unloadDeployments(this);
         super.onUnload();

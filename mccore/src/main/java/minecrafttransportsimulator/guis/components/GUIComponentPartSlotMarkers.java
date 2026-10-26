@@ -116,11 +116,8 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
             return;
         } else if (!ControlSystem.isPartInstallationInProgress()
                 && !ControlSystem.isPartRemovalInProgress()) {
-            int vehicleDeploymentCount = ControlSystem.getVehicleDeploymentCount();
-            for (int deploymentIndex = 0; deploymentIndex < vehicleDeploymentCount; ++deploymentIndex) {
-                if (ControlSystem.getVehicleDeploymentMarkerPosition(deploymentIndex, markerCenter)) {
-                    renderWorldActionProgress(gui, markerCenter, ControlSystem.getVehicleDeploymentProgress(deploymentIndex, partialTicks), installationProgressRenderable);
-                }
+            if (ControlSystem.getVehicleDeploymentMarkerPosition(markerCenter)) {
+                renderWorldActionProgress(gui, markerCenter, ControlSystem.getVehicleDeploymentProgress(partialTicks), installationProgressRenderable);
             }
         }
 
