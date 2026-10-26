@@ -44,6 +44,10 @@ public class PacketEntityColorChange extends APacketEntityInteract<AEntityD_Defi
 
     @Override
     public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity, IWrapperPlayer player) {
+        if (entity.definition.general.disableRepaint) {
+            return false;
+        }
+
         //Make sure we can handle this packet by removing materials if applicable.
         if (!world.isClient() && !player.isCreative()) {
             IWrapperInventory inventory = player.getInventory();
