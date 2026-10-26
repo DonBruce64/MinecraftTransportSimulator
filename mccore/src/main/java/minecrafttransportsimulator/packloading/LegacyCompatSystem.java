@@ -1968,6 +1968,15 @@ public final class LegacyCompatSystem {
             definition.item.type = ItemComponentType.NONE;
         }
 
+        //Phones used to be plain items with a phone section, so make those phones.
+        //Also give phones a blank section if they don't have one, as all its properties are optional.
+        if (definition.item.type == ItemComponentType.NONE && definition.phone != null) {
+            definition.item.type = ItemComponentType.PHONE;
+        }
+        if (definition.item.type == ItemComponentType.PHONE && definition.phone == null) {
+            definition.phone = new JSONItem.JSONPhone();
+        }
+
         //Add blank fieldNames for booklets, as they shouldn't exist.
         if (definition.booklet != null) {
             for (JSONText text : definition.booklet.titleText) {
