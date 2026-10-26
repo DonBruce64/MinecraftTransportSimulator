@@ -4,7 +4,6 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-		    //Leave FG5 at this version.  Newer versions do fucky stuff with 1.12.2 builds that result in odd Gradle errors.
         classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: project.forge_gradle_version
     }
 }
@@ -51,6 +50,7 @@ minecraft {
 repositories {
     //JEI
     maven { url = "https://dvs1.progwml6.com/files/maven/" }
+    //A backup repository for JEI
     maven { url = "https://maven.blamejared.com/" }
 }
 

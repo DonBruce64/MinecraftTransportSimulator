@@ -68,6 +68,7 @@ minecraft {
 repositories {
     //JEI
     maven { url = "https://dvs1.progwml6.com/files/maven/" }
+    //A backup repository for JEI
     maven { url = "https://maven.blamejared.com/" }
 	//Jade
     maven { url = "https://www.cursemaven.com" }
