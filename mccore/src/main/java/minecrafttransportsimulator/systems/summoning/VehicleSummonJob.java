@@ -33,11 +33,10 @@ import minecrafttransportsimulator.systems.summoning.GroundPathfinder.Placement;
  * real controls.  If no route exists, teleport next to the player.  If there's no room by the
  * player, drive as close as possible.  If stuck, re-plan once, then teleport.
  * <p>
- * Aircraft that can hover (see {@link VehiclePhone#canFlyIn}): teleport in above the buildings,
- * fly over the player, switch to hover, and land straight down in the first clear spot within
- * {@link #LANDING_RADIUS} blocks, trying in front of the player first, then the sides, then behind.  If there's
- * nowhere to land, it hovers above the player until a player gets in.  Other aircraft are teleported straight onto
- * the ground near the player.
+ * Aircraft that fly in (see {@link VehiclePhone#canFlyIn}): teleport in above the buildings, fly over the
+ * player, and land straight down in the first clear spot within {@link #LANDING_RADIUS} blocks, trying in front
+ * of the player first, then the sides, then behind.  If there's nowhere to land, the summon flight holds it above
+ * the player until a player gets in.  Other aircraft are teleported straight onto the ground near the player.
  */
 final class VehicleSummonJob {
     private static final int DEFAULT_SUMMON_DISTANCE = 30;
@@ -253,7 +252,7 @@ final class VehicleSummonJob {
         ++phaseTicks;
         if (isFlying()) {
             if (VehiclePhone.hasPlayerRider(vehicle)) {
-                //A player has got in mid-flight.  Hand it over to them, set up as it normally is.
+                //A player has got in mid-flight.  Hand it over to them.
                 VehiclePhone.releaseHold(vehicle);
                 stopControls();
                 return true;
@@ -462,9 +461,8 @@ final class VehicleSummonJob {
                 //Stop the flight before saving the aircraft to move it, or it'd fly back to its old target once placed.
                 VehicleSummonFlight.stop(vehicle);
                 if (spot != null) {
-                    //It'll be on the ground, so gear down and set up as it normally is.
+                    //It'll be on the ground, so gear down.
                     set(vehicle.getOrCreateVariable(VehiclePhone.VAR_GEAR), 0);
-                    VehiclePhone.restoreHoverDefaults(vehicle);
                     teleportToGround(spot.getGround(), spot.getYaw(), null, LanguageSystem.INTERACT_PHONE_BROUGHT);
                     return false;
                 }
@@ -906,7 +904,7 @@ final class VehicleSummonJob {
     //-----FLYING-----
 
     /**
-     * For aircraft that can't hover in and land.  Puts it straight on the ground near the player,
+     * For aircraft that don't fly in (see {@link VehiclePhone#canFlyIn}).  Puts it straight on the ground near the player,
      * far enough out that none of it lands on them.
      */
     private boolean teleportAircraftToGround(IWrapperPlayer player) {
@@ -922,9 +920,8 @@ final class VehicleSummonJob {
         pathfinder = new GroundPathfinder(world, shape, Double.POSITIVE_INFINITY);
         cruiseY = getCruiseHeight(playerPosition);
         startEngines(true);
-        set(vehicle.getOrCreateVariable(VehiclePhone.VAR_HOVER_HELD), 0);
-        set(vehicle.getOrCreateVariable(VehiclePhone.VAR_STAY_ON), 1);
-        set(vehicle.getOrCreateVariable(VehiclePhone.VAR_HOVER), 0);
+        //A new call takes over from any earlier one that left it in the sky.
+        set(vehicle.getOrCreateVariable(VehiclePhone.VAR_FLY_HELD), 0);
         set(vehicle.getOrCreateVariable(VehiclePhone.VAR_GEAR), 1);
         set(vehicle.parkingBrakeVar, 0);
         set(vehicle.throttleVar, 0);
@@ -960,8 +957,7 @@ final class VehicleSummonJob {
                     VehicleSummonFlight.flyTo(vehicle, target, FLY_SPEED);
                 }
                 if (horizontalDistance(position, target) < 1.5 && Math.abs(position.y - cruiseY) < 1) {
-                    //Overhead.  Switch to hover and look for somewhere to land.
-                    set(vehicle.getOrCreateVariable(VehiclePhone.VAR_HOVER), 1);
+                    //Overhead.  Look for somewhere to land.
                     startLandingSearch(player);
                 }
                 break;
@@ -1006,7 +1002,6 @@ final class VehicleSummonJob {
                 }
                 if (settleTicks > 0 && --settleTicks == 0) {
                     VehicleSummonFlight.stop(vehicle);
-                    VehiclePhone.restoreHoverDefaults(vehicle);
                     park();
                     message(player, LanguageSystem.INTERACT_PHONE_LANDED);
                     return true;

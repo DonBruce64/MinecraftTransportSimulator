@@ -106,12 +106,12 @@ public final class VehicleSummonManager {
         if (!vehicle.world.isClient()) {
             VehicleLocationTracker.onVehicleTick(vehicle);
             if (vehicle.ticksExisted % 20 == 0) {
-                boolean held = vehicle.getOrCreateVariable(VehiclePhone.VAR_HOVER_HELD).isActive;
+                boolean held = vehicle.getOrCreateVariable(VehiclePhone.VAR_FLY_HELD).isActive;
                 if (!held && vehicle.getOrCreateVariable(VehicleSummonFlight.VAR_ACTIVE).isActive && !jobs.containsKey(vehicle.uniqueUUID)) {
                     //Flight left on from a call that no longer exists, like one cut off by a restart.  Hold it where it is.
                     VehiclePhone.holdInAir(vehicle);
                 } else if (held && VehiclePhone.hasPlayerRider(vehicle)) {
-                    //A player has got into an aircraft a call left in the sky.  Give it back to them as it normally is.
+                    //A player has got into an aircraft a call left in the sky.  Give it back to them.
                     VehiclePhone.releaseHold(vehicle);
                 }
             }
