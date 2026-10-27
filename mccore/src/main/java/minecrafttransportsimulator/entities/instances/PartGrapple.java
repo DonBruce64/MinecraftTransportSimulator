@@ -157,6 +157,9 @@ public class PartGrapple extends APart {
     private final double[] aim = new double[5];
     private long aimTick = -1;
     private float aimPartialTicks = -1;
+    //Launch direction for the current tick, so the turret and crosshair don't raycast every frame.
+    private final Point3D launchDirection = new Point3D();
+    private long launchDirectionTick = -1;
 
     public PartGrapple(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartGrapple item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
@@ -339,9 +342,20 @@ public class PartGrapple extends APart {
      * The hook flies straight, so this is exact for anything that holds still.  Used by the aiming crosshair.
      */
     public Point3D getAimPoint() {
-        Point3D end = getLaunchDirection().scale(rangeVar.currentValue).add(position);
+        Point3D end = getCachedLaunchDirection().scale(rangeVar.currentValue).add(position);
         Hit hit = findHit(position, end);
         return hit != null ? hit.position : end;
+    }
+
+    /**
+     * Like {@link #getLaunchDirection()}, but only worked out once a tick.  For rendering, which asks every frame.
+     */
+    private Point3D getCachedLaunchDirection() {
+        if (launchDirectionTick != ticksExisted) {
+            launchDirectionTick = ticksExisted;
+            launchDirection.set(getLaunchDirection());
+        }
+        return launchDirection.copy();
     }
 
     /**
@@ -944,7 +958,8 @@ public class PartGrapple extends APart {
      * whether or not the launcher itself can turn.
      * While the line is out, a turning launcher points from its (moved) tip straight at the hook,
      * leaving the line angles near zero.  A fixed launcher stays put and the line angles do the work.
-     * With the line in, a turning launcher points where the controller is looking.
+     * With the line in, a turning launcher points where the hook would be fired: where the controller is
+     * looking, kept inside maxAimAngle.
      */
     private double[] getAim(float partialTicks) {
         if (aimTick == ticksExisted && aimPartialTicks == partialTicks) {
@@ -986,14 +1001,14 @@ public class PartGrapple extends APart {
             return aim;
         }
 
-        IWrapperEntity controller = getController();
-        if (fixed || controller == null) {
+        if (fixed) {
             aim[0] = 0;
             aim[1] = 0;
         } else {
-            Point3D look = controller.getLineOfSight(1).copy().reOrigin(orientation);
-            aim[0] = getYaw(look);
-            aim[1] = getPitch(look);
+            //Point the barrel the way the hook would be fired, so it stays inside maxAimAngle.
+            Point3D direction = getCachedLaunchDirection().reOrigin(orientation);
+            aim[0] = getYaw(direction);
+            aim[1] = getPitch(direction);
         }
         aim[2] = 0;
         aim[3] = 0;
