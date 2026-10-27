@@ -80,9 +80,20 @@ final class VehicleSummonJob {
     /**How many route blocks ahead the drive looks for turns to slow down for.**/
     private static final int TURN_LOOKAHEAD = 10;
     private static final int STUCK_CHECK_INTERVAL = 100;
-    private static final int DRIVE_TIMEOUT = 20 * 120;
+    /**
+     * Longest a vehicle may take to drive in before it's brought straight to the player instead, in ticks.
+     * Routes too long to drive in this time at {@link #TURN_SPEED} get longer: see {@link #getDriveTimeout()}.
+     */
+    private static final int MIN_DRIVE_TIMEOUT = 20 * 30;
+    /**Extra time allowed on long routes for starting the engine and slowing down at the end, in seconds.**/
+    private static final double DRIVE_TIMEOUT_MARGIN = 10;
     private static final double STOP_FRONT_DISTANCE = 3.5;
     private static final int LANDING_RADIUS = 20;
+    /**
+     * Longest an aircraft may spend flying in before it's put on the ground in front of the player instead, in ticks.
+     * A normal flight takes 10 to 20 seconds, or around 40 when descending past tall buildings.
+     */
+    private static final int FLIGHT_TIMEOUT = 20 * 90;
     private static final double CRUISE_CLEARANCE = 10;
     private static final double FLY_SPEED = 1.0;
     private static final double DESCEND_SPEED = 0.2;
@@ -117,7 +128,9 @@ final class VehicleSummonJob {
         /**Where a ground vehicle is teleported when it can't drive in.**/
         FALLBACK,
         /**Where an aircraft that can't fly in is teleported.**/
-        AIRCRAFT
+        AIRCRAFT,
+        /**Where an aircraft that took too long flying in is teleported.**/
+        FLIGHT_TIMEOUT
     }
 
     final UUID vehicleID;
@@ -172,6 +185,8 @@ final class VehicleSummonJob {
     private int pathIndex;
     private Point3D lastProgressPosition;
     private int replans;
+    /**How long the current route may take to drive, in ticks.**/
+    private int driveTimeout;
     private boolean drivingToClosest;
 
     //Flying.
@@ -185,6 +200,9 @@ final class VehicleSummonJob {
     /**True while the descent is held just above the ground for the aircraft to finish turning.**/
     private boolean descentHeld;
     private double lastDescentHeight = Double.MAX_VALUE;
+    /**How long the summon flight has been flying the aircraft in, in ticks, and whether it's run out of time.**/
+    private int flightTicks;
+    private boolean flightTimedOut;
     private int settleTicks;
 
     VehicleSummonJob(AWrapperWorld world, IWrapperPlayer player, UUID vehicleID, String name) {
@@ -233,12 +251,23 @@ final class VehicleSummonJob {
             return true;
         }
         ++phaseTicks;
-        if (isFlying() && VehiclePhone.hasPlayerRider(vehicle)) {
-            //A player has got in mid-flight.  Hand it over to them, set up as it normally is.
-            VehicleSummonFlight.stop(vehicle);
-            VehiclePhone.restoreHoverDefaults(vehicle);
-            stopControls();
-            return true;
+        if (isFlying()) {
+            if (VehiclePhone.hasPlayerRider(vehicle)) {
+                //A player has got in mid-flight.  Hand it over to them, set up as it normally is.
+                VehicleSummonFlight.stop(vehicle);
+                VehiclePhone.restoreHoverDefaults(vehicle);
+                stopControls();
+                return true;
+            }
+            if (!flightTimedOut && ++flightTicks > FLIGHT_TIMEOUT) {
+                //Taking too long, likely blocked.  Hold where it is while we find somewhere on the ground for it.
+                flightTimedOut = true;
+                VehicleSummonFlight.flyTo(vehicle, vehicle.position.copy(), FLY_SPEED);
+                frontAngle = getLookAngle(player);
+                double minDistance = shape.radius() + 1.5;
+                startSpotSearch(player.getPosition(), minDistance, minDistance + FALLBACK_SPOT_MAX, SpotPurpose.FLIGHT_TIMEOUT);
+                return false;
+            }
         }
         switch (phase) {
             case LOCATE:
@@ -264,9 +293,9 @@ final class VehicleSummonJob {
         return true;
     }
 
-    /**True while the summon flight is flying the aircraft in.**/
+    /**True while the summon flight is flying the aircraft in, or holding it while we find it somewhere to go after timing out.**/
     private boolean isFlying() {
-        return phase == Phase.CLIMB || phase == Phase.FLY_TO_PLAYER || phase == Phase.FIND_LANDING || phase == Phase.FLY_TO_LANDING || phase == Phase.DESCEND;
+        return phase == Phase.CLIMB || phase == Phase.FLY_TO_PLAYER || phase == Phase.FIND_LANDING || phase == Phase.FLY_TO_LANDING || phase == Phase.DESCEND || (phase == Phase.FIND_SPOT && spotPurpose == SpotPurpose.FLIGHT_TIMEOUT);
     }
 
     private void setPhase(Phase phase) {
@@ -429,6 +458,22 @@ final class VehicleSummonJob {
                     return false;
                 }
                 break;
+            }
+            case FLIGHT_TIMEOUT: {
+                //Stop the flight before saving the aircraft to move it, or it'd fly back to its old target once placed.
+                VehicleSummonFlight.stop(vehicle);
+                if (spot != null) {
+                    //It'll be on the ground, so gear down and set up as it normally is.
+                    set(vehicle.getOrCreateVariable(VehiclePhone.VAR_GEAR), 0);
+                    VehiclePhone.restoreHoverDefaults(vehicle);
+                    teleportToGround(spot.getGround(), spot.getYaw(), null, LanguageSystem.INTERACT_PHONE_BROUGHT);
+                    return false;
+                }
+                //Nowhere on the ground either.  Stay up where it is, powered, until a player gets in.
+                VehiclePhone.holdHover(vehicle);
+                stopControls();
+                message(player, LanguageSystem.INTERACT_PHONE_HOVERINGSTUCK);
+                return true;
             }
         }
         //Nothing fits in front of the player.
@@ -729,6 +774,20 @@ final class VehicleSummonJob {
         startEngines(false);
         set(vehicle.parkingBrakeVar, 0);
         lastProgressPosition = vehicle.position.copy();
+        driveTimeout = getDriveTimeout();
+    }
+
+    /**
+     * How long the vehicle may take to drive the current route, in ticks: {@link #MIN_DRIVE_TIMEOUT}, or longer for
+     * routes that need more time than that at {@link #TURN_SPEED}, the slowest it drives, plus {@link #DRIVE_TIMEOUT_MARGIN}.
+     * So it's 30 seconds for any route up to 60 blocks, and a long winding route still gets time to finish.
+     */
+    private int getDriveTimeout() {
+        double routeLength = 0;
+        for (int i = 1; i < path.size(); ++i) {
+            routeLength += horizontalDistance(path.get(i - 1), path.get(i));
+        }
+        return Math.max(MIN_DRIVE_TIMEOUT, (int) Math.ceil((routeLength / TURN_SPEED + DRIVE_TIMEOUT_MARGIN) * 20));
     }
 
     private boolean drive(IWrapperPlayer player) {
@@ -795,7 +854,7 @@ final class VehicleSummonJob {
         if (phaseTicks % STUCK_CHECK_INTERVAL == 0) {
             boolean stuck = lastProgressPosition.isDistanceToCloserThan(position, 1.5);
             lastProgressPosition = position.copy();
-            if (stuck || phaseTicks > DRIVE_TIMEOUT) {
+            if (stuck || phaseTicks > driveTimeout) {
                 return onStuck(player);
             }
         }
@@ -804,7 +863,7 @@ final class VehicleSummonJob {
 
     private boolean onStuck(IWrapperPlayer player) {
         stopControls();
-        if (replans == 0 && phaseTicks <= DRIVE_TIMEOUT) {
+        if (replans == 0 && phaseTicks <= driveTimeout) {
             ++replans;
             int x = (int) Math.floor(vehicle.position.x);
             int z = (int) Math.floor(vehicle.position.z);

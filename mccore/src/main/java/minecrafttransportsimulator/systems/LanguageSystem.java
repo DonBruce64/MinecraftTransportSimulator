@@ -448,6 +448,7 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_PHONE_BROUGHT = new LanguageEntry("interact.phone.brought", "%s has been brought to you.");
     public static final LanguageEntry INTERACT_PHONE_LANDED = new LanguageEntry("interact.phone.landed", "%s has landed.");
     public static final LanguageEntry INTERACT_PHONE_HOVERING = new LanguageEntry("interact.phone.hovering", "No room to land.  %s is hovering above you.");
+    public static final LanguageEntry INTERACT_PHONE_HOVERINGSTUCK = new LanguageEntry("interact.phone.hoveringstuck", "%s couldn't reach you, and there's no room for it in front of you.  It's hovering where it is.");
 
     public static final LanguageEntry INTERACT_TRAILER_CONNECTED = new LanguageEntry("interact.trailer.connected", "Trailer connected.");
     public static final LanguageEntry INTERACT_TRAILER_DISCONNECTED = new LanguageEntry("interact.trailer.disconnected", "Trailer disconnected.");
