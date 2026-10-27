@@ -1,8 +1,11 @@
 package minecrafttransportsimulator.systems.summoning;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -19,7 +22,17 @@ import minecrafttransportsimulator.systems.summoning.VehiclePhone.PhoneEntry;
  * way restarts its call.
  */
 public final class VehicleSummonManager {
+    /**
+     * Most time all calls together may spend searching for spots and routes each server tick, in
+     * nanoseconds.  However many players are calling vehicles, this is all the time they get.
+     */
+    private static final long SEARCH_TIME_PER_TICK = 5_000_000;
     private static final Map<UUID, VehicleSummonJob> jobs = new ConcurrentHashMap<>();
+    /**Worlds ticked so far this server tick, and the search time left in it.**/
+    private static final Set<AWrapperWorld> worldsTicked = new HashSet<>();
+    private static long searchTimeLeft = SEARCH_TIME_PER_TICK;
+    /**Which call goes first each tick, rotating so none of them always gets what's left over.**/
+    private static int firstJob;
 
     private VehicleSummonManager() {
     }
@@ -61,11 +74,28 @@ public final class VehicleSummonManager {
 
     /**Called at the start of every server tick for each world.**/
     public static void tickWorld(AWrapperWorld world) {
-        Iterator<VehicleSummonJob> iterator = jobs.values().iterator();
-        while (iterator.hasNext()) {
-            VehicleSummonJob job = iterator.next();
-            if (job.world == world && job.tick()) {
-                iterator.remove();
+        //Every world ticks once a server tick, so seeing one again means a new server tick has started.
+        if (!worldsTicked.add(world)) {
+            worldsTicked.clear();
+            worldsTicked.add(world);
+            searchTimeLeft = SEARCH_TIME_PER_TICK;
+            ++firstJob;
+        }
+
+        //Share the search time left evenly between this world's calls.  Time one doesn't use goes to the rest.
+        List<VehicleSummonJob> worldJobs = new ArrayList<>();
+        for (VehicleSummonJob job : jobs.values()) {
+            if (job.world == world) {
+                worldJobs.add(job);
+            }
+        }
+        for (int i = 0; i < worldJobs.size(); ++i) {
+            VehicleSummonJob job = worldJobs.get((firstJob + i) % worldJobs.size());
+            long startTime = System.nanoTime();
+            boolean done = job.tick(Math.max(0, searchTimeLeft / (worldJobs.size() - i)));
+            searchTimeLeft -= System.nanoTime() - startTime;
+            if (done) {
+                jobs.remove(job.vehicleID, job);
             }
         }
         VehicleLocationTracker.tick(world);
@@ -94,5 +124,6 @@ public final class VehicleSummonManager {
             }
         }
         VehicleLocationTracker.onWorldUnload(world);
+        worldsTicked.remove(world);
     }
 }

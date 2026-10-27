@@ -440,7 +440,7 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_PHONE_NOWAYTELEPORT = new LanguageEntry("interact.phone.nowayteleport", "%s couldn't find a way through, so it came straight to you.");
     public static final LanguageEntry INTERACT_PHONE_NOROOMCLOSEST = new LanguageEntry("interact.phone.noroomclosest", "There's no room for %s next to you.  It's getting as close as it can.");
     public static final LanguageEntry INTERACT_PHONE_PARKEDCLOSEST = new LanguageEntry("interact.phone.parkedclosest", "Parked %s as close as it fits.");
-    public static final LanguageEntry INTERACT_PHONE_NOROOM = new LanguageEntry("interact.phone.noroom", "There's nowhere near you that %s fits.");
+    public static final LanguageEntry INTERACT_PHONE_NOROOM = new LanguageEntry("interact.phone.noroom", "There's no room for %s in front of you.  Face somewhere open and call it again.");
     public static final LanguageEntry INTERACT_PHONE_STUCKTELEPORT = new LanguageEntry("interact.phone.stuckteleport", "%s got stuck, so it came straight to you.");
     public static final LanguageEntry INTERACT_PHONE_STUCK = new LanguageEntry("interact.phone.stuck", "%s got stuck and stopped as close as it could.");
     public static final LanguageEntry INTERACT_PHONE_BROUGHT = new LanguageEntry("interact.phone.brought", "%s has been brought to you.");
