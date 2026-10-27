@@ -87,6 +87,11 @@ final class VehicleSummonJob {
     private static final double DESCEND_SPEED = 0.2;
     /**How far below the ground the descent aims, so it reaches the ground at a steady rate.**/
     private static final double LANDING_OVERSHOOT = 1.0;
+    /**
+     * How high above the ground the origin waits while an aircraft finishes turning to its landing heading,
+     * in blocks, so it never touches down crooked.
+     */
+    private static final double LANDING_TURN_HOLD = 2;
     /**Ticks to keep pressing down after first touching the ground.**/
     private static final int SETTLE_TICKS = 10;
 
@@ -174,6 +179,10 @@ final class VehicleSummonJob {
     private int landingIndex;
     private Point3D landingSpot;
     private int landingHeading;
+    /**True if the aircraft can turn to its landing heading as it comes down, rather than having to finish turning first.**/
+    private boolean landingTurnsOnWayDown;
+    /**True while the descent is held just above the ground for the aircraft to finish turning.**/
+    private boolean descentHeld;
     private double lastDescentHeight = Double.MAX_VALUE;
     private int settleTicks;
 
@@ -875,22 +884,28 @@ final class VehicleSummonJob {
             }
             case FLY_TO_LANDING: {
                 if (horizontalDistance(position, landingSpot) < 0.75) {
-                    //It turned to face where it was flying, so turn to the heading the spot was checked at before coming down.
-                    double landingYaw = GroundPathfinder.getHeadingYaw(landingHeading);
-                    VehicleSummonFlight.turnTo(vehicle, landingYaw);
-                    if (!VehicleSummonFlight.isFacing(vehicle, landingYaw)) {
+                    //If there isn't room to turn on the way down, finish turning up here first.
+                    if (!landingTurnsOnWayDown && !isFacingLandingHeading()) {
                         break;
                     }
                     set(vehicle.getOrCreateVariable(VehiclePhone.VAR_GEAR), 0);
-                    //Aim a block below where the wheels meet the ground.  The flight eases off as it nears
-                    //its target, so aiming at the ground itself would crawl the last bit and stop short.
-                    //The ground stops us; we finish when the wheels touch.
-                    VehicleSummonFlight.flyTo(vehicle, new Point3D(landingSpot.x, landingSpot.y + shape.groundOffset() - LANDING_OVERSHOOT, landingSpot.z), DESCEND_SPEED);
                     setPhase(Phase.DESCEND);
+                    //Until it's facing its landing heading, only come down to just above the ground and wait there.
+                    descentHeld = !isFacingLandingHeading();
+                    VehicleSummonFlight.flyTo(vehicle, descentHeld ? getDescentHold() : getDescentTarget(), DESCEND_SPEED);
                 }
                 break;
             }
             case DESCEND: {
+                if (descentHeld) {
+                    if (isFacingLandingHeading()) {
+                        //Finished turning.  Carry on down.
+                        descentHeld = false;
+                        setPhase(Phase.DESCEND);
+                        VehicleSummonFlight.flyTo(vehicle, getDescentTarget(), DESCEND_SPEED);
+                    }
+                    break;
+                }
                 double heightLeft = position.y - (landingSpot.y + shape.groundOffset());
                 //Note MTS's isAnythingOnGround() is true when nothing is on the ground, so check the grounded set directly.
                 boolean wheelsDown = !vehicle.groundDeviceCollective.groundedGroundDevices.isEmpty();
@@ -917,6 +932,24 @@ final class VehicleSummonJob {
                 break;
         }
         return false;
+    }
+
+    private boolean isFacingLandingHeading() {
+        return VehicleSummonFlight.isFacing(vehicle, GroundPathfinder.getHeadingYaw(landingHeading));
+    }
+
+    /**
+     * Where the descent aims: a block below where the wheels meet the ground.  The flight eases off as it
+     * nears its target, so aiming at the ground itself would crawl the last bit and stop short.  The ground
+     * stops us; we finish when the wheels touch.
+     */
+    private Point3D getDescentTarget() {
+        return new Point3D(landingSpot.x, landingSpot.y + shape.groundOffset() - LANDING_OVERSHOOT, landingSpot.z);
+    }
+
+    /**Where the descent waits for the aircraft to finish turning, just above the ground.**/
+    private Point3D getDescentHold() {
+        return new Point3D(landingSpot.x, landingSpot.y + shape.groundOffset() + LANDING_TURN_HOLD, landingSpot.z);
     }
 
     private void startLandingSearch(IWrapperPlayer player) {
@@ -958,11 +991,19 @@ final class VehicleSummonJob {
             int x = (int) Math.floor(spot.x);
             int z = (int) Math.floor(spot.z);
             int groundY = getLandingGround(x, z);
-            //Land facing the player if it fits, or else turned whichever way it does.
-            int heading = groundY != GroundPathfinder.NO_SURFACE ? pathfinder.findLandingHeading(x, groundY, z, GroundPathfinder.getHeading(yawTowards(spot, player.getPosition())), cruiseY) : -1;
-            if (heading >= 0) {
+            if (groundY == GroundPathfinder.NO_SURFACE) {
+                continue;
+            }
+            //Land with its left side to the player if it fits, or else turned whichever way it does.
+            //Its left is 90 degrees anticlockwise of its nose, so the nose points 90 degrees round from the player.
+            int preferredHeading = GroundPathfinder.getHeading(yawTowards(spot, player.getPosition()) - 90);
+            int[] heading = pathfinder.findLandingHeading(x, groundY, z, preferredHeading, GroundPathfinder.getHeading(vehicle.orientation.angles.y), cruiseY);
+            if (heading != null) {
                 landingSpot = new Point3D(spot.x, groundY, spot.z);
-                landingHeading = heading;
+                landingHeading = heading[0];
+                landingTurnsOnWayDown = heading[1] == 1;
+                //Start turning now, smoothly, as it flies over to the spot.
+                VehicleSummonFlight.turnTo(vehicle, GroundPathfinder.getHeadingYaw(landingHeading));
                 VehicleSummonFlight.flyTo(vehicle, new Point3D(spot.x, cruiseY, spot.z), FLY_SPEED * 0.4);
                 setPhase(Phase.FLY_TO_LANDING);
                 return false;

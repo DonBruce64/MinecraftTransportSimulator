@@ -241,17 +241,48 @@ final class GroundPathfinder {
     }
 
     /**
-     * Returns the first heading in {@link #HEADING_ORDER} from the preferred one that an aircraft can
-     * land at here (see {@link #canLandAt}), or -1 if there isn't one.
+     * Picks the heading for an aircraft facing currentHeading to land at here, coming down from its origin
+     * being at fromY (see {@link #canLandAt}).  Headings are tried in {@link #HEADING_ORDER} from the
+     * preferred one.
+     * <p>
+     * It prefers a heading it can turn to smoothly on the way down, which needs every heading it turns
+     * through to be clear all the way down too.  Returns {heading, 1} for one of those.  Failing that, it
+     * returns {heading, 0} for the first heading it can land at once it's finished turning, as it can turn
+     * up at cruise height where there's nothing in the way.  Returns null if it can't land here at all.
      */
-    int findLandingHeading(int x, int y, int z, int preferredHeading, double fromY) {
+    int[] findLandingHeading(int x, int y, int z, int preferredHeading, int currentHeading, double fromY) {
+        int[] turnFirst = null;
         for (int relativeHeading : HEADING_ORDER) {
             int heading = Math.floorMod(preferredHeading + relativeHeading, HEADINGS);
             if (canLandAt(x, y, z, heading, fromY)) {
-                return heading;
+                if (canTurnOnWayDown(x, y, z, currentHeading, heading, fromY)) {
+                    return new int[] { heading, 1 };
+                }
+                if (turnFirst == null) {
+                    turnFirst = new int[] { heading, 0 };
+                }
             }
         }
-        return -1;
+        return turnFirst;
+    }
+
+    /**
+     * Returns true if every heading an aircraft turns through from fromHeading to toHeading, the short way
+     * round, has room all the way down from its origin being at fromY to the ground at height y.
+     */
+    private boolean canTurnOnWayDown(int x, int y, int z, int fromHeading, int toHeading, double fromY) {
+        //Turn the same way the flight does: the short way, or clockwise when it's exactly half a turn.
+        int turn = Math.floorMod(toHeading - fromHeading, HEADINGS);
+        int step = turn <= HEADINGS / 2 ? 1 : -1;
+        double descent = fromY + shape.bottom - y;
+        for (int heading = fromHeading; heading != toHeading; heading = Math.floorMod(heading + step, HEADINGS)) {
+            for (Column column : getFootprint(heading)) {
+                if (!isClear(x + column.x, y, z + column.z, Math.max(column.low, PARKING_CLEARANCE), descent + column.high)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private List<Column> getFootprint(int heading) {

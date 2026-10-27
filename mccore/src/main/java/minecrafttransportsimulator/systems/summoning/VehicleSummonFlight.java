@@ -18,7 +18,7 @@ public final class VehicleSummonFlight {
     static final String VAR_Z = "phone_fly_z";
     /**Top speed, in blocks per tick.**/
     static final String VAR_SPEED = "phone_fly_speed";
-    /**If set, the heading to turn to when not moving sideways.**/
+    /**If set, the heading to turn to, even while moving sideways.**/
     static final String VAR_TURN = "phone_fly_turn";
     static final String VAR_YAW = "phone_fly_yaw";
 
@@ -42,14 +42,14 @@ public final class VehicleSummonFlight {
         Point3D velocity = distance > 0.01 ? toTarget.scale(speed / distance) : new Point3D();
         vehicle.motion.set(velocity).scale(1D / vehicle.speedFactor);
 
-        //Face where we're going while moving sideways.  Otherwise turn to the set heading, if there is one,
-        //or hold heading when climbing or descending.
+        //Turn to the set heading, if there is one, whichever way we're moving.  Otherwise face where
+        //we're going while moving sideways, and hold heading when climbing or descending.
         double yawDelta = 0;
-        if (Math.hypot(velocity.x, velocity.z) > 0.15) {
+        if (vehicle.getOrCreateVariable(VAR_TURN).isActive) {
+            yawDelta = clampAngle(vehicle.getOrCreateVariable(VAR_YAW).currentValue - vehicle.orientation.angles.y) * 0.1;
+        } else if (Math.hypot(velocity.x, velocity.z) > 0.15) {
             double desiredYaw = Math.toDegrees(Math.atan2(velocity.x, velocity.z));
             yawDelta = clampAngle(desiredYaw - vehicle.orientation.angles.y) * 0.1;
-        } else if (vehicle.getOrCreateVariable(VAR_TURN).isActive) {
-            yawDelta = clampAngle(vehicle.getOrCreateVariable(VAR_YAW).currentValue - vehicle.orientation.angles.y) * 0.1;
         }
         yawDelta = Math.max(-MAX_YAW_RATE, Math.min(MAX_YAW_RATE, yawDelta));
         vehicle.rotation.angles.set(-vehicle.orientation.angles.x * LEVEL_RATE, yawDelta, -vehicle.orientation.angles.z * LEVEL_RATE);
@@ -68,7 +68,7 @@ public final class VehicleSummonFlight {
         vehicle.getOrCreateVariable(VAR_ACTIVE).setTo(1, true);
     }
 
-    /**Server only: turns the aircraft to face the yaw whenever it isn't moving sideways.**/
+    /**Server only: turns the aircraft smoothly to face the yaw, whichever way it's moving, until it stops.**/
     static void turnTo(EntityVehicleF_Physics vehicle, double yaw) {
         vehicle.getOrCreateVariable(VAR_YAW).setTo(yaw, true);
         vehicle.getOrCreateVariable(VAR_TURN).setTo(1, true);
