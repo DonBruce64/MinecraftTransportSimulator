@@ -39,13 +39,16 @@ public final class VehiclePhone {
     static final String VAR_STAY_ON = "stay_on";
     static final String VAR_GEAR = "gear_setpoint";
     /**
-     * Set on an aircraft left hovering in the sky by a call, with {@link #VAR_HOVER} and {@link #VAR_STAY_ON} held
-     * on to keep it there.  They go back to their defaults when a player gets in.
+     * Set on an aircraft a call has left in the sky, held there until a player gets in.  Aircraft that can hover
+     * (see {@link #canHover}) are held by {@link #VAR_HOVER} and {@link #VAR_STAY_ON}.  Others are held in place by
+     * the summon flight, as they'd fall otherwise.
      */
     static final String VAR_HOVER_HELD = "phone_hover_held";
     /**Vehicle variable for how far away it appears before driving in, in blocks.  0 uses the default.**/
     public static final String VAR_SUMMON_DISTANCE = "phone_summon_distance";
     static final int MAX_VEHICLES = 8;
+    /**Top speed the summon flight uses to hold an aircraft in place, in blocks per tick.**/
+    private static final double HOLD_SPEED = 0.2;
     /**Same reach as the clicks that {@link minecrafttransportsimulator.systems.ControlSystem} sends to entities.**/
     private static final double CLICK_DISTANCE = 3.5;
     private static final String DATA_VEHICLES = "phoneVehicles";
@@ -108,14 +111,18 @@ public final class VehiclePhone {
     }
 
     /**
-     * True if this aircraft can fly itself over to the player: it has the
-     * {@link #CONSTANT_AIRCRAFT_ALLOWED} constant, or it or one of its parts exposes both
-     * {@link #VAR_HOVER} and {@link #VAR_STAY_ON} as custom variables or keybinds.
+     * True if this aircraft can fly itself over to the player: it has the {@link #CONSTANT_AIRCRAFT_ALLOWED}
+     * constant, or it can hover (see {@link #canHover}).
      */
     static boolean canFlyIn(EntityVehicleF_Physics vehicle) {
-        if (vehicle.getOrCreateVariable(CONSTANT_AIRCRAFT_ALLOWED).isActive) {
-            return true;
-        }
+        return vehicle.getOrCreateVariable(CONSTANT_AIRCRAFT_ALLOWED).isActive || canHover(vehicle);
+    }
+
+    /**
+     * True if this aircraft can hover on its own: it or one of its parts exposes both {@link #VAR_HOVER} and
+     * {@link #VAR_STAY_ON} as custom variables or keybinds.
+     */
+    static boolean canHover(EntityVehicleF_Physics vehicle) {
         Set<String> variables = new HashSet<>();
         addControlVariables(vehicle.definition, variables);
         for (APart part : vehicle.allParts) {
@@ -138,12 +145,28 @@ public final class VehiclePhone {
     }
 
     /**
-     * Leaves the aircraft hovering where it is, powered, until a player gets in.  Server only.
+     * Leaves the aircraft in the sky where it is until a player gets in.  If it can hover, the summon flight is
+     * stopped and {@link #VAR_HOVER} and {@link #VAR_STAY_ON} hold it up.  If it can't, the summon flight holds it
+     * in place instead, as it would fall otherwise.  Server only.
      */
-    static void holdHover(EntityVehicleF_Physics vehicle) {
-        setIfChanged(vehicle, VAR_HOVER, 1);
-        setIfChanged(vehicle, VAR_STAY_ON, 1);
+    static void holdInAir(EntityVehicleF_Physics vehicle) {
+        if (canHover(vehicle)) {
+            VehicleSummonFlight.stop(vehicle);
+            setIfChanged(vehicle, VAR_HOVER, 1);
+            setIfChanged(vehicle, VAR_STAY_ON, 1);
+        } else {
+            VehicleSummonFlight.flyTo(vehicle, vehicle.position.copy(), HOLD_SPEED);
+        }
         setIfChanged(vehicle, VAR_HOVER_HELD, 1);
+    }
+
+    /**
+     * Gives an aircraft a call left in the sky to the player who's got in: stops the summon flight if it was
+     * holding it, and puts {@link #VAR_HOVER} and {@link #VAR_STAY_ON} back to their defaults.  Server only.
+     */
+    static void releaseHold(EntityVehicleF_Physics vehicle) {
+        VehicleSummonFlight.stop(vehicle);
+        restoreHoverDefaults(vehicle);
     }
 
     /**

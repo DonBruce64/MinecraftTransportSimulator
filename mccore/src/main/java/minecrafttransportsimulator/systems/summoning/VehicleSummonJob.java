@@ -254,8 +254,7 @@ final class VehicleSummonJob {
         if (isFlying()) {
             if (VehiclePhone.hasPlayerRider(vehicle)) {
                 //A player has got in mid-flight.  Hand it over to them, set up as it normally is.
-                VehicleSummonFlight.stop(vehicle);
-                VehiclePhone.restoreHoverDefaults(vehicle);
+                VehiclePhone.releaseHold(vehicle);
                 stopControls();
                 return true;
             }
@@ -469,8 +468,8 @@ final class VehicleSummonJob {
                     teleportToGround(spot.getGround(), spot.getYaw(), null, LanguageSystem.INTERACT_PHONE_BROUGHT);
                     return false;
                 }
-                //Nowhere on the ground either.  Stay up where it is, powered, until a player gets in.
-                VehiclePhone.holdHover(vehicle);
+                //Nowhere on the ground either.  Stay up where it is until a player gets in.
+                VehiclePhone.holdInAir(vehicle);
                 stopControls();
                 message(player, LanguageSystem.INTERACT_PHONE_HOVERINGSTUCK);
                 return true;
@@ -923,6 +922,7 @@ final class VehicleSummonJob {
         pathfinder = new GroundPathfinder(world, shape, Double.POSITIVE_INFINITY);
         cruiseY = getCruiseHeight(playerPosition);
         startEngines(true);
+        set(vehicle.getOrCreateVariable(VehiclePhone.VAR_HOVER_HELD), 0);
         set(vehicle.getOrCreateVariable(VehiclePhone.VAR_STAY_ON), 1);
         set(vehicle.getOrCreateVariable(VehiclePhone.VAR_HOVER), 0);
         set(vehicle.getOrCreateVariable(VehiclePhone.VAR_GEAR), 1);
@@ -1064,9 +1064,8 @@ final class VehicleSummonJob {
         long startTime = System.nanoTime();
         while (System.nanoTime() - startTime < tickTime) {
             if (landingIndex >= landingCandidates.size()) {
-                //Nowhere to land.  Stay overhead in hover, powered, until a player gets in.
-                VehicleSummonFlight.stop(vehicle);
-                VehiclePhone.holdHover(vehicle);
+                //Nowhere to land.  Stay overhead until a player gets in.
+                VehiclePhone.holdInAir(vehicle);
                 stopControls();
                 message(player, LanguageSystem.INTERACT_PHONE_HOVERING);
                 return true;
@@ -1213,9 +1212,8 @@ final class VehicleSummonJob {
             return;
         }
         if (vehicle.getOrCreateVariable(VehicleSummonFlight.VAR_ACTIVE).isActive) {
-            //Airborne.  Hover where it is, powered, until a player gets in.
-            VehicleSummonFlight.stop(vehicle);
-            VehiclePhone.holdHover(vehicle);
+            //Airborne.  Stay up where it is until a player gets in.
+            VehiclePhone.holdInAir(vehicle);
             stopControls();
         } else {
             park();
