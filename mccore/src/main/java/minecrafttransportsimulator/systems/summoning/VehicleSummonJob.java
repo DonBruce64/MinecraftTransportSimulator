@@ -29,7 +29,7 @@ import minecrafttransportsimulator.systems.summoning.GroundPathfinder.Placement;
  * One vehicle answering one phone call.  Runs on the server, one step per tick.
  * <p>
  * Ground vehicles: find (force-loading the chunk if needed), plan a route from a spot about
- * {@link VehiclePhone#VAR_SUMMON_DISTANCE} blocks away, teleport there and drive in with the
+ * the vehicle's summonDistance blocks away, teleport there and drive in with the
  * real controls.  If no route exists, teleport next to the player.  If there's no room by the
  * player, drive as close as possible.  If stuck, re-plan once, then teleport.
  * <p>
@@ -397,7 +397,7 @@ final class VehicleSummonJob {
     }
 
     private double getSummonDistance() {
-        double distance = vehicle.getOrCreateVariable(VehiclePhone.VAR_SUMMON_DISTANCE).currentValue;
+        double distance = vehicle.summonDistanceVar.currentValue;
         return distance > 0 ? distance : DEFAULT_SUMMON_DISTANCE;
     }
 

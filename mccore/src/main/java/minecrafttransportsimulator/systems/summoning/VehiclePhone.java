@@ -25,11 +25,6 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
  * and are stored on the phone's stack, so whoever holds the phone can call them.
  */
 public final class VehiclePhone {
-    /**
-     * Vehicle constant that makes an aircraft fly in when called.  Aircraft without it are teleported to the ground
-     * near the player instead.
-     **/
-    public static final String CONSTANT_AIRCRAFT_ALLOWED = "phone_summon_aircraft";
     /**MTS's landing gear variable: 1 raises the gear, 0 lowers it.**/
     static final String VAR_GEAR = "gear_setpoint";
     /**
@@ -37,8 +32,6 @@ public final class VehiclePhone {
      * Saved with the vehicle, so the hold carries over a restart.
      */
     static final String VAR_FLY_HELD = "phone_fly_held";
-    /**Vehicle variable for how far away it appears before driving in, in blocks.  0 uses the default.**/
-    public static final String VAR_SUMMON_DISTANCE = "phone_summon_distance";
     static final int MAX_VEHICLES = 8;
     /**Top speed the summon flight uses to hold an aircraft in place, in blocks per tick.**/
     private static final double HOLD_SPEED = 0.2;
@@ -103,9 +96,12 @@ public final class VehiclePhone {
         return result != null && (result.entity instanceof EntityVehicleF_Physics || (result.entity instanceof APart && ((APart) result.entity).vehicleOn != null));
     }
 
-    /**True if this aircraft flies itself over to the player when called: it has the {@link #CONSTANT_AIRCRAFT_ALLOWED} constant.**/
+    /**
+     * True if this aircraft flies itself over to the player when called, rather than being placed on the ground:
+     * its motorized summonFlyIn is set, or a variable modifier has turned it on.
+     */
     static boolean canFlyIn(EntityVehicleF_Physics vehicle) {
-        return vehicle.getOrCreateVariable(CONSTANT_AIRCRAFT_ALLOWED).isActive;
+        return vehicle.summonFlyInVar.isActive;
     }
 
     /**

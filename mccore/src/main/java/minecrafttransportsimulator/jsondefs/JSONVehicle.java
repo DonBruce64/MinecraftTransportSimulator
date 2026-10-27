@@ -192,6 +192,13 @@ public class JSONVehicle extends AJSONPartProvider {
         @ModifiableValue
         @JSONDescription("How strongly this vehicle eases its pitch and roll back to level while airborne, as the fraction of the current tilt removed each tick, from 0 to 1.  0.05 levels out over a few seconds, and tilts under 0.01 degrees snap to exactly level.  Like blimpSkidSteer, this does not need airspeed.  0 (the default) disables it.  Make this a variableModifier to only enable it in certain modes, like a hover mode.")
         public float blimpLevelFactor;
+        @ModifiableValue
+        @JSONDescription("If true, this aircraft flies itself over to the player when called with a vehicle phone, then lands beside them.  The summon flight moves it directly, so it doesn't need to be able to hover by itself.  If false (the default), aircraft are placed on the ground near the player instead.  Only used for aircraft.")
+        public boolean summonFlyIn;
+
+        @ModifiableValue
+        @JSONDescription("How far from the player this vehicle arrives when called with a vehicle phone, in blocks, before driving or flying the rest of the way.  0 (the default) uses 30.")
+        public float summonDistance;
 
         @ModifiableValue
         @JSONDescription("The most blimpLevelFactor may rotate this vehicle, in degrees per tick, so large tilts level at a steady rate instead of snapping.  0 (the default) means no limit.")
