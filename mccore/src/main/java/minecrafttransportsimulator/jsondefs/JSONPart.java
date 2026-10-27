@@ -709,7 +709,7 @@ public class JSONPart extends AJSONPartProvider {
         public float maxAimAngle;
 
         @ModifiableValue
-        @JSONDescription("How much damage the hook does to an entity or vehicle when it sticks into it.  Uses the same scale as bullet damage.  0 does no damage.")
+        @JSONDescription("How much damage the hook does to an entity or vehicle when it sticks into it.  This is raw damage: unlike bullets, it is not scaled by speed or by the bullet damage config factors.  It does nothing to blocks, or when the hook bounces off.  0 does no damage.")
         public float hookDamage;
 
         @ModifiableValue
