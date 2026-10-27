@@ -19,6 +19,8 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartGrapple;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.entities.instances.PartSeat;
@@ -56,6 +58,7 @@ public class GUIOverlay extends AGUIBase {
     private GUIComponentLabel gunLabel;
     private GUIComponentItem scannerItem;
     private GUIComponentCrosshair aimingCrosshair;
+    private GUIComponentCrosshair grappleCrosshair;
     private GUIComponentAimReticle aimReticle;
     private final List<String> tooltipText = new ArrayList<>();
     private EntityInteractResult lastInteractResult;
@@ -83,6 +86,10 @@ public class GUIOverlay extends AGUIBase {
         addComponent(aimingCrosshair = new GUIComponentCrosshair(screenWidth / 2, screenHeight / 2));
         aimingCrosshair.visible = false;
         aimingCrosshair.ignoreGUILightingState = true;
+        //Grapples get the same crosshair turned to an X, so it can't be mistaken for a gun's.
+        addComponent(grappleCrosshair = new GUIComponentCrosshair(screenWidth / 2, screenHeight / 2, 45));
+        grappleCrosshair.visible = false;
+        grappleCrosshair.ignoreGUILightingState = true;
         addComponent(scannerItem = new GUIComponentItem(0, screenHeight / 4, 6.0F) {
             //Render the item stats as a tooltip, as it's easier to see.
             @Override
@@ -112,6 +119,9 @@ public class GUIOverlay extends AGUIBase {
         aimingCrosshair.visible = false;
         aimingCrosshair.pendingImpactPoint = null;
         aimingCrosshair.vehicleRef = null;
+        grappleCrosshair.visible = false;
+        grappleCrosshair.pendingImpactPoint = null;
+        grappleCrosshair.vehicleRef = null;
         if (!InterfaceManager.clientInterface.isChatOpen()) {
             EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
             List<PartGun> activeGunGroup = null;
@@ -145,6 +155,11 @@ public class GUIOverlay extends AGUIBase {
             // Update the aiming crosshair position when a gun is active.
             if (activeGunGroup != null && ConfigSystem.client.renderingSettings.gunCrosshair.value) {
                 updateAimingCrosshair(activeGunGroup, player.getWorld());
+            }
+
+            //Show where the grapple would hook if fired now.
+            if (ConfigSystem.client.renderingSettings.gunCrosshair.value) {
+                updateGrappleCrosshair(player);
             }
         }
 
@@ -434,6 +449,31 @@ public class GUIOverlay extends AGUIBase {
         aimingCrosshair.pendingImpactPoint = impactPoint;
         aimingCrosshair.vehicleRef = firstGun.vehicleOn;
         aimingCrosshair.visible = true;
+    }
+
+    /**
+     * Points the grapple crosshair at where the first ready grapple on the player's vehicle would hook.
+     * Only shown while the player is in the controller seat and the line is in, as that's when
+     * firing goes where they're looking.
+     */
+    private void updateGrappleCrosshair(IWrapperPlayer player) {
+        AEntityB_Existing entityRiding = player.getEntityRiding();
+        if (!(entityRiding instanceof PartSeat) || !((PartSeat) entityRiding).placementDefinition.isController) {
+            return;
+        }
+        EntityVehicleF_Physics vehicle = ((PartSeat) entityRiding).vehicleOn;
+        if (vehicle == null) {
+            return;
+        }
+        for (PartGrapple grapple : vehicle.grapples) {
+            if (grapple.isValid && grapple.isActiveVar.isActive && !grapple.outOfHealth && !grapple.isLineOut()) {
+                grappleCrosshair.applySmoothing = vehicle.definition.motorized.isAircraft;
+                grappleCrosshair.pendingImpactPoint = grapple.getAimPoint();
+                grappleCrosshair.vehicleRef = vehicle;
+                grappleCrosshair.visible = true;
+                return;
+            }
+        }
     }
 
     /**

@@ -73,9 +73,17 @@ public class GUIComponentCrosshair extends AGUIComponent {
     private final Point3D adjustedImpact = new Point3D();
 
     public GUIComponentCrosshair(int x, int y) {
+        this(x, y, 0);
+    }
+
+    /**
+     * Creates a crosshair turned clockwise on screen by the given angle, in degrees.
+     * 45 gives an X instead of a +.
+     */
+    public GUIComponentCrosshair(int x, int y, double rotation) {
         super(x, y, ARM_LENGTH * 2, ARM_LENGTH * 2);
         RenderableVertices crosshairVertices = new RenderableVertices("CROSSHAIR", FloatBuffer.allocate(ARM_COUNT * VERTICES_PER_ARM * FLOATS_PER_VERTEX), false);
-        setCrosshairGeometry(crosshairVertices.vertices);
+        setCrosshairGeometry(crosshairVertices.vertices, Math.toRadians(rotation));
         renderable = new RenderableData(crosshairVertices, null);
         renderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
         renderable.setColor(ColorRGB.WHITE);
@@ -92,34 +100,37 @@ public class GUIComponentCrosshair extends AGUIComponent {
         renderable.transform.setTranslation(position);
     }
 
-    /** Writes the four rectangular arms in component-local coordinates (centred at 0,0,0). */
-    private static void setCrosshairGeometry(FloatBuffer vertices) {
+    /** Writes the four rectangular arms in component-local coordinates (centred at 0,0,0), turned by the given angle in radians. */
+    private static void setCrosshairGeometry(FloatBuffer vertices, double rotation) {
         float halfThickness = CROSSHAIR_THICKNESS / 2.0F;
+        float cos = (float) Math.cos(rotation);
+        float sin = (float) Math.sin(rotation);
 
-        addQuad(vertices, CENTER_GAP, -halfThickness, ARM_LENGTH, halfThickness);
-        addQuad(vertices, -ARM_LENGTH, -halfThickness, -CENTER_GAP, halfThickness);
-        addQuad(vertices, -halfThickness, CENTER_GAP, halfThickness, ARM_LENGTH);
-        addQuad(vertices, -halfThickness, -ARM_LENGTH, halfThickness, -CENTER_GAP);
+        addQuad(vertices, cos, sin, CENTER_GAP, -halfThickness, ARM_LENGTH, halfThickness);
+        addQuad(vertices, cos, sin, -ARM_LENGTH, -halfThickness, -CENTER_GAP, halfThickness);
+        addQuad(vertices, cos, sin, -halfThickness, CENTER_GAP, halfThickness, ARM_LENGTH);
+        addQuad(vertices, cos, sin, -halfThickness, -ARM_LENGTH, halfThickness, -CENTER_GAP);
         vertices.flip();
     }
 
-    private static void addQuad(FloatBuffer vertices, float minX, float minY, float maxX, float maxY) {
-        addVertex(vertices, minX, minY);
-        addVertex(vertices, maxX, minY);
-        addVertex(vertices, maxX, maxY);
-        addVertex(vertices, minX, minY);
-        addVertex(vertices, maxX, maxY);
-        addVertex(vertices, minX, maxY);
+    private static void addQuad(FloatBuffer vertices, float cos, float sin, float minX, float minY, float maxX, float maxY) {
+        addVertex(vertices, cos, sin, minX, minY);
+        addVertex(vertices, cos, sin, maxX, minY);
+        addVertex(vertices, cos, sin, maxX, maxY);
+        addVertex(vertices, cos, sin, minX, minY);
+        addVertex(vertices, cos, sin, maxX, maxY);
+        addVertex(vertices, cos, sin, minX, maxY);
     }
 
-    private static void addVertex(FloatBuffer vertices, float x, float y) {
+    private static void addVertex(FloatBuffer vertices, float cos, float sin, float x, float y) {
         vertices.put(0);
         vertices.put(0);
         vertices.put(1);
         vertices.put(0);
         vertices.put(0);
-        vertices.put(x);
-        vertices.put(y);
+        //GUI y is up-positive, so this turns the point clockwise on screen.
+        vertices.put(x * cos + y * sin);
+        vertices.put(-x * sin + y * cos);
         vertices.put(0);
     }
 
