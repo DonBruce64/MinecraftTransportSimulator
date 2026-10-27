@@ -276,7 +276,9 @@ final class VehicleSummonJob {
                 world.keepChunkLoaded(forcedChunk);
                 message(player, LanguageSystem.INTERACT_PHONE_CALLING);
             } else if (phaseTicks > LOAD_TIMEOUT) {
+                //It's not where it was last seen, so it's been picked up or destroyed.  Stop looking for it there.
                 message(player, LanguageSystem.INTERACT_PHONE_NOANSWER);
+                VehicleLocationTracker.forget(world, vehicleID);
                 releaseChunk();
                 return true;
             }
@@ -291,6 +293,13 @@ final class VehicleSummonJob {
                 return true;
             }
             return false;
+        }
+
+        //Check the caller may still call it.  Its owner may have given it a key since it was registered on this phone.
+        if (!VehiclePhone.canControl(player, vehicle)) {
+            message(player, LanguageSystem.INTERACT_PHONE_NEEDKEYCALL);
+            releaseChunk();
+            return true;
         }
 
         //Check it can come.

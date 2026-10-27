@@ -37,6 +37,7 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
+import minecrafttransportsimulator.systems.summoning.VehicleLocationTracker;
 import minecrafttransportsimulator.systems.summoning.VehiclePhone;
 
 public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteractable, IItemFood {
@@ -162,6 +163,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                     if ((!ConfigSystem.settings.general.opPickupVehiclesOnly.value || player.isOP()) && (!ConfigSystem.settings.general.creativePickupVehiclesOnly.value || player.isCreative()) && entity.isValid) {
                                         vehicle.disconnectAllConnections();
                                         vehicle.world.spawnItemStack(vehicle.getStack(), hitBox.globalCenter, null);
+                                        VehicleLocationTracker.forget(vehicle);
                                         vehicle.remove();
                                     }
                                 }

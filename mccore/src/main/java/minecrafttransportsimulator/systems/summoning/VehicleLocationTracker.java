@@ -1,22 +1,33 @@
 package minecrafttransportsimulator.systems.summoning;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
  * Remembers where every vehicle was last seen, per world, so phones can find vehicles
- * whose chunks aren't loaded.  Positions are kept in memory and saved to the world's data
- * every so often, as each save also sends the data to every client.  Server only.
+ * whose chunks aren't loaded.  Server only.
+ * <p>
+ * Positions are kept in memory and saved every so often to a file of their own next to the world's
+ * MTS data.  They're never sent to clients, so players can't find out where everyone's vehicles are.
+ * Vehicles are forgotten when they're picked up, or when a call finds they're no longer where they were
+ * last seen, so the file doesn't fill up with vehicles that are long gone.
  */
 public final class VehicleLocationTracker {
-    private static final String DATA_NAME = "vehicle_locations";
+    private static final String FILE_NAME = "mtsvehiclelocations.txt";
     private static final int TRACK_INTERVAL = 20;
     private static final int SAVE_INTERVAL = 600;
 
@@ -38,6 +49,21 @@ public final class VehicleLocationTracker {
         Point3D last = locations.positions.get(vehicle.uniqueUUID);
         if (last == null || !last.isDistanceToCloserThan(vehicle.position, 1)) {
             locations.positions.put(vehicle.uniqueUUID, vehicle.position.copy());
+            locations.dirty = true;
+        }
+    }
+
+    /**Forgets the vehicle, for when it's been removed from the world for good, like being picked up.**/
+    public static void forget(EntityVehicleF_Physics vehicle) {
+        if (!vehicle.world.isClient()) {
+            forget(vehicle.world, vehicle.uniqueUUID);
+        }
+    }
+
+    /**Forgets the vehicle in this world.**/
+    static void forget(AWrapperWorld world, UUID vehicleID) {
+        WorldLocations locations = get(world);
+        if (locations.positions.remove(vehicleID) != null) {
             locations.dirty = true;
         }
     }
@@ -64,26 +90,56 @@ public final class VehicleLocationTracker {
         }
     }
 
+    private static File getFile(AWrapperWorld world) {
+        return new File(world.getDataFile().getParentFile(), FILE_NAME);
+    }
+
+    /**
+     * Writes the positions if they've changed, one vehicle a line as "uuid x y z".  Writes to a
+     * temporary file first and then swaps it in, so a crash mid-save can't leave a half-written file.
+     */
     private static void save(AWrapperWorld world, WorldLocations locations) {
-        if (locations.dirty) {
-            IWrapperNBT data = InterfaceManager.coreInterface.getNewNBTWrapper();
-            locations.positions.forEach((id, position) -> data.setPoint3d(id.toString(), position));
-            world.setData(DATA_NAME, data);
+        if (!locations.dirty) {
+            return;
+        }
+        File file = getFile(world);
+        File tempFile = new File(file.getParentFile(), FILE_NAME + ".tmp");
+        try {
+            file.getParentFile().mkdirs();
+            try (BufferedWriter writer = Files.newBufferedWriter(tempFile.toPath(), StandardCharsets.UTF_8)) {
+                for (Entry<UUID, Point3D> entry : locations.positions.entrySet()) {
+                    Point3D position = entry.getValue();
+                    writer.write(entry.getKey() + " " + position.x + " " + position.y + " " + position.z);
+                    writer.newLine();
+                }
+            }
+            Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
             locations.dirty = false;
+        } catch (IOException e) {
+            InterfaceManager.coreInterface.logError("Could not save vehicle locations to " + file + ": " + e.getMessage());
         }
     }
 
+    /**Reads the world's positions the first time they're needed.**/
     private static WorldLocations get(AWrapperWorld world) {
         return worlds.computeIfAbsent(world, w -> {
             WorldLocations locations = new WorldLocations();
-            IWrapperNBT data = w.getData(DATA_NAME);
-            if (data != null) {
-                for (String name : data.getAllNames()) {
-                    try {
-                        locations.positions.put(UUID.fromString(name), data.getPoint3d(name));
-                    } catch (IllegalArgumentException e) {
-                        //Not a vehicle entry.  Skip it.
+            File file = getFile(w);
+            if (file.exists()) {
+                try (BufferedReader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        String[] values = line.trim().split(" ");
+                        if (values.length >= 4) {
+                            try {
+                                locations.positions.put(UUID.fromString(values[0]), new Point3D(Double.parseDouble(values[1]), Double.parseDouble(values[2]), Double.parseDouble(values[3])));
+                            } catch (IllegalArgumentException e) {
+                                //Corrupt line.  Skip it.
+                            }
+                        }
                     }
+                } catch (IOException e) {
+                    InterfaceManager.coreInterface.logError("Could not load vehicle locations from " + file + ": " + e.getMessage());
                 }
             }
             return locations;

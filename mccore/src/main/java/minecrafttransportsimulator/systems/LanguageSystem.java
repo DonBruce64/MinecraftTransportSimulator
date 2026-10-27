@@ -420,6 +420,7 @@ public class LanguageSystem {
 
     public static final LanguageEntry INTERACT_PHONE_REGISTERED = new LanguageEntry("interact.phone.registered", "Registered %s.");
     public static final LanguageEntry INTERACT_PHONE_NEEDKEY = new LanguageEntry("interact.phone.needkey", "You need this vehicle's key to register it.");
+    public static final LanguageEntry INTERACT_PHONE_NEEDKEYCALL = new LanguageEntry("interact.phone.needkeycall", "You need %s's key to call it.");
     public static final LanguageEntry INTERACT_PHONE_FULL = new LanguageEntry("interact.phone.full", "This phone is full.  Remove a vehicle first.");
     public static final LanguageEntry INTERACT_PHONE_REMOVED = new LanguageEntry("interact.phone.removed", "Removed %s from the phone.");
     public static final LanguageEntry INTERACT_PHONE_CANCELLED = new LanguageEntry("interact.phone.cancelled", "Cancelled the call to %s.");
