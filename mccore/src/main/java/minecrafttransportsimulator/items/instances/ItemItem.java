@@ -522,7 +522,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                 }
             }
         } else if (definition.item.type.equals(ItemComponentType.PHONE)) {
-            if (!world.isClient()) {
+            //Clicks on a vehicle are handled by doEntityInteraction, so don't open the screen over them.
+            if (!world.isClient() && !VehiclePhone.isAimingAtVehicle(player)) {
                 player.sendPacket(new PacketGUIRequest(player, PacketGUIRequest.GUIType.PHONE, this));
             }
         }

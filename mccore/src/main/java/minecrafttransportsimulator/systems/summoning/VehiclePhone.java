@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import minecrafttransportsimulator.baseclasses.EntityInteractResult;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -38,6 +40,8 @@ public final class VehiclePhone {
     /**Vehicle variable for how far away it appears before driving in, in blocks.  0 uses the default.**/
     public static final String VAR_SUMMON_DISTANCE = "phone_summon_distance";
     static final int MAX_VEHICLES = 8;
+    /**Same reach as the clicks that {@link minecrafttransportsimulator.systems.ControlSystem} sends to entities.**/
+    private static final double CLICK_DISTANCE = 3.5;
     private static final String DATA_VEHICLES = "phoneVehicles";
     private static final String ENTRY_SEPARATOR = ";";
 
@@ -83,6 +87,18 @@ public final class VehiclePhone {
             }
         }
         return false;
+    }
+
+    /**
+     * True if the player is aiming at a vehicle or one of its parts.  Clicks on those go to
+     * {@link ItemItem#doEntityInteraction}, so the phone screen shouldn't also open.  This is checked
+     * server-side because 1.12.2 sends vanilla's item use to the server before it can be cancelled on the client.
+     */
+    public static boolean isAimingAtVehicle(IWrapperPlayer player) {
+        Point3D startPosition = player.getEyePosition();
+        Point3D endPosition = player.getLineOfSight(CLICK_DISTANCE).add(startPosition);
+        EntityInteractResult result = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
+        return result != null && (result.entity instanceof EntityVehicleF_Physics || (result.entity instanceof APart && ((APart) result.entity).vehicleOn != null));
     }
 
     /**
