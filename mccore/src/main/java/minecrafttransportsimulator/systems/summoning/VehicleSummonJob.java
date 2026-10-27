@@ -34,8 +34,9 @@ import minecrafttransportsimulator.systems.summoning.GroundPathfinder.Placement;
  * player, drive as close as possible.  If stuck, re-plan once, then teleport.
  * <p>
  * Aircraft that can hover (see {@link VehiclePhone#canFlyIn}): teleport in above the buildings,
- * fly over the player, switch to hover, and land straight down in the nearest clear spot within
- * {@link #LANDING_RADIUS} blocks, or hover there.  Other aircraft are teleported straight onto
+ * fly over the player, switch to hover, and land straight down in the first clear spot within
+ * {@link #LANDING_RADIUS} blocks, trying in front of the player first, then the sides, then behind.  If there's
+ * nowhere to land, it hovers above the player until a player gets in.  Other aircraft are teleported straight onto
  * the ground near the player.
  */
 final class VehicleSummonJob {
@@ -232,6 +233,13 @@ final class VehicleSummonJob {
             return true;
         }
         ++phaseTicks;
+        if (isFlying() && VehiclePhone.hasPlayerRider(vehicle)) {
+            //A player has got in mid-flight.  Hand it over to them, set up as it normally is.
+            VehicleSummonFlight.stop(vehicle);
+            VehiclePhone.restoreHoverDefaults(vehicle);
+            stopControls();
+            return true;
+        }
         switch (phase) {
             case LOCATE:
                 return locate(player);
@@ -254,6 +262,11 @@ final class VehicleSummonJob {
                 return findLanding(player);
         }
         return true;
+    }
+
+    /**True while the summon flight is flying the aircraft in.**/
+    private boolean isFlying() {
+        return phase == Phase.CLIMB || phase == Phase.FLY_TO_PLAYER || phase == Phase.FIND_LANDING || phase == Phase.FLY_TO_LANDING || phase == Phase.DESCEND;
     }
 
     private void setPhase(Phase phase) {
@@ -934,6 +947,7 @@ final class VehicleSummonJob {
                 }
                 if (settleTicks > 0 && --settleTicks == 0) {
                     VehicleSummonFlight.stop(vehicle);
+                    VehiclePhone.restoreHoverDefaults(vehicle);
                     park();
                     message(player, LanguageSystem.INTERACT_PHONE_LANDED);
                     return true;
@@ -991,10 +1005,9 @@ final class VehicleSummonJob {
         long startTime = System.nanoTime();
         while (System.nanoTime() - startTime < tickTime) {
             if (landingIndex >= landingCandidates.size()) {
-                //Nowhere to land.  Stay overhead in hover, powered.
+                //Nowhere to land.  Stay overhead in hover, powered, until a player gets in.
                 VehicleSummonFlight.stop(vehicle);
-                set(vehicle.getOrCreateVariable(VehiclePhone.VAR_HOVER), 1);
-                set(vehicle.getOrCreateVariable(VehiclePhone.VAR_STAY_ON), 1);
+                VehiclePhone.holdHover(vehicle);
                 stopControls();
                 message(player, LanguageSystem.INTERACT_PHONE_HOVERING);
                 return true;
@@ -1141,10 +1154,9 @@ final class VehicleSummonJob {
             return;
         }
         if (vehicle.getOrCreateVariable(VehicleSummonFlight.VAR_ACTIVE).isActive) {
-            //Airborne.  Hover where it is.
+            //Airborne.  Hover where it is, powered, until a player gets in.
             VehicleSummonFlight.stop(vehicle);
-            set(vehicle.getOrCreateVariable(VehiclePhone.VAR_HOVER), 1);
-            set(vehicle.getOrCreateVariable(VehiclePhone.VAR_STAY_ON), 1);
+            VehiclePhone.holdHover(vehicle);
             stopControls();
         } else {
             park();

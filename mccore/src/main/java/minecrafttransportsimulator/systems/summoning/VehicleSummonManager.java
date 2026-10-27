@@ -105,9 +105,15 @@ public final class VehicleSummonManager {
     public static void onVehicleTick(EntityVehicleF_Physics vehicle) {
         if (!vehicle.world.isClient()) {
             VehicleLocationTracker.onVehicleTick(vehicle);
-            if (vehicle.ticksExisted % 20 == 0 && vehicle.getOrCreateVariable(VehicleSummonFlight.VAR_ACTIVE).isActive && !jobs.containsKey(vehicle.uniqueUUID)) {
-                //Flight left on from a call that no longer exists, like one cut off by a restart.
-                VehicleSummonFlight.stop(vehicle);
+            if (vehicle.ticksExisted % 20 == 0) {
+                if (vehicle.getOrCreateVariable(VehicleSummonFlight.VAR_ACTIVE).isActive && !jobs.containsKey(vehicle.uniqueUUID)) {
+                    //Flight left on from a call that no longer exists, like one cut off by a restart.
+                    VehicleSummonFlight.stop(vehicle);
+                }
+                if (vehicle.getOrCreateVariable(VehiclePhone.VAR_HOVER_HELD).isActive && VehiclePhone.hasPlayerRider(vehicle)) {
+                    //A player has got into an aircraft a call left hovering.  Give it back to them as it normally is.
+                    VehiclePhone.restoreHoverDefaults(vehicle);
+                }
             }
         }
         VehicleSummonFlight.apply(vehicle);

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -37,6 +38,11 @@ public final class VehiclePhone {
     static final String VAR_HOVER = "hover";
     static final String VAR_STAY_ON = "stay_on";
     static final String VAR_GEAR = "gear_setpoint";
+    /**
+     * Set on an aircraft left hovering in the sky by a call, with {@link #VAR_HOVER} and {@link #VAR_STAY_ON} held
+     * on to keep it there.  They go back to their defaults when a player gets in.
+     */
+    static final String VAR_HOVER_HELD = "phone_hover_held";
     /**Vehicle variable for how far away it appears before driving in, in blocks.  0 uses the default.**/
     public static final String VAR_SUMMON_DISTANCE = "phone_summon_distance";
     static final int MAX_VEHICLES = 8;
@@ -128,6 +134,44 @@ public final class VehiclePhone {
                     variables.add(keybind.action.variable);
                 }
             }
+        }
+    }
+
+    /**
+     * Leaves the aircraft hovering where it is, powered, until a player gets in.  Server only.
+     */
+    static void holdHover(EntityVehicleF_Physics vehicle) {
+        setIfChanged(vehicle, VAR_HOVER, 1);
+        setIfChanged(vehicle, VAR_STAY_ON, 1);
+        setIfChanged(vehicle, VAR_HOVER_HELD, 1);
+    }
+
+    /**
+     * Puts {@link #VAR_HOVER} and {@link #VAR_STAY_ON} back to how the aircraft starts out when placed: on if
+     * its definition lists them in its initial variables, off if not.  Server only.
+     */
+    static void restoreHoverDefaults(EntityVehicleF_Physics vehicle) {
+        List<String> initialVariables = vehicle.definition.initialVariables;
+        setIfChanged(vehicle, VAR_HOVER, initialVariables != null && initialVariables.contains(VAR_HOVER) ? 1 : 0);
+        setIfChanged(vehicle, VAR_STAY_ON, initialVariables != null && initialVariables.contains(VAR_STAY_ON) ? 1 : 0);
+        setIfChanged(vehicle, VAR_HOVER_HELD, 0);
+    }
+
+    /**True if a player is riding anywhere in the vehicle.**/
+    static boolean hasPlayerRider(EntityVehicleF_Physics vehicle) {
+        for (APart part : vehicle.allParts) {
+            if (part.rider instanceof IWrapperPlayer) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**Sets the variable and syncs it to clients, only if it's changed.**/
+    private static void setIfChanged(EntityVehicleF_Physics vehicle, String variableName, double value) {
+        ComputedVariable variable = vehicle.getOrCreateVariable(variableName);
+        if (variable.currentValue != value) {
+            variable.setTo(value, true);
         }
     }
 
