@@ -310,16 +310,19 @@ final class VehicleSummonJob {
                 return true;
             }
         }
-        if (vehicle.outOfHealth) {
-            message(player, LanguageSystem.INTERACT_PHONE_WRECKED);
-            releaseChunk();
-            return true;
-        }
+        //It has to be able to get here under its own power: not broken, with a working engine, and fuel if that needs it.
         boolean isAircraft = vehicle.definition.motorized.isAircraft;
         boolean flyIn = isAircraft && VehiclePhone.canFlyIn(vehicle);
-        //Aircraft that can't fly in are just teleported, so they don't need fuel.
-        if ((!isAircraft || flyIn) && needsFuel(isAircraft) && vehicle.fuelTank.getFluidLevel() == 0) {
-            message(player, LanguageSystem.INTERACT_PHONE_NOFUEL);
+        LanguageEntry notReady = null;
+        if (vehicle.outOfHealth) {
+            notReady = LanguageSystem.INTERACT_PHONE_WRECKED;
+        } else if (getWorkingEngines(isAircraft).isEmpty()) {
+            notReady = LanguageSystem.INTERACT_PHONE_NOENGINE;
+        } else if (needsFuel(isAircraft) && vehicle.fuelTank.getFluidLevel() == 0) {
+            notReady = LanguageSystem.INTERACT_PHONE_NOFUEL;
+        }
+        if (notReady != null) {
+            message(player, notReady);
             releaseChunk();
             return true;
         }
@@ -1072,8 +1075,8 @@ final class VehicleSummonJob {
     //-----CONTROLS-----
 
     private void startEngines(boolean includeJets) {
-        for (PartEngine engine : vehicle.engines) {
-            if ((includeJets || !isJet(engine)) && !engine.running) {
+        for (PartEngine engine : getWorkingEngines(includeJets)) {
+            if (!engine.running) {
                 if (engine.definition.engine.type == EngineType.MAGIC) {
                     //Magic engines start themselves once the magneto is on.  We can't use the
                     //auto-starter, as it refuses to start anything when the fuel tank is empty.
@@ -1087,15 +1090,29 @@ final class VehicleSummonJob {
     }
 
     /**
-     * True if any engine we'd start burns fuel from the tank.  Magic engines don't, so a vehicle
+     * The engines that aren't broken and that we'd use to bring the vehicle in.  Ground vehicles drive in,
+     * so their jets don't count.
+     */
+    private List<PartEngine> getWorkingEngines(boolean includeJets) {
+        List<PartEngine> engines = new ArrayList<>();
+        for (PartEngine engine : vehicle.engines) {
+            if ((includeJets || !isJet(engine)) && !engine.outOfHealth) {
+                engines.add(engine);
+            }
+        }
+        return engines;
+    }
+
+    /**
+     * True if any working engine we'd start burns fuel from the tank.  Magic engines don't, so a vehicle
      * powered only by them never runs out.
      */
     private boolean needsFuel(boolean includeJets) {
         if (vehicle.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0) {
             return false;
         }
-        for (PartEngine engine : vehicle.engines) {
-            if ((includeJets || !isJet(engine)) && engine.definition.engine.type != EngineType.MAGIC) {
+        for (PartEngine engine : getWorkingEngines(includeJets)) {
+            if (engine.definition.engine.type != EngineType.MAGIC) {
                 return true;
             }
         }

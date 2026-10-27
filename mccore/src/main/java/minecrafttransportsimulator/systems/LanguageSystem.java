@@ -431,6 +431,7 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_PHONE_LOSTCONTACT = new LanguageEntry("interact.phone.lostcontact", "Lost contact with %s.");
     public static final LanguageEntry INTERACT_PHONE_INUSE = new LanguageEntry("interact.phone.inuse", "%s is in use.");
     public static final LanguageEntry INTERACT_PHONE_WRECKED = new LanguageEntry("interact.phone.wrecked", "%s is wrecked.");
+    public static final LanguageEntry INTERACT_PHONE_NOENGINE = new LanguageEntry("interact.phone.noengine", "%s has no working engine.");
     public static final LanguageEntry INTERACT_PHONE_NOFUEL = new LanguageEntry("interact.phone.nofuel", "%s is out of fuel.");
     public static final LanguageEntry INTERACT_PHONE_INDOORS = new LanguageEntry("interact.phone.indoors", "%s can't reach you indoors.");
     public static final LanguageEntry INTERACT_PHONE_ONITSWAY = new LanguageEntry("interact.phone.onitsway", "%s is on its way.");
