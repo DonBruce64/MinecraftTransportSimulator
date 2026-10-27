@@ -816,18 +816,27 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         super.updateCollisionBoxes(requiresDeltaUpdates);
         if (world.isClient()) {
             if (!partSlotBoxes.isEmpty()) {
-                world.beginProfiling("PartSlotActives", false);
                 activeClientPartSlotBoxes.clear();
                 IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
                 AItemBase heldItem = player.getHeldItem();
                 AItemPart heldPart = heldItem instanceof AItemPart ? (AItemPart) heldItem : null;
                 boolean holdingScanner = heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type == ItemComponentType.SCANNER;
+                //No slot markers or interactions need these boxes without a scanner or part.
+                //The superclass already cleared them from collisionBoxes for this tick.
+                if (!holdingScanner && heldPart == null) {
+                    return;
+                }
+                world.beginProfiling("PartSlotActives", false);
                 boolean slotsCanBeClicked = canBeClicked();
                 for (Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : partSlotBoxes.entrySet()) {
                     BoundingBox box = partSlotBoxEntry.getKey();
                     JSONPartDefinition slotDef = partSlotBoxEntry.getValue();
+                    boolean heldPartValidForSlot = heldPart != null && heldPart.isPartValidForPackDef(slotDef, subDefinition, false);
+                    if (!holdingScanner && !heldPartValidForSlot) {
+                        continue;
+                    }
 
-                    //Always update empty slot positions so inactive boxes and their GUI markers cannot retain stale transforms.
+                    //Update unavailable slots too so their visible markers cannot retain stale transforms.
                     AnimationSwitchbox switchBox = partSlotSwitchboxes.get(slotDef);
                     if (switchBox != null && switchBox.runSwitchbox(0, false)) {
                         box.globalCenter.set(box.localCenter).transform(switchBox.netMatrix);
@@ -836,8 +845,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         box.updateToEntity(this, null);
                     }
 
-                    //Reset slot bounds every tick so changing held items cannot leave dimensions from the prior item behind.
-                    boolean heldPartValidForSlot = heldPart != null && heldPart.isPartValidForPackDef(slotDef, subDefinition, false);
+                    //Reset slot bounds so changing held items cannot leave dimensions from the prior item behind.
                     if (slotDef.slotWidth != 0) {
                         box.widthRadius = slotDef.slotWidth / 2D;
                         box.heightRadius = slotDef.slotHeight / 2D;
