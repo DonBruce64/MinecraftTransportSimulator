@@ -158,7 +158,7 @@ public class GUIOverlay extends AGUIBase {
             }
 
             //Show where the grapple would hook if fired now.
-            if (ConfigSystem.client.renderingSettings.gunCrosshair.value) {
+            if (ConfigSystem.client.renderingSettings.grappleCrosshair.value) {
                 updateGrappleCrosshair(player);
             }
         }
