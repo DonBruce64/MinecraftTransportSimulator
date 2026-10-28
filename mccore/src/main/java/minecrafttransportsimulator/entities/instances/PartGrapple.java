@@ -296,6 +296,11 @@ public class PartGrapple extends APart {
                     release();
                     return;
                 }
+                if (hookedMultipart instanceof EntityVehicleF_Physics && isInOurTowChain((EntityVehicleF_Physics) hookedMultipart)) {
+                    //Hitched to us since we hooked it.  The line would only pull us, so drop it.
+                    release();
+                    return;
+                }
                 setAnchor(hookOffset.copy().rotate(hookedMultipart.orientation).add(hookedMultipart.position));
                 break;
             }
@@ -427,7 +432,8 @@ public class PartGrapple extends APart {
         if (hit.entity != null) {
             return !disableEntityAttachVar.isActive;
         } else if (hit.multipart instanceof EntityVehicleF_Physics) {
-            return !disableVehicleAttachVar.isActive;
+            //Not our own tow chain, as pulling it would only pull us.
+            return !disableVehicleAttachVar.isActive && !isInOurTowChain((EntityVehicleF_Physics) hit.multipart);
         } else {
             //Blocks and placed parts.
             return !disableBlockAttachVar.isActive;
@@ -454,7 +460,8 @@ public class PartGrapple extends APart {
                 //weigh all of it.  The front vehicle's mass includes everything it tows.
                 double otherMass = getTowChainLead((EntityVehicleF_Physics) hit.multipart).currentMass;
                 double ourMass = getTowChainLead(vehicleOn).currentMass;
-                selfShare = otherMass / (otherMass + ourMass);
+                //Packs can leave emptyMass out, so both could be massless.  Split evenly then.
+                selfShare = otherMass + ourMass > 0 ? otherMass / (otherMass + ourMass) : 0.5;
             } else {
                 //Placed parts don't move, so treat them like a block.
                 selfShare = 1;
@@ -564,11 +571,6 @@ public class PartGrapple extends APart {
      * the vehicles update in.  See {@link #queueChainPull} and {@link #applyPull(EntityVehicleF_Physics, LinePull)}.
      */
     private void pullVehicle(EntityVehicleF_Physics other, Point3D anchor, double rope, double share) {
-        EntityVehicleF_Physics lead = getTowChainLead(other);
-        if (lead == getTowChainLead(vehicleOn)) {
-            //Hooked into our own tow chain.  Pulling it would only pull us.
-            return;
-        }
         Point3D toLauncher = position.copy().subtract(anchor);
         double distance = toLauncher.length();
         if (distance <= rope || distance < 1.0E-3) {
@@ -597,6 +599,10 @@ public class PartGrapple extends APart {
      */
     private static Point3D[] getChainPull(EntityVehicleF_Physics hooked, Point3D towards, double stretch, double share) {
         EntityVehicleF_Physics lead = getTowChainLead(hooked);
+        if (!(lead.currentMass > 0)) {
+            //Massless, as packs can leave emptyMass out.  There's nothing to share the pull with, so don't move it.
+            return new Point3D[] {new Point3D(), new Point3D()};
+        }
         //Rigid line: stop the chain moving further away.
         Point3D stopping = new Point3D();
         double radialSpeed = lead.motion.dotProduct(towards, false);
@@ -648,6 +654,13 @@ public class PartGrapple extends APart {
             vehicle = vehicle.towedByConnection.towingVehicle;
         }
         return vehicle;
+    }
+
+    /**
+     * Returns true if the passed-in vehicle is in the same tow chain as the vehicle we are on.
+     */
+    private boolean isInOurTowChain(EntityVehicleF_Physics vehicle) {
+        return getTowChainLead(vehicle) == getTowChainLead(vehicleOn);
     }
 
     /**
@@ -825,11 +838,12 @@ public class PartGrapple extends APart {
         vehicle.pitchHeldByGrapple = true;
         vehicle.rollHeldByGrapple = true;
 
-        //Turn by the torque over our moments, the same as our own physics does.
-        Point3D turn = new Point3D(torque.x / vehicle.momentPitch, torque.y / vehicle.momentYaw, torque.z / vehicle.momentRoll).scale(180D / Math.PI);
+        //Turn by the torque over our moments, the same as our own physics does.  A moment can be 0 when a
+        //pack leaves emptyMass out, which would turn us infinitely, so we don't turn about that axis.
+        Point3D turn = new Point3D(getTurnRate(torque.x, vehicle.momentPitch), getTurnRate(torque.y, vehicle.momentYaw), getTurnRate(torque.z, vehicle.momentRoll));
         double angle = turn.length();
-        if (!(angle > MIN_PULL_TURN)) {
-            //Too small to bother with, or the moments aren't set yet.
+        if (!(angle > MIN_PULL_TURN) || Double.isInfinite(angle)) {
+            //Too small to bother with.
             return;
         }
         Point3D axis = turn.scale(1D / angle);
@@ -857,6 +871,13 @@ public class PartGrapple extends APart {
             vehicle.motion.addScaled(pivotShift.rotate(vehicle.orientation), 1D / vehicle.speedFactor);
             vehicle.rotation.angles.add(turnMatrix.convertToAngles());
         }
+    }
+
+    /**
+     * Returns how far a torque turns a vehicle about one axis this tick, in degrees, or 0 if it has no moment about that axis.
+     */
+    private static double getTurnRate(double torque, double moment) {
+        return moment > 0 ? Math.toDegrees(torque / moment) : 0;
     }
 
     /**
