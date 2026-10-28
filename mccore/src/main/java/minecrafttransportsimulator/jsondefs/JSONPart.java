@@ -213,6 +213,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("The rate at which this engine accrues hours. If you make it lower, it'll be more reliable. If you make it higher, it'll collect that wearout like the infinity stones.")
         public float engineWearFactor;
 
+        @JSONDescription("If true, this engine will never accrue hours, no matter how it's run or damaged.  This means it won't lose top-end RPM or backfire from wear.  Can be toggled with variable modifiers on the noEngineWear variable.")
+        public boolean noEngineWear;
+
         @ModifiableValue
         @JSONDescription("How many mb/t the engine uses, and how powerful the engine is. This value is calculated at maxRPM and scaled down based on the percentage of speed the engine is at, so an engine with a maxRPM of 4000 with a fuel consumption of 1.0 running at 2000RPM is actually running at a rate of 0.5.  This value is the key to determining the raw power output of your engine, as it's directly related to how much force the engine can output.  However, even the most powerful engines won't do much if they're geared improperly, and even weak engines with low consumption can reach high speeds if they can maintain high RPMs.")
         public float fuelConsumption;
