@@ -3,6 +3,7 @@ package minecrafttransportsimulator.mcinterface;
 import minecrafttransportsimulator.items.instances.ItemPartEffector;
 import minecrafttransportsimulator.items.instances.ItemPartEngine;
 import minecrafttransportsimulator.items.instances.ItemPartGeneric;
+import minecrafttransportsimulator.items.instances.ItemPartGrapple;
 import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
@@ -42,6 +43,7 @@ public class InterfaceManager {
         PackParser.addItemPartCreator(ItemPartEffector.CREATOR);
         PackParser.addItemPartCreator(ItemPartEngine.CREATOR);
         PackParser.addItemPartCreator(ItemPartGeneric.CREATOR);
+        PackParser.addItemPartCreator(ItemPartGrapple.CREATOR);
         PackParser.addItemPartCreator(ItemPartGroundDevice.CREATOR);
         PackParser.addItemPartCreator(ItemPartGun.CREATOR);
         PackParser.addItemPartCreator(ItemPartInteractable.CREATOR);

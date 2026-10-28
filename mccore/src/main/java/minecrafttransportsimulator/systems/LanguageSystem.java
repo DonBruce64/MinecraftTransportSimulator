@@ -223,6 +223,9 @@ public class LanguageSystem {
     public static final LanguageEntry DEATH_PROPELLER_NULL = new LanguageEntry("death.propeller.null", "%s was shredded by a propeller");
     public static final LanguageEntry DEATH_PROPELLER_PLAYER = new LanguageEntry("death.propeller.player", "%s was shredded by %s's propeller");
 
+    public static final LanguageEntry DEATH_GRAPPLE_NULL = new LanguageEntry("death.grapple.null", "%s was harpooned");
+    public static final LanguageEntry DEATH_GRAPPLE_PLAYER = new LanguageEntry("death.grapple.player", "%s was harpooned by %s");
+
     public static final LanguageEntry DEATH_JETINTAKE_NULL = new LanguageEntry("death.jet_intake.null", "%s was sucked into a jet engine");
     public static final LanguageEntry DEATH_JETINTAKE_PLAYER = new LanguageEntry("death.jet_intake.player", "%s was sucked into %s's jet engine");
 
@@ -474,6 +477,13 @@ public class LanguageSystem {
     public static final LanguageEntry ITEMINFO_GUN_AUTORELOAD = new LanguageEntry("iteminfo.gun.autoReload", "Auto-Reloads");
     public static final LanguageEntry ITEMINFO_GUN_YAWRANGE = new LanguageEntry("iteminfo.gun.yawRange", "Yaw Range: ");
     public static final LanguageEntry ITEMINFO_GUN_PITCHRANGE = new LanguageEntry("iteminfo.gun.pitchRange", "Pitch Range: ");
+
+    public static final LanguageEntry ITEMINFO_GRAPPLE_RANGE = new LanguageEntry("iteminfo.grapple.range", "Range (blocks): ");
+    public static final LanguageEntry ITEMINFO_GRAPPLE_REELSPEED = new LanguageEntry("iteminfo.grapple.reelSpeed", "Winch Speed (blk/s): ");
+    public static final LanguageEntry ITEMINFO_GRAPPLE_ATTACHESTO = new LanguageEntry("iteminfo.grapple.attachesTo", "Attaches To: ");
+    public static final LanguageEntry ITEMINFO_GRAPPLE_BLOCKS = new LanguageEntry("iteminfo.grapple.blocks", "Blocks");
+    public static final LanguageEntry ITEMINFO_GRAPPLE_ENTITIES = new LanguageEntry("iteminfo.grapple.entities", "Mobs");
+    public static final LanguageEntry ITEMINFO_GRAPPLE_VEHICLES = new LanguageEntry("iteminfo.grapple.vehicles", "Vehicles");
 
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_EXPLOSIVE = new LanguageEntry("iteminfo.bullet.type.explosive", "Explosive Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_INCENDIARY = new LanguageEntry("iteminfo.bullet.type.incendiary", "Incendiary Bullet");

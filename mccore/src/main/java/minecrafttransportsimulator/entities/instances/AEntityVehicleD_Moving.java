@@ -117,6 +117,24 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private AEntityE_Interactable<?> lastCollidedEntity;
     public VehicleGroundDeviceCollection groundDeviceCollective;
 
+    //Grapple data.
+    public final List<PartGrapple> grapples = new ArrayList<>();
+    /**True if a grapple line is holding our pitch this tick, so ground pitch correction shouldn't level us.**/
+    public boolean pitchHeldByGrapple;
+    /**Push out of a wall to apply after moving this tick, if a grapple line has dragged us into one.**/
+    private Point3D grapplePushOut;
+
+    //Wall checks for motion that doesn't come from our own wheels, such as a grapple line.
+    /**How far we are pushed out of a wall each tick, in blocks.**/
+    private static final double WALL_PUSH_STEP = 1D / 16D;
+    /**How many steps out we search for free space before giving up.  8 steps is half a block.**/
+    private static final int WALL_PUSH_MAX_STEPS = 8;
+    /**Directions we push out in.  Not down, as that's into the ground.**/
+    private static final Point3D[] WALL_PUSH_DIRECTIONS = {new Point3D(1, 0, 0), new Point3D(-1, 0, 0), new Point3D(0, 0, 1), new Point3D(0, 0, -1), new Point3D(0, 1, 0)};
+    /**How many times a blocked move or tilt is halved before it's dropped: full, half, then quarter.**/
+    private static final int WALL_CUT_TRIES = 3;
+    private static final Point3D NO_OFFSET = new Point3D();
+
     public AEntityVehicleD_Moving(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);
         if (data != null) {
@@ -223,6 +241,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             } else {
                 slipping = false;
             }
+            //Grapples go after our own forces, so their lines can override tyre grip and steering.
+            world.beginProfiling("Grapples", false);
+            updateGrapples();
             world.beginProfiling("TotalMovement", false);
             moveVehicle();
             if (!world.isClient()) {
@@ -347,6 +368,34 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         super.updatePartList();
         if (ticksExisted > 1) {
             updateGroundDevicesRequest = true;
+        }
+        grapples.clear();
+        for (APart part : allParts) {
+            if (part instanceof PartGrapple) {
+                grapples.add((PartGrapple) part);
+            }
+        }
+    }
+
+    /**
+     * Updates all grapple lines on this vehicle, applying their forces to our motion.
+     * If a line has dragged us into a wall, this also works out how to step us back out.
+     */
+    private void updateGrapples() {
+        pitchHeldByGrapple = false;
+        grapplePushOut = null;
+        if (!grapples.isEmpty()) {
+            boolean attached = false;
+            for (PartGrapple grapple : grapples) {
+                if (grapple.isValid) {
+                    grapple.updateLine();
+                    attached |= grapple.isAttached();
+                }
+            }
+            //Only while attached, so we don't change how collisions are handled the rest of the time.
+            if (attached && towedByConnection == null) {
+                grapplePushOut = findWallPushOut(getBoxesForWallChecks());
+            }
         }
     }
 
@@ -876,7 +925,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 }
                 if (!groundDeviceCollective.isBlockedVertically() && (fallingDown || towedByConnection != null)) {
                     world.beginProfiling("GroundHandlingPitch", false);
-                    groundDeviceCollective.performPitchCorrection(groundMotion);
+                    //Don't level us if a grapple line is holding one end up, or the lifted end drops straight back down.
+                    if (!pitchHeldByGrapple) {
+                        groundDeviceCollective.performPitchCorrection(groundMotion);
+                    }
                     //Don't do roll correction if we don't have roll.
                     if (groundDeviceCollective.canDoRollChecks()) {
                         world.beginProfiling("GroundHandlingRoll", false);
@@ -956,6 +1008,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             if (lastCollidedEntity != null) {
                 motionApplied.add(vehicleCollisionMotion);
                 rotationApplied.angles.add(vehicleCollisionRotation.angles);
+            }
+
+            //Add grapple push-out.  Moves made by a box already inside a block are cancelled, so this can't go
+            //through motion.  It goes in motionApplied so clients count it towards what they've moved.
+            if (grapplePushOut != null) {
+                motionApplied.add(grapplePushOut);
             }
 
             //All contributions done, add calculated motions.
@@ -1058,6 +1116,135 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             }
         }
         return false;
+    }
+
+    /*
+     * Wall checks for motion that doesn't come from our own wheels, such as a grapple line pulling us sideways.
+     *
+     * Our collision boxes are checked against blocks as we move, but wheels only against the ground
+     * under them.  A sideways pull drags the wheels into a wall, and once any box is inside a block
+     * every move and turn is blocked, so we stick.
+     * -clampMotionToWalls: cuts motion on any horizontal axis that would put a wheel or box into a
+     * block, so we slide along the wall instead.
+     * -limitTiltToWalls: shrinks a tilt that would swing a wheel or collision box into a block.
+     * -findWallPushOut: steps us out a little each tick if we're already stuck, towards the nearest free spot.
+     *
+     * Wheels are checked by their top half only, so the ground they sit on (or a slab they're climbing) doesn't count.
+     */
+
+    /**
+     * Returns the boxes the wall checks use: the top half of each wheel at its current position,
+     * plus our block collision boxes.  Call this before we move, while the collision list only holds our own boxes.
+     */
+    public List<BoundingBox> getBoxesForWallChecks() {
+        List<BoundingBox> boxes = new ArrayList<>();
+        for (APart part : allParts) {
+            if (part instanceof PartGroundDevice && !part.placementDefinition.isSpare) {
+                BoundingBox wheel = part.boundingBox;
+                double halfHeight = wheel.heightRadius / 2D;
+                boxes.add(new BoundingBox(wheel.globalCenter.copy().add(0, halfHeight, 0), wheel.widthRadius, halfHeight, wheel.depthRadius));
+            }
+        }
+        boxes.addAll(allBlockCollisionBoxes);
+        return boxes;
+    }
+
+    /**
+     * Returns the boxes that aren't already inside a block.  Stuck boxes block every move, so
+     * checks that should still let us move use only these, and {@link #findWallPushOut} frees the rest.
+     */
+    public List<BoundingBox> getBoxesOutsideBlocks(List<BoundingBox> boxes) {
+        List<BoundingBox> free = new ArrayList<>();
+        for (BoundingBox box : boxes) {
+            if (!wallCollides(box, NO_OFFSET)) {
+                free.add(box);
+            }
+        }
+        return free;
+    }
+
+    /**
+     * Cuts our X and Z motion where it would put a wheel or collision box into a block.
+     * The rest of the motion is kept, so we slide along the wall.  Vertical motion is left alone,
+     * as wheels are meant to touch the ground.
+     *
+     * @return the horizontal movement that was cut, in blocks.
+     */
+    public Point3D clampMotionToWalls(List<BoundingBox> freeBoxes) {
+        Point3D before = new Point3D(motion.x, 0, motion.z);
+        motion.x = clampAxisToWalls(freeBoxes, new Point3D(1, 0, 0), motion.x);
+        motion.z = clampAxisToWalls(freeBoxes, new Point3D(0, 0, 1), motion.z);
+        return before.subtract(new Point3D(motion.x, 0, motion.z)).scale(speedFactor);
+    }
+
+    private double clampAxisToWalls(List<BoundingBox> boxes, Point3D axis, double axisMotion) {
+        for (int i = 0; i < WALL_CUT_TRIES && axisMotion != 0; ++i, axisMotion /= 2) {
+            if (!wallCollidesAny(boxes, axis.copy().scale(axisMotion * speedFactor))) {
+                return axisMotion;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Returns the largest of the tilt, half of it or a quarter of it that doesn't swing a box into a
+     * block, or 0 if none fit. Makes sure the pitch change the grapple wants to apply doesn't swing part of the vehicle into a block.
+     *
+     * @param pivot the point we turn about, in our own frame.
+     * @param tilt the pitch to apply, in degrees.  Positive is nose down.
+     */
+    public double limitTiltToWalls(List<BoundingBox> freeBoxes, Point3D pivot, double tilt) {
+        for (int i = 0; i < WALL_CUT_TRIES && tilt != 0; ++i, tilt /= 2) {
+            if (!tiltCollidesWithWalls(freeBoxes, pivot, tilt)) {
+                return tilt;
+            }
+        }
+        return 0;
+    }
+
+    private boolean tiltCollidesWithWalls(List<BoundingBox> boxes, Point3D pivot, double tilt) {
+        RotationMatrix turn = new RotationMatrix().setToAxisAngle(1, 0, 0, tilt);
+        for (BoundingBox box : boxes) {
+            //Turn the box centre about the pivot in our frame, then take it back to the world.
+            Point3D turned = box.globalCenter.copy().subtract(position).reOrigin(orientation).subtract(pivot).rotate(turn).add(pivot);
+            Point3D offset = turned.rotate(orientation).add(position).subtract(box.globalCenter);
+            if (wallCollides(box, offset)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * If any box is inside a block, returns one push step towards the nearest position where every
+     * box is free.  Returns null if nothing is stuck, or if there's no free spot within reach.
+     */
+    private Point3D findWallPushOut(List<BoundingBox> boxes) {
+        if (getBoxesOutsideBlocks(boxes).size() == boxes.size()) {
+            return null;
+        }
+        for (int step = 1; step <= WALL_PUSH_MAX_STEPS; ++step) {
+            for (Point3D direction : WALL_PUSH_DIRECTIONS) {
+                if (!wallCollidesAny(boxes, direction.copy().scale(step * WALL_PUSH_STEP))) {
+                    return direction.copy().scale(WALL_PUSH_STEP);
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean wallCollidesAny(List<BoundingBox> boxes, Point3D offset) {
+        for (BoundingBox box : boxes) {
+            if (wallCollides(box, offset)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean wallCollides(BoundingBox box, Point3D offset) {
+        //Clear the air cache each time, as it lives across ticks and blocks may have been placed since.
+        return world.checkForCollisions(box, offset, true, false);
     }
 
     /**
