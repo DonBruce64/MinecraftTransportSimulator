@@ -20,7 +20,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.LanguageSystem;
-import minecrafttransportsimulator.systems.grapple.GrappleLineCollision;
 
 /**
  * A grappling-hook launcher.  Firing launches the hook towards whatever is under the controller's
@@ -610,11 +609,11 @@ public class PartGrapple extends APart {
             vehicleOn.rotation.angles.y += yawAdded;
         }
 
-        List<BoundingBox> freeBoxes = GrappleLineCollision.getFreeBoxes(vehicleOn, GrappleLineCollision.getAllBoxes(vehicleOn));
+        List<BoundingBox> freeBoxes = vehicleOn.getBoxesOutsideBlocks(vehicleOn.getBoxesForWallChecks());
         applyLineTilt(lineNormal, (vehicleOn.motion.y - motionYBefore) * vehicleOn.speedFactor, freeBoxes);
 
         //Vehicles don't stop wheels going into walls, and the line usually pulls the vehicle towards one.
-        Point3D blocked = GrappleLineCollision.clampToWalls(vehicleOn, freeBoxes);
+        Point3D blocked = vehicleOn.clampMotionToWalls(freeBoxes);
 
         //A straight line to a hook on top of a wall stops lifting once the launcher is level with the
         //hook, which leaves the wheels below the lip.  When that happens, the server hands over to the
@@ -713,7 +712,7 @@ public class PartGrapple extends APart {
         }
 
         //Turns are only checked against the collision boxes, so a tilt could swing the wheels into a wall.
-        tilt = GrappleLineCollision.limitTilt(vehicleOn, freeBoxes, pivot, tilt);
+        tilt = vehicleOn.limitTiltToWalls(freeBoxes, pivot, tilt);
         if (tilt != 0) {
             //The tilt raises the launcher, so don't also lift the whole vehicle by that much.
             vehicleOn.motion.y -= tilt * risePerDegree / vehicleOn.speedFactor;
