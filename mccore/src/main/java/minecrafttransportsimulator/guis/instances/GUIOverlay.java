@@ -1,10 +1,8 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -25,23 +23,18 @@ import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentAimReticle;
 import minecrafttransportsimulator.guis.components.GUIComponentCrosshair;
-import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.items.components.AItemPart;
-import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
+import minecrafttransportsimulator.guis.components.GUIComponentPartSlotMarkers;
+import minecrafttransportsimulator.guis.components.GUIComponentPartSlotScanner;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
-import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
-import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -54,10 +47,9 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public class GUIOverlay extends AGUIBase {
     private GUIComponentLabel mouseoverLabel;
     private GUIComponentLabel gunLabel;
-    private GUIComponentItem scannerItem;
+    private GUIComponentPartSlotScanner scannerPreview;
     private GUIComponentCrosshair aimingCrosshair;
     private GUIComponentAimReticle aimReticle;
-    private final List<String> tooltipText = new ArrayList<>();
     private EntityInteractResult lastInteractResult;
     private AEntityE_Interactable<?> lastCollisionGroupHoverEntity;
     private int lastCollisionGroupHoverIndex;
@@ -83,23 +75,9 @@ public class GUIOverlay extends AGUIBase {
         addComponent(aimingCrosshair = new GUIComponentCrosshair(screenWidth / 2, screenHeight / 2));
         aimingCrosshair.visible = false;
         aimingCrosshair.ignoreGUILightingState = true;
-        addComponent(scannerItem = new GUIComponentItem(0, screenHeight / 4, 6.0F) {
-            //Render the item stats as a tooltip, as it's easier to see.
-            @Override
-            public boolean isMouseInBounds(int mouseX, int mouseY) {
-                return true;
-            }
-
-            @Override
-            public void renderTooltip(AGUIBase gui, int mouseX, int mouseY) {
-                super.renderTooltip(gui, scannerItem.constructedX, scannerItem.constructedY + 24 * 6);
-            }
-
-            @Override
-            public List<String> getTooltipText() {
-                return tooltipText;
-            }
-        });
+        scannerPreview = new GUIComponentPartSlotScanner();
+        addComponent(new GUIComponentPartSlotMarkers(scannerPreview));
+        addComponent(scannerPreview);
     }
 
     @Override
@@ -202,60 +180,7 @@ public class GUIOverlay extends AGUIBase {
             }
         }
 
-        scannerItem.stack = null;
-        tooltipText.clear();
-        if (player.isHoldingItemType(ItemComponentType.SCANNER)) {
-            if (interactResult != null && interactResult.entity instanceof AEntityF_Multipart) {
-                AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) interactResult.entity;
-                BoundingBox mousedOverBox = null;
-                JSONPartDefinition packVehicleDef = null;
-                for (Entry<BoundingBox, JSONPartDefinition> boxEntry : multipart.activeClientPartSlotBoxes.entrySet()) {
-                    BoundingBox box = boxEntry.getKey();
-                    if (box.getIntersection(startPosition, endPosition) != null) {
-                        if (mousedOverBox == null || (box.globalCenter.distanceTo(startPosition) < mousedOverBox.globalCenter.distanceTo(startPosition))) {
-                            mousedOverBox = box;
-                            packVehicleDef = boxEntry.getValue();
-                        }
-                    }
-                }
-
-                if (mousedOverBox != null) {
-                    //Populate stacks.
-                    List<AItemPart> validParts = new ArrayList<>();
-                    for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
-                        if (packItem instanceof AItemPart) {
-                            AItemPart part = (AItemPart) packItem;
-                            if (part.isPartValidForPackDef(packVehicleDef, multipart.subDefinition, true)) {
-                                validParts.add(part);
-                            }
-                        }
-                    }
-
-                    //Get the slot info.
-                    tooltipText.add("Types: " + packVehicleDef.types.toString());
-                    tooltipText.add("Min/Max: " + packVehicleDef.minValue + "/" + packVehicleDef.maxValue);
-                    if (packVehicleDef.customTypes != null) {
-                        tooltipText.add("CustomTypes: " + packVehicleDef.customTypes);
-                    } else {
-                        tooltipText.add("CustomTypes: None");
-                    }
-
-                    //Get the stack to render..
-                    if (!validParts.isEmpty()) {
-                        //Get current part to render based on the cycle.
-                        int cycle = player.isSneaking() ? 30 : 15;
-                        AItemPart partToRender = validParts.get((int) ((multipart.ticksExisted / cycle) % validParts.size()));
-                        tooltipText.add(partToRender.getItemName());
-                        scannerItem.stack = partToRender.getNewStack(null);
-
-                        //If we are on the start of the cycle, beep.
-                        if (multipart.ticksExisted % cycle == 0) {
-                            InterfaceManager.soundInterface.playQuickSound(new SoundInstance(multipart, InterfaceManager.coreModID + ":scanner_beep"));
-                        }
-                    }
-                }
-            }
-        }
+        scannerPreview.updateTarget(player, interactResult, startPosition, endPosition);
     }
 
     @Override
