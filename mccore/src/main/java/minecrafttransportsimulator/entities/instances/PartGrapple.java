@@ -578,22 +578,27 @@ public class PartGrapple extends APart {
             return;
         }
         Point3D lineNormal = toLauncher.scale(1D / distance);
-        Point3D motionAdded = new Point3D();
+        //Rigid line: stop the chain moving further away.
+        Point3D stopping = new Point3D();
         double radialSpeed = lead.motion.dotProduct(lineNormal, false);
         if (radialSpeed < 0) {
-            motionAdded.addScaled(lineNormal, -radialSpeed * share);
+            stopping.addScaled(lineNormal, -radialSpeed * share);
         }
-        motionAdded.addScaled(lineNormal, Math.min((distance - rope) * STIFFNESS, MAX_PULL) * share / lead.speedFactor);
+        //Pull back towards the line length.
+        Point3D spring = lineNormal.copy().scale(Math.min((distance - rope) * STIFFNESS, MAX_PULL) * share / lead.speedFactor);
 
-        //The line's tension is the force it takes to move the whole chain that much.  The chain's tyres
-        //and brakes hold back what they can, and the rest moves it.  The line lightens the hooked vehicle
-        //when it lifts it, so its tyres grip less.
-        Point3D force = motionAdded.copy().scale(lead.currentMass);
-        Point3D moving = force.copy();
+        //The line's tension is the force it takes to move the whole chain that much.
+        Point3D force = stopping.copy().add(spring).scale(lead.currentMass);
+
+        //The chain's tyres and brakes hold back what they can of the spring's pull, and the rest moves it.
+        //The line lightens the hooked vehicle when it lifts it, so its tyres grip less.  They don't hold back
+        //the line stopping the chain moving away: friction resists the chain sliding, so there it helps the
+        //line, and the chain's own brakes and tyres have already slowed it this tick.
+        Point3D moving = spring.copy().scale(lead.currentMass);
         for (EntityVehicleF_Physics chainVehicle : getTowChain(lead)) {
             moving.subtract(getTyreHold(chainVehicle, moving, chainVehicle == other ? Math.max(0, force.y) : 0));
         }
-        motionAdded.set(moving).scale(1D / lead.currentMass);
+        Point3D motionAdded = stopping.add(moving.scale(1D / lead.currentMass));
 
         Point3D point = anchor.copy();
         EntityVehicleF_Physics vehicle = other;
