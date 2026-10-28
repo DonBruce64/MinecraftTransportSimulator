@@ -20,8 +20,3 @@ bin
 
 # don't want compiled jars in the repo
 out
-/Batvehicles_MTS_Patch
-/BatmobilePack
-/Wiki
-buildAll.ps1
-buildAll.bat
