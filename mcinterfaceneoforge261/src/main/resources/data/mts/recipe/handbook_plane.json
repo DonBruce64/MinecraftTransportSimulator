@@ -1,0 +1,15 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "   ",
+        " ab",
+        "   "
+    ],
+    "key": {
+        "a": "minecraft:book",
+        "b": "mts:mts.ticket"
+    },
+    "result": {
+        "id": "mts:mts.handbook_plane"
+    }
+}
