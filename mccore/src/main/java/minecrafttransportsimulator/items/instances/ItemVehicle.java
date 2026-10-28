@@ -64,12 +64,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
             vehicle.setPlacementStack(deploymentStack);
         }
         vehicle.world.spawnEntity(vehicle);
-        try {
-            vehicle.addPartsPostAddition(player, data);
-        } catch (RuntimeException | Error e) {
-            vehicle.remove();
-            throw e;
-        }
+        vehicle.addPartsPostAddition(player, data);
     }
 
     @Override

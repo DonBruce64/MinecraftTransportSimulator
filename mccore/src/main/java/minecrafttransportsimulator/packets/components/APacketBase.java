@@ -309,15 +309,13 @@ public abstract class APacketBase {
         //Vehicle packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleControlNotification.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleDeployment.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehiclePacking.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
 
         //World packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataRequest.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataUpdate.class);
-
-        //New packet types are appended to preserve the IDs of existing packets.
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleDeployment.class);
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehiclePacking.class);
 
         //Client effect packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketCameraShake.class);
