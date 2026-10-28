@@ -79,6 +79,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     private final ComputedVariable newlyAddedVar;
     public final ComputedVariable isExteriorVar;
     public final ComputedVariable isActiveVar;
+    public final ComputedVariable isSpareVar;
 
     /**
      * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
@@ -165,8 +166,22 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         addVariable(this.newlyAddedVar = new ComputedVariable(this, "newlyAdded", data));
         addVariable(this.isExteriorVar = new ComputedVariable(this, "part_isExterior", data));
         addVariable(this.isActiveVar = new ComputedVariable(this, "part_active", data));
+        addVariable(this.isSpareVar = new ComputedVariable(this, "part_isSpare"));
         if (placingPlayer != null) {
             newlyAddedVar.setActive(true, false);
+        }
+    }
+
+    @Override
+    public void addPartsPostAddition(IWrapperPlayer placingPlayer, IWrapperNBT data) {
+        super.addPartsPostAddition(placingPlayer, data);
+        //Apply own variable modifiers early so isSpare can be set from part JSON at spawn
+        if (definition.variableModifiers != null) {
+            try {
+                updateVariableModifiers();
+            } catch (Exception ignored) {
+                //Ignore failures during early VM application
+            }
         }
     }
 
@@ -304,6 +319,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public void setVariableDefaults() {
         super.setVariableDefaults();
         isExteriorVar.setActive(placementDefinition.isExterior, false);
+        if (ticksExisted < 2) {
+            isSpareVar.setActive((placementDefinition.isSpare || (partOn != null && partOn.isSpare)), false);
+        }
     }
 
     @Override
@@ -635,8 +653,10 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                         return new ComputedVariable(isMirrored);
                     case ("part_isonfront"):
                         return new ComputedVariable(placementDefinition.pos.z > 0);
+                    case ("isSpare"):
+                        return new ComputedVariable(this, variable, partialTicks -> (isSpare || isSpareVar.isActive) ? 1 : 0, false);
                     case ("part_isspare"):
-                        return new ComputedVariable(isSpare);
+                        return new ComputedVariable(this, variable, partialTicks -> (isSpare || isSpareVar.isActive) ? 1 : 0, false);
                     case ("part_onvehicle"):
                         return new ComputedVariable(vehicleOn != null);
                     case ("part_added_vehicle"):
