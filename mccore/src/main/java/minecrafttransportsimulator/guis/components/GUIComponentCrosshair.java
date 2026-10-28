@@ -83,7 +83,7 @@ public class GUIComponentCrosshair extends AGUIComponent {
     public GUIComponentCrosshair(int x, int y, double rotation) {
         super(x, y, ARM_LENGTH * 2, ARM_LENGTH * 2);
         RenderableVertices crosshairVertices = new RenderableVertices("CROSSHAIR", FloatBuffer.allocate(ARM_COUNT * VERTICES_PER_ARM * FLOATS_PER_VERTEX), false);
-        setCrosshairGeometry(crosshairVertices.vertices, Math.toRadians(rotation));
+        setCrosshairGeometry(crosshairVertices.vertices, rotation);
         renderable = new RenderableData(crosshairVertices, null);
         renderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
         renderable.setColor(ColorRGB.WHITE);
@@ -100,11 +100,12 @@ public class GUIComponentCrosshair extends AGUIComponent {
         renderable.transform.setTranslation(position);
     }
 
-    /** Writes the four rectangular arms in component-local coordinates (centred at 0,0,0), turned by the given angle in radians. */
+    /** Writes the four rectangular arms in component-local coordinates (centred at 0,0,0), turned by the given angle in degrees. */
     private static void setCrosshairGeometry(FloatBuffer vertices, double rotation) {
         float halfThickness = CROSSHAIR_THICKNESS / 2.0F;
-        float cos = (float) Math.cos(rotation);
-        float sin = (float) Math.sin(rotation);
+        double angleRads = Math.toRadians(rotation);
+        float cos = (float) Math.cos(angleRads);
+        float sin = (float) Math.sin(angleRads);
 
         addQuad(vertices, cos, sin, CENTER_GAP, -halfThickness, ARM_LENGTH, halfThickness);
         addQuad(vertices, cos, sin, -ARM_LENGTH, -halfThickness, -CENTER_GAP, halfThickness);
