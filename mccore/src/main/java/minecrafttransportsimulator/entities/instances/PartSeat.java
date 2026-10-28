@@ -222,6 +222,10 @@ public final class PartSeat extends APart {
                 //Open the HUD.  This will have been closed in the remove call.
                 new GUIHUD(vehicleOn, this);
 
+                if (placementDefinition.isController) {
+                    ControlSystem.resetAircraftControlsNotice();
+                }
+
                 //Auto-start the engines, if we have that config enabled and we can start them.
                 if (placementDefinition.isController && ConfigSystem.client.controlSettings.autostartEng.value && vehicleOn.canPlayerStartEngines((IWrapperPlayer) rider) && !vehicleOn.definition.motorized.overrideAutoStart) {
                     vehicleOn.engines.forEach(engine -> {
@@ -363,7 +367,7 @@ public final class PartSeat extends APart {
 
     @Override
     public boolean updateRider() {
-        boolean usingMouseYoke = world.isClient() && riderIsClient && placementDefinition.isController && vehicleOn != null && vehicleOn.definition.motorized.isAircraft && ConfigSystem.client.controlSettings.mouseYoke.value && !ConfigSystem.client.controlSettings.arcadeMode.value;
+        boolean usingMouseYoke = world.isClient() && riderIsClient && placementDefinition.isController && vehicleOn != null && vehicleOn.definition.motorized.isAircraft && ConfigSystem.client.controlSettings.mouseYoke.value && !vehicleOn.isArcadeFlightActive();
         double riderYawDelta = 0;
         double riderPitchDelta = 0;
         if (usingMouseYoke) {

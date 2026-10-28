@@ -2,6 +2,7 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -96,6 +97,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public final ComputedVariable ballastControlVar;
     public final ComputedVariable ballastVolumeVar;
     public final ComputedVariable waterBallastFactorVar;
+    public final ComputedVariable arcadeFlightModeVar;
     public final ComputedVariable blimpSkidSteerVar;
     public final ComputedVariable blimpLevelFactorVar;
     public final ComputedVariable blimpLevelMaxRateVar;
@@ -165,6 +167,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         addVariable(this.ballastControlVar = new ComputedVariable(this, "ballastControl", data));
         addVariable(this.ballastVolumeVar = new ComputedVariable(this, "ballastVolume"));
         addVariable(this.waterBallastFactorVar = new ComputedVariable(this, "waterBallastFactor"));
+        addVariable(this.arcadeFlightModeVar = new ComputedVariable(this, "arcadeFlightMode"));
         addVariable(this.blimpSkidSteerVar = new ComputedVariable(this, "blimpSkidSteer"));
         addVariable(this.blimpLevelFactorVar = new ComputedVariable(this, "blimpLevelFactor"));
         addVariable(this.blimpLevelMaxRateVar = new ComputedVariable(this, "blimpLevelMaxRate"));
@@ -264,6 +267,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         ballastControlVar.setTo(elevatorInputVar.currentValue, false);
         ballastVolumeVar.setTo(definition.motorized.ballastVolume, false);
         waterBallastFactorVar.setTo(definition.motorized.waterBallastFactor, false);
+        arcadeFlightModeVar.setTo(definition.motorized.arcadeFlightMode, false);
         blimpSkidSteerVar.setTo(definition.motorized.blimpSkidSteer, false);
         blimpLevelFactorVar.setTo(definition.motorized.blimpLevelFactor, false);
         blimpLevelMaxRateVar.setTo(definition.motorized.blimpLevelMaxRate, false);
@@ -717,6 +721,40 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     }
 
     /**
+     * Returns true if this aircraft should be flown with arcade (mouse) flight.
+     * If arcadeFlightMode is 0, this follows the player's config.  Otherwise a positive
+     * value defaults to arcade and a negative one to standard controls, unless the player
+     * has saved an override for this aircraft and default with the arcade key.
+     * Only valid on the client.
+     */
+    public boolean isArcadeFlightActive() {
+        String overrideKey = getArcadeFlightOverrideKey();
+        if (overrideKey == null) {
+            return ConfigSystem.client.controlSettings.arcadeMode.value;
+        }
+        Map<String, Boolean> overrides = ConfigSystem.client.controlSettings.arcadeFlightOverrides;
+        Boolean override = overrides != null ? overrides.get(overrideKey) : null;
+        return override != null ? override : isArcadeFlightDefault();
+    }
+
+    /**
+     * Returns true if arcadeFlightMode currently defaults this aircraft to arcade flight.
+     * Only meaningful when arcadeFlightMode is non-zero.
+     */
+    public boolean isArcadeFlightDefault() {
+        return arcadeFlightModeVar.currentValue > 0;
+    }
+
+    /**
+     * Returns the key the player's arcade override for this aircraft's current default is
+     * saved under, or null if arcadeFlightMode is 0 and the player's config is used instead.
+     * Variants of the same aircraft share the key, so subName is left out.
+     */
+    public String getArcadeFlightOverrideKey() {
+        if (arcadeFlightModeVar.currentValue == 0) {
+            return null;
+        }
+        return definition.packID + ":" + definition.systemName + (isArcadeFlightDefault() ? "|arcade" : "|standard");
      * Returns how many degrees to rotate back towards level this tick for the passed-in tilt.
      * Removes the passed-in fraction of the tilt, capped by blimpLevelMaxRate if set.
      * Tilts under {@link #BLIMP_LEVEL_SNAP_ANGLE} are removed entirely so we stop at exactly level.
