@@ -1050,7 +1050,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         if (!ConfigSystem.settings.general.noclipVehicles.value && motion.length() > 0.001) {
             boolean clearedCache = false;
             for (BoundingBox box : allBlockCollisionBoxes) {
-                tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).subtract(box.globalCenter).add(position).addScaled(motion, speedFactor);
+                tempBoxPosition.set(box.globalCenter).subtract(position).reOrigin(orientation).rotate(rotation).rotate(orientation).subtract(box.globalCenter).add(position).addScaled(motion, speedFactor);
                 if (!box.collidesWithLiquids && world.checkForCollisions(box, tempBoxPosition, !clearedCache, !world.isClient() && ConfigSystem.settings.damage.vehicleBlockBreaking.value)) {
                     return true;
                 }
@@ -1158,7 +1158,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         //Check the rotation.
         if (!rotation.angles.isZero()) {
             for (BoundingBox box : allBlockCollisionBoxes) {
-                tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).add(position).addScaled(motion, speedFactor);
+                tempBoxPosition.set(box.globalCenter).subtract(position).reOrigin(orientation).rotate(rotation).rotate(orientation).add(position).addScaled(motion, speedFactor);
                 if (box.updateCollisions(world, tempBoxPosition.subtract(box.globalCenter), false)) {
                     rotation.setToZero();
                     rotation.angles.set(0, 0, 0);

@@ -263,9 +263,14 @@ public class VehicleGroundDeviceCollection {
     }
 
     /**
-     * Returns true if any devices are on the ground.
+     * Legacy name for {@link #isAirborne()}.  Returns true when no ground box is grounded.
      */
     public boolean isAnythingOnGround() {
+        return isAirborne();
+    }
+
+    /**Returns true when none of the ground boxes are supported by the ground.**/
+    public boolean isAirborne() {
         return !frontLeftGDB.isGrounded && !frontRightGDB.isGrounded && !rearLeftGDB.isGrounded && !rearRightGDB.isGrounded;
     }
 

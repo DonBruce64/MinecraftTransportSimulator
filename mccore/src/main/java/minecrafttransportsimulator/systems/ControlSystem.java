@@ -608,7 +608,8 @@ public final class ControlSystem {
         if (useMouseFlight) {
             //Activate mouse flight if not already active.  Refresh it if the
             //installed parts changed the aircraft between rotor and fixed-wing.
-            if (MouseFlightController.isMouseFlightActive && MouseFlightController.isHelicopter != hasRotorPropeller) {
+            if (MouseFlightController.isMouseFlightActive && (!MouseFlightController.isControlling(aircraft)
+                    || MouseFlightController.isHelicopter != hasRotorPropeller)) {
                 MouseFlightController.deactivate();
             }
             if (!MouseFlightController.isMouseFlightActive) {

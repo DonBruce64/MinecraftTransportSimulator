@@ -18,6 +18,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.FixedWingAimController;
+import minecrafttransportsimulator.systems.MouseFlightController;
 
 /**
  * This class adds the final layer of physics calculations on top of the
@@ -44,7 +46,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public final ComputedVariable elevatorAreaVar;
     public static final double MAX_ELEVATOR_ANGLE = 25;
     public static final double MAX_ELEVATOR_TRIM = 10;
-    private static final double ELEVATOR_LIFT_OFFSET = -2.5;
+    public static final double ELEVATOR_LIFT_OFFSET = -2.5;
     public static final double ELEVATOR_DAMPEN_RATE = 0.6;
 
     //Rudder.
@@ -68,6 +70,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public final ComputedVariable autopilotValueVar;
     public final ComputedVariable autolevelEnabledVar;
     public final ComputedVariable mouseAimControlVar;
+    public final ComputedVariable mouseAimYawVar;
+    public final ComputedVariable mouseAimPitchVar;
+    public final ComputedVariable mouseAimOverrideVar;
+    private final FixedWingAimController mouseAimController = new FixedWingAimController();
 
     //Open top.
     public final ComputedVariable openTopVar;
@@ -134,9 +140,27 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     private final Point3D thrustTorque = new Point3D();//kg*m^2/ticks^2
     private final Point3D totalTorque = new Point3D();//kg*m^2/ticks^2
     private final Point3D rotorRotation = new Point3D();//degrees
+    /**World-space angular momentum for free fixed-wing flight, in kg*m^2/tick.**/
+    private final Point3D angularMomentum = new Point3D();
+    private final Point3D localAngularVelocity = new Point3D();
+    private final Point3D rotationalDamping = new Point3D();
+    private final Point3D controlAcceleration = new Point3D();
+    private final Point3D flightPathForward = new Point3D();
+    private final Point3D flightPathDirection = new Point3D();
+    private final Point3D flightPathTangent = new Point3D();
+    private static final double MIN_FLIGHT_PATH_SPEED = 8.0; //Observed blocks per second.
+    private static final double MAX_TURN_RATE = 1.5; //Degrees per tick.
+    private static final double TURN_REFERENCE_SPEED = 8.0; //Motion units per tick.
+    private static final double MAX_TURN_SPEED_PENALTY = 0.25;
+    private static final double MAX_ROLL_RATE = 2.5;
+    private static final double FLIGHT_PATH_RESPONSE = 0.25;
+    private static final double FREE_FLIGHT_PATH_ANGLE = 5.0;
 
     public EntityVehicleF_Physics(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);
+        if (data != null) {
+            angularMomentum.set(data.getPoint3d("angularMomentum"));
+        }
         addVariable(this.aileronInputVar = new ComputedVariable(this, "input_aileron", data));
         addVariable(this.aileronAngleVar = new ComputedVariable(this, "aileron", data));
         addVariable(this.aileronTrimVar = new ComputedVariable(this, "trim_aileron", data));
@@ -160,6 +184,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         addVariable(this.autopilotValueVar = new ComputedVariable(this, "autopilot", data));
         addVariable(this.autolevelEnabledVar = new ComputedVariable(this, "auto_level", data));
         addVariable(this.mouseAimControlVar = new ComputedVariable(this, "mouse_aim_control", data));
+        addVariable(this.mouseAimYawVar = new ComputedVariable(this, "mouse_aim_yaw", data));
+        addVariable(this.mouseAimPitchVar = new ComputedVariable(this, "mouse_aim_pitch", data));
+        addVariable(this.mouseAimOverrideVar = new ComputedVariable(this, "mouse_aim_override", data));
         addVariable(this.openTopVar = new ComputedVariable(this, "hasOpenTop", data));
 
         addVariable(this.dragCoefficientVar = new ComputedVariable(this, "dragCoefficient"));
@@ -182,7 +209,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         //Set vectors.
         verticalVector.set(0D, 1D, 0D).rotate(orientation);
         normalizedVelocityVector.set(motion).normalize();
-        sideVector.set(verticalVector.crossProduct(headingVector));
+        sideVector.set(1D, 0D, 0D).rotate(orientation);
+        //Ground correction and collision handling may have cancelled the physical rotation.
+        if (!groundDeviceCollective.isAirborne() || rotation.angles.isZero()) {
+            angularMomentum.set(0, 0, 0);
+        }
         if (!world.isClient() && controllerCount == 0 && mouseAimControlVar.isActive) {
             mouseAimControlVar.setActive(false, true);
         }
@@ -239,6 +270,25 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     @Override
     public void setVariableDefaults() {
         super.setVariableDefaults();
+        boolean localMouseAim = world.isClient() && MouseFlightController.isControlling(this) && !MouseFlightController.isHelicopter;
+        IWrapperPlayer clientPlayer = world.isClient() && controllerCount > 0 ? InterfaceManager.clientInterface.getClientPlayer() : null;
+        AEntityB_Existing ridingEntity = clientPlayer != null ? clientPlayer.getEntityRiding() : null;
+        boolean localPilot = ridingEntity instanceof PartSeat && ((PartSeat) ridingEntity).vehicleOn == this
+                && ((PartSeat) ridingEntity).placementDefinition.isController;
+        if (localPilot) {
+            //An old mode echo must not reactivate mouse steering after a local
+            //switch to keyboard/joystick control or to the helicopter instructor.
+            mouseAimControlVar.setTo(MouseFlightController.isControlling(this) ? (MouseFlightController.isHelicopter ? 1 : 2) : 0, false);
+        }
+        if (controllerCount > 0 && (localMouseAim || !localPilot && mouseAimControlVar.currentValue == 2)) {
+            //Use fresh local target state for the controlling client; echoed target
+            //packets must not rewind its aim.  The server closes the same loop locally.
+            mouseAimController.update(this, localMouseAim ? MouseFlightController.getAimYaw() : mouseAimYawVar.currentValue,
+                    localMouseAim ? MouseFlightController.getAimPitch() : mouseAimPitchVar.currentValue,
+                    localMouseAim ? MouseFlightController.getOverrideAxes() : (int) mouseAimOverrideVar.currentValue);
+        } else {
+            mouseAimController.reset();
+        }
         aileronAreaVar.setTo(definition.motorized.aileronArea, false);
         aileronAngleVar.setTo(aileronInputVar.currentValue, false);
         elevatorAngleVar.setTo(elevatorInputVar.currentValue, false);
@@ -332,6 +382,14 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             }
         }
 
+        boolean fixedWing = definition.motorized.isAircraft && !definition.motorized.isBlimp && !hasRotors;
+        boolean useAngularInertia = fixedWing && towedByConnection == null && groundDeviceCollective.isAirborne();
+        if (!useAngularInertia) {
+            angularMomentum.set(0, 0, 0);
+            rotationalDamping.set(0, 0, 0);
+            controlAcceleration.set(0, 0, 0);
+        }
+
         //If we are free, do normal updates.  But if we are towed by a vehicle, do trailer forces instead.
         //This prevents trailers from behaving badly and flinging themselves into the abyss.
         if (towedByConnection == null) {
@@ -340,6 +398,15 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             momentRoll = definition.motorized.emptyMass * (1.5F + fuelTank.getFluidLevel() / 10000F);
             momentPitch = 2D * currentMass;
             momentYaw = 3D * currentMass;
+            if (useAngularInertia) {
+                //Estimate the mass distribution from the span and fuselage length.
+                //Retain the legacy lower bounds for aircraft with incomplete geometry.
+                double spanInertia = currentMass * wingSpanVar.currentValue * wingSpanVar.currentValue / 12D;
+                double lengthInertia = currentMass * definition.motorized.tailDistance * definition.motorized.tailDistance / 3D;
+                momentRoll = Math.max(momentRoll, spanInertia);
+                momentPitch = Math.max(momentPitch, lengthInertia);
+                momentYaw = Math.max(momentYaw, spanInertia + lengthInertia);
+            }
 
             //If we are towing any non-mounted vehicles, get their thrust contributions as well.
             double towedThrust = getRecursiveTowingThrust();
@@ -437,11 +504,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             elevatorTorque = elevatorForce * definition.motorized.tailDistance;
             rudderTorque = rudderForce * definition.motorized.tailDistance;
 
-            //Disable elevators only when airflow cannot provide meaningful authority.
-            //Testing the resulting torque instead creates a dead zone around equilibrium
-            //and discards the small corrections needed for precise aiming and trim.
-            double maxElevatorTorque = 0.5F * airDensity * axialVelocity * axialVelocity * elevatorAreaVar.currentValue * 2D * Math.abs(definition.motorized.tailDistance);
-            if (maxElevatorTorque < 2D * currentMass / 400D) {
+            //Keep the legacy low-torque cutoff outside free fixed-wing flight.
+            //An airborne aircraft must retain small torques: discarding them makes
+            //the aim controller repeatedly cross a discontinuity and jerk the nose.
+            if (!useAngularInertia && Math.abs(elevatorTorque) < 2D * currentMass / 400D) {
                 elevatorTorque = 0;
             }
 
@@ -515,17 +581,50 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             totalTorque.y /= momentYaw;
             totalTorque.z /= momentRoll;
 
-            //For fixed-wing aircraft, apply aerodynamic rotational damping.
-            //Control surfaces create a damping moment proportional to dynamic pressure
-            //and their geometry (area * arm²), which resists rotation at higher airspeeds.
-            //Without this, the torque feedback gain (which scales with v²) can exceed the
-            //restoring capacity of the base moment of inertia, causing oscillation.
-            if (definition.motorized.isAircraft && !definition.motorized.isBlimp && !hasRotors) {
-                double q = 0.5 * airDensity * axialVelocity * axialVelocity;
-                double rollArm = wingSpanVar.currentValue * 0.5 * 0.75;
-                totalTorque.x /= (1.0 + q * elevatorAreaVar.currentValue * definition.motorized.tailDistance * definition.motorized.tailDistance * 4.0 / momentPitch);
-                totalTorque.y /= (1.0 + q * rudderAreaVar.currentValue * definition.motorized.tailDistance * definition.motorized.tailDistance * 4.0 / momentYaw);
-                totalTorque.z /= (1.0 + q * aileronAreaVar.currentValue * rollArm * rollArm * 4.0 / momentRoll);
+            if (useAngularInertia) {
+                //Torque / inertia is angular acceleration, not a per-tick rotation.
+                //Transport momentum through world space so combined pitch, yaw, and
+                //roll do not silently change its axis as the aircraft rotates.
+                localAngularVelocity.set(angularMomentum).reOrigin(orientation).scale(180D / Math.PI);
+                localAngularVelocity.x /= momentPitch;
+                localAngularVelocity.y /= momentYaw;
+                localAngularVelocity.z /= momentRoll;
+
+                //Rotation changes the airflow at each surface by rate * arm.
+                //The lift-curve slope at neutral is 12 per radian, giving damping
+                //proportional to airspeed rather than an artificial extra inertia.
+                double q = 0.5D * airDensity * axialVelocity * axialVelocity;
+                double damping = 12D * q / Math.max(0.1D, axialVelocity);
+                double tailArmSquared = definition.motorized.tailDistance * definition.motorized.tailDistance;
+                double rollArm = wingSpanVar.currentValue * 0.5D * 0.75D;
+                double rollDampingArea = Math.max(wingAreaVar.currentValue * wingSpanVar.currentValue * wingSpanVar.currentValue / 12D,
+                        aileronAreaVar.currentValue * rollArm * rollArm);
+                rotationalDamping.set(damping * Math.max(0, elevatorAreaVar.currentValue) * tailArmSquared / momentPitch,
+                        damping * Math.max(0, rudderAreaVar.currentValue) * tailArmSquared / momentYaw,
+                        damping * Math.max(0, rollDampingArea) / momentRoll);
+                if (mouseAimControlVar.currentValue == 2 && controllerCount > 0) {
+                    double settlingDamping = mouseAimController.getSettlingDamping();
+                    rotationalDamping.x += settlingDamping;
+                    rotationalDamping.y += settlingDamping;
+                }
+                double tailArm = Math.abs(definition.motorized.tailDistance);
+                controlAcceleration.set(12D * q * Math.max(0, elevatorAreaVar.currentValue) * tailArm / momentPitch,
+                        12D * q * Math.max(0, rudderAreaVar.currentValue) * tailArm / momentYaw,
+                        12D * q * Math.max(0, aileronAreaVar.currentValue) * Math.abs(rollArm) / momentRoll);
+                //Treat damping and the tail's restoring moment implicitly.  The
+                //latter changes as the nose rotates relative to the airflow during
+                //this tick; leaving it explicit makes high-speed flight numerically stiff.
+                totalTorque.x = (localAngularVelocity.x + totalTorque.x) / (1D + rotationalDamping.x + controlAcceleration.x);
+                totalTorque.y = (localAngularVelocity.y + totalTorque.y) / (1D + rotationalDamping.y + controlAcceleration.y);
+                totalTorque.z = (localAngularVelocity.z + totalTorque.z) / (1D + rotationalDamping.z);
+            } else if (fixedWing) {
+                //Grounded aircraft retain the existing force response; contact
+                //correction must not become persistent airborne angular momentum.
+                double q = 0.5D * airDensity * axialVelocity * axialVelocity;
+                double rollArm = wingSpanVar.currentValue * 0.5D * 0.75D;
+                totalTorque.x /= (1D + q * elevatorAreaVar.currentValue * definition.motorized.tailDistance * definition.motorized.tailDistance * 4D / momentPitch);
+                totalTorque.y /= (1D + q * rudderAreaVar.currentValue * definition.motorized.tailDistance * definition.motorized.tailDistance * 4D / momentYaw);
+                totalTorque.z /= (1D + q * aileronAreaVar.currentValue * rollArm * rollArm * 4D / momentRoll);
             }
 
             //If we have skid-steer, yaw directly off the rudder.  This doesn't depend on airspeed, so it lets us turn in place.
@@ -542,6 +641,25 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 totalTorque.z -= getLevelCorrection(orientation.angles.z, levelFactor);
             }
             rotation.angles.set(totalTorque).add(rotorRotation);
+            if (useAngularInertia) {
+                limitFixedWingTurnRate(rotation.angles);
+                angularMomentum.set(rotation.angles).scale(Math.PI / 180D);
+                angularMomentum.x *= momentPitch;
+                angularMomentum.y *= momentYaw;
+                angularMomentum.z *= momentRoll;
+                angularMomentum.rotate(orientation);
+
+                //Apply the rotation vector as one axis-angle rotation.  Sequential
+                //Euler rotations would introduce an extra pitch during banked yaw.
+                double angle = rotation.angles.length();
+                if (angle > 0) {
+                    localAngularVelocity.set(rotation.angles).scale(1D / angle);
+                    rotation.setToAxisAngle(localAngularVelocity, angle).convertToAngles();
+                } else {
+                    rotation.setToZero();
+                }
+                updateFixedWingFlightPath();
+            }
         } else if (!lockedOnRoad) {
             towedByConnection.hookupPriorPosition.set(towedByConnection.hookupCurrentPosition);
 
@@ -658,7 +776,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 	aileronTrimVar.adjustBy(-1, true);
                 }
             }
-        } else if (definition.motorized.isAircraft && autopilotValueVar.isActive) {
+        } else if (definition.motorized.isAircraft && autopilotValueVar.isActive && mouseAimControlVar.currentValue != 2) {
             //Normal aircraft.  Do autopilot operations if required.
             //If we are not flying at a steady elevation, angle the elevator to compensate
             if (-motion.y * 10 > elevatorTrimVar.currentValue + 1 && elevatorTrimVar.currentValue < MAX_ELEVATOR_TRIM) {
@@ -735,36 +853,90 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         return correction;
     }
 
-    /**
-     * Writes the input angles that produce no control-surface moment for the current
-     * airflow and trim.  Components are elevator (X), rudder (Y), and aileron (Z).
-     */
-    public void getNeutralControlSurfaceAngles(Point3D store) {
-        store.set(motion).normalize();
-        orientation.reOrigin(store);
-        double pitchAngle = -Math.toDegrees(Math.asin(Math.max(-1D, Math.min(1D, store.y))));
-        double yawAngle = Math.toDegrees(Math.asin(Math.max(-1D, Math.min(1D, store.x))));
-        store.set(ELEVATOR_LIFT_OFFSET + pitchAngle - elevatorTrimVar.currentValue,
-                yawAngle - rudderTrimVar.currentValue, -aileronTrimVar.currentValue);
+    /**Shared flight envelope for cursor, keyboard, and joystick control.**/
+    private void limitFixedWingTurnRate(Point3D rate) {
+        if (!outOfHealth && motion.length() * speedFactor * 20D >= MIN_FLIGHT_PATH_SPEED) {
+            double turnRate = Math.hypot(rate.x, rate.y);
+            double limit = Math.toDegrees(getFixedWingTurnRateLimit());
+            if (turnRate > limit) {
+                rate.x *= limit / turnRate;
+                rate.y *= limit / turnRate;
+            }
+            rate.z = Math.max(-MAX_ROLL_RATE, Math.min(MAX_ROLL_RATE, rate.z));
+        }
+    }
+
+    private double getFixedWingTurnRateLimit() {
+        //Bound the speed penalty: even very fast flight adds at most 25% to
+        //turn duration, rather than requiring a fixed lateral acceleration.
+        double excessSpeed = Math.max(0, motion.length() - TURN_REFERENCE_SPEED);
+        double speedPenalty = MAX_TURN_SPEED_PENALTY * excessSpeed / (TURN_REFERENCE_SPEED + excessSpeed);
+        return Math.toRadians(MAX_TURN_RATE) / (1D + speedPenalty);
+    }
+
+    /**Bend velocity through a turn for every input mode, preserving the speed produced by forces.**/
+    private void updateFixedWingFlightPath() {
+        double speed = motion.length();
+        if (outOfHealth || speed < 0.000001D || speed * speedFactor * 20D < MIN_FLIGHT_PATH_SPEED) {
+            return;
+        }
+        flightPathForward.set(0, 0, 1).rotate(rotation).rotate(orientation);
+        if (mouseAimControlVar.currentValue == 2 && controllerCount > 0 && mouseAimController.isFlightPathAligned()) {
+            //The cursor instructor can finish capture once it has settled on its
+            //target.  Manual flight retains the same turn envelope and free airflow.
+            motion.set(flightPathForward).scale(speed);
+            mouseAimController.rebaseFlightPathTrim(this);
+        } else {
+            flightPathDirection.set(motion).scale(1D / speed);
+            double dot = flightPathDirection.dotProduct(flightPathForward, true);
+            double angle = Math.acos(dot);
+            //Allow normal angle of attack and sideslip; only excessive drift
+            //gets a bounded lateral correction.  Longitudinal forces retain their effect.
+            double correction = Math.min(Math.max(0, angle - Math.toRadians(FREE_FLIGHT_PATH_ANGLE)) * FLIGHT_PATH_RESPONSE, getFixedWingTurnRateLimit());
+            if (correction > 0.000001D) {
+                flightPathTangent.set(flightPathForward).addScaled(flightPathDirection, -dot).normalize();
+                if (flightPathTangent.length() < 0.5D) {
+                    flightPathTangent.set(1, 0, 0).rotate(orientation);
+                    flightPathTangent.addScaled(flightPathDirection, -flightPathTangent.dotProduct(flightPathDirection, false)).normalize();
+                }
+                motion.set(flightPathDirection).scale(Math.cos(correction)).addScaled(flightPathTangent, Math.sin(correction)).scale(speed);
+            }
+        }
+    }
+
+    /**Writes the actual local angular velocity in degrees per tick, independent of Euler rotation order.**/
+    public void getAngularVelocity(Point3D store) {
+        if (momentPitch > 0 && momentYaw > 0 && momentRoll > 0) {
+            store.set(angularMomentum).reOrigin(orientation).scale(180D / Math.PI);
+            store.x /= momentPitch;
+            store.y /= momentYaw;
+            store.z /= momentRoll;
+        } else {
+            store.set(rotation.angles);
+        }
     }
 
     /**
-     * Writes the local rotation per degree of control input near neutral, including
-     * the same dynamic pressure, moments of inertia, and damping as the force solver.
+     * Writes the rate-feedback lead (ticks), input response, and precision gain
+     * for the mouse instructor.  Estimate critical damping from actual torque
+     * authority and aerodynamic damping rather than one gain for every airspeed.
      */
-    public void getControlSurfaceRotationRates(Point3D store) {
-        double q = 0.5D * airDensity * axialVelocity * axialVelocity;
-        if (q <= 0) {
-            store.set(0, 0, 0);
-            return;
-        }
-        double tailArm = definition.motorized.tailDistance;
-        double rollArm = wingSpanVar.currentValue * 0.5D * 0.75D;
-        //At neutral, getLiftCoeff(angle, 2) has slope PI / 15 per degree.
-        //Converting its torque to degrees per tick gives the factor of 12 below.
-        store.set(-12D * q * elevatorAreaVar.currentValue * tailArm / Math.max(1D, momentPitch + 4D * q * elevatorAreaVar.currentValue * tailArm * tailArm),
-                -12D * q * rudderAreaVar.currentValue * tailArm / Math.max(1D, momentYaw + 4D * q * rudderAreaVar.currentValue * tailArm * tailArm),
-                12D * q * aileronAreaVar.currentValue * rollArm / Math.max(1D, momentRoll + 4D * q * aileronAreaVar.currentValue * rollArm * rollArm));
+    public void getControlDampingTime(Point3D store, Point3D response, Point3D precisionGain, double proportionalGain, double maxStiffness) {
+        double gain = Math.toRadians(proportionalGain);
+        precisionGain.set(Math.min(1D, maxStiffness / Math.max(0.000001D, controlAcceleration.x * MAX_ELEVATOR_ANGLE * gain)),
+                Math.min(1D, maxStiffness / Math.max(0.000001D, controlAcceleration.y * MAX_RUDDER_ANGLE * gain)),
+                Math.min(1D, maxStiffness / Math.max(0.000001D, controlAcceleration.z * MAX_AILERON_ANGLE * gain)));
+        store.set(precisionGain.x * getControlDampingTime(controlAcceleration.x, rotationalDamping.x, controlAcceleration.x, MAX_ELEVATOR_ANGLE * gain * precisionGain.x),
+                precisionGain.y * getControlDampingTime(controlAcceleration.y, rotationalDamping.y, controlAcceleration.y, MAX_RUDDER_ANGLE * gain * precisionGain.y),
+                precisionGain.z * getControlDampingTime(controlAcceleration.z, rotationalDamping.z, 0, MAX_AILERON_ANGLE * gain * precisionGain.z));
+        response.set(controlAcceleration.x * MAX_ELEVATOR_ANGLE * gain / (1D + rotationalDamping.x + controlAcceleration.x),
+                controlAcceleration.y * MAX_RUDDER_ANGLE * gain / (1D + rotationalDamping.y + controlAcceleration.y),
+                controlAcceleration.z * MAX_AILERON_ANGLE * gain / (1D + rotationalDamping.z));
+    }
+
+    private static double getControlDampingTime(double authority, double damping, double restoring, double gain) {
+        double stiffness = authority * gain;
+        return stiffness > 0.000001D ? Math.max(0, (2D * Math.sqrt(stiffness + restoring) - damping) / stiffness) : 0;
     }
 
     protected static double getLiftCoeff(double angleOfAttack, double maxLiftCoeff) {
@@ -1071,6 +1243,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 }
             }
         }
+    }
+
+    @Override
+    public IWrapperNBT save(IWrapperNBT data) {
+        super.save(data);
+        data.setPoint3d("angularMomentum", angularMomentum);
+        return data;
     }
 
     @Override
