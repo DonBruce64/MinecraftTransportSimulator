@@ -33,6 +33,7 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.summoning.VehicleSummonManager;
 
 /**
  * At the final basic vehicle level we add in the functionality for state-based movement.
@@ -223,6 +224,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             } else {
                 slipping = false;
             }
+            world.beginProfiling("Summoning", false);
+            VehicleSummonManager.onVehicleTick((EntityVehicleF_Physics) this);
             world.beginProfiling("TotalMovement", false);
             moveVehicle();
             if (!world.isClient()) {

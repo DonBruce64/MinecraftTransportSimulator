@@ -4,6 +4,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -79,6 +80,7 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.shapes.IBooleanFunction;
@@ -89,6 +91,7 @@ import net.minecraft.world.Explosion;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.server.TicketType;
 import net.minecraft.world.storage.DimensionSavedDataManager;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
@@ -111,6 +114,8 @@ import net.minecraftforge.items.IItemHandler;
 
 public class WrapperWorld extends AWrapperWorld {
     private static final Map<World, WrapperWorld> worldWrappers = new HashMap<>();
+    /**Ticket that keeps chunks loaded for a short while, for {@link #keepChunkLoaded(Point3D)}.**/
+    private static final TicketType<ChunkPos> KEEP_LOADED_TICKET = TicketType.create("mts_keep_loaded", Comparator.comparingLong(ChunkPos::toLong), CHUNK_KEEP_LOADED_TICKS);
     private final Map<UUID, BuilderEntityExisting> playerServerGunBuilders = new HashMap<>();
     private final Map<UUID, Integer> ticksSincePlayerJoin = new HashMap<>();
     private static Map<UUID, BuilderEntityRenderForwarder> playerFollowers = new HashMap<>();
@@ -417,6 +422,15 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public boolean chunkLoaded(Point3D position) {
         return world.isLoaded(new BlockPos(position.x, position.y, position.z));
+    }
+
+    @Override
+    public void keepChunkLoaded(Point3D position) {
+        if (world instanceof ServerWorld) {
+            ChunkPos chunkPos = new ChunkPos((int) Math.floor(position.x) >> 4, (int) Math.floor(position.z) >> 4);
+            //A distance of 2 makes the chunk entity-ticking, the same as a forced chunk.
+            ((ServerWorld) world).getChunkSource().addRegionTicket(KEEP_LOADED_TICKET, chunkPos, 2, chunkPos);
+        }
     }
 
     @Override

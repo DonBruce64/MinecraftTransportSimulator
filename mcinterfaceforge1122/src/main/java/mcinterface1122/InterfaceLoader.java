@@ -11,6 +11,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
+import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -32,6 +33,9 @@ public final class InterfaceLoader {
     public static final String MODNAME = "Immersive Vehicles (MTS)";
     public static final String MODVER = "25.0.0";
 	public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
+
+    @Mod.Instance(MODID)
+    public static InterfaceLoader INSTANCE;
 	
 	@EventHandler
     public void modConstruction(FMLConstructionEvent event) {
@@ -43,6 +47,9 @@ public final class InterfaceLoader {
     public void preInit(FMLPreInitializationEvent event) {
         //Get game directory.
         String gameDirectory = event.getModConfigurationDirectory().getParent();
+
+        //Chunks we keep loaded are only ever needed for a few seconds, so drop any left over from the last time the world was loaded.
+        ForgeChunkManager.setForcedChunkLoadingCallback(this, (tickets, world) -> tickets.forEach(ForgeChunkManager::releaseTicket));
 
         //Init interfaces and send to the main game system.
         if (event.getSide().isClient()) {

@@ -167,6 +167,16 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract boolean chunkLoaded(Point3D position);
 
     /**
+     * Loads the chunk that contains the position, if it isn't already, and keeps it loaded with its
+     * entities ticking for {@link #CHUNK_KEEP_LOADED_TICKS} ticks.  Call again before then to keep it loaded
+     * for longer.  Used to wake up entities that are far from any player.  Server only.
+     */
+    public abstract void keepChunkLoaded(Point3D position);
+
+    /**How long {@link #keepChunkLoaded(Point3D)} keeps a chunk loaded for, in ticks.**/
+    public static final int CHUNK_KEEP_LOADED_TICKS = 100;
+
+    /**
      * Returns the block at the passed-in position, or null if it doesn't exist in the world.
      * Only valid for blocks of type {@link ABlockBase} others will return null.
      */

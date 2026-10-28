@@ -5,8 +5,10 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -74,10 +76,13 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ForgeChunkManager;
+import net.minecraftforge.common.ForgeChunkManager.Ticket;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.GetCollisionBoxesEvent;
@@ -104,6 +109,9 @@ public class WrapperWorld extends AWrapperWorld {
     private final Map<UUID, Integer> ticksSincePlayerJoin = new HashMap<>();
     private final List<AxisAlignedBB> mutableCollidingAABBs = new ArrayList<>();
     private final Set<BlockPos> knownAirBlocks = new HashSet<>();
+    /**Chunks kept loaded by {@link #keepChunkLoaded(Point3D)}, with their tickets and the world time they expire at.**/
+    private final Map<ChunkPos, Ticket> keepLoadedTickets = new HashMap<>();
+    private final Map<ChunkPos, Long> keepLoadedExpiries = new HashMap<>();
 
     protected final World world;
     private final IWrapperNBT savedData;
@@ -388,6 +396,39 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public boolean chunkLoaded(Point3D position) {
         return world.isBlockLoaded(new BlockPos(position.x, position.y, position.z));
+    }
+
+    @Override
+    public void keepChunkLoaded(Point3D position) {
+        if (!world.isRemote) {
+            ChunkPos chunkPos = new ChunkPos((int) Math.floor(position.x) >> 4, (int) Math.floor(position.z) >> 4);
+            if (!keepLoadedTickets.containsKey(chunkPos)) {
+                Ticket ticket = ForgeChunkManager.requestTicket(InterfaceLoader.INSTANCE, world, ForgeChunkManager.Type.NORMAL);
+                if (ticket == null) {
+                    //Out of tickets.  The chunk will just have to load on its own.
+                    return;
+                }
+                //Forcing only stops the chunk unloading, so load it too.
+                ForgeChunkManager.forceChunk(ticket, chunkPos);
+                world.getChunkProvider().provideChunk(chunkPos.x, chunkPos.z);
+                keepLoadedTickets.put(chunkPos, ticket);
+            }
+            keepLoadedExpiries.put(chunkPos, world.getTotalWorldTime() + CHUNK_KEEP_LOADED_TICKS);
+        }
+    }
+
+    /**
+     * Stops keeping chunks loaded once their time is up.
+     */
+    private void releaseExpiredChunks() {
+        Iterator<Entry<ChunkPos, Long>> iterator = keepLoadedExpiries.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Entry<ChunkPos, Long> entry = iterator.next();
+            if (entry.getValue() <= world.getTotalWorldTime()) {
+                ForgeChunkManager.releaseTicket(keepLoadedTickets.remove(entry.getKey()));
+                iterator.remove();
+            }
+        }
     }
 
     @Override
@@ -1077,6 +1118,7 @@ public class WrapperWorld extends AWrapperWorld {
         if (!event.world.isRemote && event.world.equals(world)) {
             if (event.phase.equals(Phase.START)) {
                 tickAll(true);
+                releaseExpiredChunks();
 
                 for (EntityPlayer player : event.world.playerEntities) {
                     UUID playerUUID = player.getUniqueID();
