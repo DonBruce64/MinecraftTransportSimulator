@@ -123,7 +123,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public boolean pitchHeldByGrapple;
     /**True if a grapple line is holding our roll this tick, so ground roll correction shouldn't level us.**/
     public boolean rollHeldByGrapple;
-    /**Pulls from other vehicles' grapple lines hooked into us or a vehicle we tow, applied in our next update.  Server only.**/
+    /**Pulls from grapple lines on us or a vehicle we tow, applied in our next update.  Lines hooked into us from other vehicles only queue these on the server.**/
     public final List<PartGrapple.LinePull> grapplePulls = new ArrayList<>();
     /**Push out of a wall to apply after moving this tick, if a grapple line has dragged us into one.**/
     private Point3D grapplePushOut;
