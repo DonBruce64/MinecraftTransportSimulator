@@ -1092,25 +1092,6 @@ public final class LegacyCompatSystem {
             }
         }
 
-        if (definition.grapple != null) {
-            //Set grapple defaults.
-            if (definition.grapple.range == 0) {
-                definition.grapple.range = 100;
-            }
-            if (definition.grapple.hookSpeed == 0) {
-                definition.grapple.hookSpeed = 80;
-            }
-            if (definition.grapple.reelSpeed == 0) {
-                definition.grapple.reelSpeed = 5;
-            }
-            if (definition.grapple.minLength == 0) {
-                definition.grapple.minLength = 0.5F;
-            }
-            if (definition.grapple.grapplePivotPoint == null) {
-                definition.grapple.grapplePivotPoint = new Point3D();
-            }
-        }
-
         if (definition.parts != null) {
             for (JSONPartDefinition subPartDef : definition.parts) {
                 try {

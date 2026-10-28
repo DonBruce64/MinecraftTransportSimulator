@@ -80,7 +80,7 @@ public class JSONPart extends AJSONPartProvider {
         INTERACTABLE,
         @JSONDescription("Effectors are parts that effect the world they are in.  Different effectors do different things, but the one thing they have in common is they do something with blocks in the world.  Unlike interactable parts, they do not have any inventories or GUIs.  To have such functionality, they should be combined with an interactable part.  For example, a planter combined with a crate to hold seeds for the planter.")
         EFFECTOR,
-        @JSONDescription("Grapples fire a hook on a line from the vehicle they are on.  The hook flies to whatever is under the controller's crosshair, or along the part's +Z axis if nobody is controlling it, and attaches to the first thing it hits, if attachToBlocks, attachToEntities or attachToVehicles allows it.  The line only ever pulls: hooked blocks hold the vehicle and let it winch itself in, swing round corners and climb walls, hooked entities get reeled in, and hooked vehicles share the pull by mass.\nGrapples are driven entirely by variables, so use customKeybinds or panel switches to set the inputs, and animations to render the cable and hook.  Inputs: grapple_fire (toggle; 1 fires the hook, 0 releases it), grapple_reel (button; winches the line in) and grapple_slack (button; lets the line out).\nOutputs: grapple_state (0 idle, 1 flying, 2 hooked a block, 3 hooked an entity, 4 hooked a vehicle), grapple_line_out, grapple_attached, grapple_rope (line length), grapple_mantle (non-zero while being hauled over the top of a wall), and grapple_anchor_x/y/z (the hook's world position).\nFor rendering: grapple_body_yaw and grapple_body_pitch turn the launcher body about grapplePivotPoint to follow the controller's view or the hook.  grapple_line_yaw and grapple_line_pitch then turn the cable and hook about the part's origin, relative to the body, and grapple_length is the distance from the origin to the hook.  Model the cable 1 block long along +Z from the origin and scale it by grapple_length, and translate the hook along +Z by grapple_length.\nGrapples only work on vehicles.  The hook is not a bullet: it is simulated on the server so the line can hold across clients and reloads, and it never consumes ammo.")
+        @JSONDescription("Grapples fire a hook on a line from the vehicle they are on.  The hook flies to whatever is under the controller's crosshair, or along the part's +Z axis if nobody is controlling it, and attaches to the first thing it hits, unless disableBlockAttach, disableEntityAttach or disableVehicleAttach stops it.  The line only ever pulls: hooked blocks hold the vehicle and let it winch itself in, swing round corners and climb walls, hooked entities get reeled in, and hooked vehicles share the pull by mass.\nGrapples are driven entirely by variables, so use customKeybinds or panel switches to set the inputs, and animations to render the cable and hook.  Inputs: grapple_fire (toggle; 1 fires the hook, 0 releases it), grapple_reel (button; winches the line in) and grapple_slack (button; lets the line out).\nOutputs: grapple_state (0 idle, 1 flying, 2 hooked a block, 3 hooked an entity, 4 hooked a vehicle), grapple_line_out, grapple_attached, grapple_rope (line length), grapple_mantle (non-zero while being hauled over the top of a wall), and grapple_anchor_x/y/z (the hook's world position).\nFor rendering: grapple_body_yaw and grapple_body_pitch turn the launcher body about grapplePivotPoint to follow the controller's view or the hook.  grapple_line_yaw and grapple_line_pitch then turn the cable and hook about the part's origin, relative to the body, and grapple_length is the distance from the origin to the hook.  Model the cable 1 block long along +Z from the origin and scale it by grapple_length, and translate the hook along +Z by grapple_length.\nGrapples only work on vehicles.  The hook is not a bullet: it is simulated on the server so the line can hold across clients and reloads, and it never consumes ammo.")
         GRAPPLE
     }
 
@@ -690,50 +690,50 @@ public class JSONPart extends AJSONPartProvider {
     public static class JSONPartGrapple {
         @ModifiableValue
         @JSONDescription("How far the hook can fly, in blocks.  This is also the longest the line can be let out to.  If the two ends are pulled more than 1.5 times this far apart, the line snaps.  Defaults to 100.")
-        public float range;
+        public float range = 100;
 
         @ModifiableValue
         @JSONDescription("How fast the hook flies, in m/s.  Defaults to 80.")
-        public float hookSpeed;
+        public float hookSpeed = 80;
 
         @ModifiableValue
         @JSONDescription("How fast the winch reels the line in or lets it out, in m/s.  Defaults to 5.")
-        public float reelSpeed;
+        public float reelSpeed = 5;
 
         @ModifiableValue
         @JSONDescription("The shortest the winch can reel the line, in blocks.  Short lines let the vehicle be pulled right up over the top of a wall when the hook is just past the edge.  Defaults to 0.5.")
-        public float minLength;
+        public float minLength = 0.5F;
 
         @ModifiableValue
-        @JSONDescription("The widest angle, in degrees from the part's +Z axis, that the hook can be fired at.  If the controller aims further out than this, the hook is fired at the edge of this cone instead.  0 lets the hook be fired in any direction.")
-        public float maxAimAngle;
+        @JSONDescription("The widest angle, in degrees from the part's +Z axis, that the hook can be fired at.  If the controller aims further out than this, the hook is fired at the edge of this cone instead.  0 (default) lets the hook be fired in any direction.")
+        public float maxAimAngle = 0;
 
         @ModifiableValue
-        @JSONDescription("How much damage the hook does to an entity or vehicle when it sticks into it.  This is raw damage: unlike bullets, it is not scaled by speed or by the bullet damage config factors.  It does nothing to blocks, or when the hook bounces off.  0 does no damage.")
-        public float hookDamage;
+        @JSONDescription("How much damage the hook does to an entity or vehicle when it sticks into it.  This is raw damage: unlike bullets, it is not scaled by speed or by the bullet damage config factors.  It does nothing to blocks, or when the hook bounces off.  0 (default) does no damage.")
+        public float hookDamage = 0;
 
         @ModifiableValue
-        @JSONDescription("If true, the launcher body doesn't turn to follow the controller's view or the hook, so grapple_body_yaw and grapple_body_pitch are always 0.  The hook is still fired where the controller aims, within maxAimAngle, and the cable still swings out from the part's origin.")
-        public boolean isFixed;
+        @JSONDescription("If true, the launcher body doesn't turn to follow the controller's view or the hook, so grapple_body_yaw and grapple_body_pitch are always 0.  The hook is still fired where the controller aims, within maxAimAngle, and the cable still swings out from the part's origin. Defaults to false.")
+        public boolean isFixed = false;
 
         @ModifiableValue
-        @JSONDescription("If true, the hook can attach to blocks and placed parts.  The hook bounces off anything it can't attach to and is reeled back in, so set at least one of attachToBlocks, attachToEntities and attachToVehicles.  Leave this out for harpoons that should only catch mobs and vehicles.")
-        public boolean attachToBlocks;
+        @JSONDescription("If true, the hook can't attach to blocks or placed parts.  It bounces off them and is reeled back in instead.  Use this for harpoons that should only catch mobs and vehicles.  Defaults to false.")
+        public boolean disableBlockAttach = false;
 
         @ModifiableValue
-        @JSONDescription("If true, the hook can attach to mobs and players, which are then reeled in.")
-        public boolean attachToEntities;
+        @JSONDescription("If true, the hook can't attach to mobs, players or other entities, and bounces off them instead.  Otherwise, hooked entities are reeled in.  Defaults to false.")
+        public boolean disableEntityAttach = false;
 
         @ModifiableValue
-        @JSONDescription("If true, the hook can attach to other vehicles, which share the line's pull by mass.")
-        public boolean attachToVehicles;
+        @JSONDescription("If true, the hook can't attach to other vehicles, and bounces off them instead.  Otherwise, hooked vehicles share the line's pull by mass.  Defaults to false.")
+        public boolean disableVehicleAttach = false;
 
         @ModifiableValue
-        @JSONDescription("Normally, a vehicle winched up a wall to a hook on top of it is hauled up and over the lip onto the top.  If true, this won't happen, and the vehicle will just hang from the line.")
-        public boolean disableMantle;
+        @JSONDescription("Normally, a vehicle winched up a wall to a hook on top of it is hauled up and over the lip onto the top.  If true, this won't happen, and the vehicle will just hang from the line. Defaults to false.")
+        public boolean disableMantle = false;
 
         @JSONDescription("The point the launcher body turns about for grapple_body_yaw and grapple_body_pitch, in part coordinates.  This must match the centerPoint of the animations that use those variables, so the cable lines up with the turned barrel.  Defaults to the part's origin.")
-        public Point3D grapplePivotPoint;
+        public Point3D grapplePivotPoint = new Point3D();
     }
 
     @Deprecated

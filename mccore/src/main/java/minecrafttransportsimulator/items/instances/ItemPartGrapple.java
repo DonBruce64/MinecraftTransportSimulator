@@ -30,13 +30,13 @@ public class ItemPartGrapple extends AItemPart {
         tooltipLines.add(LanguageSystem.ITEMINFO_GRAPPLE_RANGE.getCurrentValue() + definition.grapple.range);
         tooltipLines.add(LanguageSystem.ITEMINFO_GRAPPLE_REELSPEED.getCurrentValue() + definition.grapple.reelSpeed);
         List<String> attachesTo = new ArrayList<>();
-        if (definition.grapple.attachToBlocks) {
+        if (!definition.grapple.disableBlockAttach) {
             attachesTo.add(LanguageSystem.ITEMINFO_GRAPPLE_BLOCKS.getCurrentValue());
         }
-        if (definition.grapple.attachToEntities) {
+        if (!definition.grapple.disableEntityAttach) {
             attachesTo.add(LanguageSystem.ITEMINFO_GRAPPLE_ENTITIES.getCurrentValue());
         }
-        if (definition.grapple.attachToVehicles) {
+        if (!definition.grapple.disableVehicleAttach) {
             attachesTo.add(LanguageSystem.ITEMINFO_GRAPPLE_VEHICLES.getCurrentValue());
         }
         if (!attachesTo.isEmpty()) {

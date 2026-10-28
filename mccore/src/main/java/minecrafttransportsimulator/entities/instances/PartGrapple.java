@@ -114,9 +114,9 @@ public class PartGrapple extends APart {
     private final ComputedVariable maxAimAngleVar;
     private final ComputedVariable hookDamageVar;
     private final ComputedVariable isFixedVar;
-    private final ComputedVariable attachToBlocksVar;
-    private final ComputedVariable attachToEntitiesVar;
-    private final ComputedVariable attachToVehiclesVar;
+    private final ComputedVariable disableBlockAttachVar;
+    private final ComputedVariable disableEntityAttachVar;
+    private final ComputedVariable disableVehicleAttachVar;
     private final ComputedVariable disableMantleVar;
 
     //Inputs.
@@ -169,9 +169,9 @@ public class PartGrapple extends APart {
         addVariable(this.maxAimAngleVar = new ComputedVariable(this, "maxAimAngle"));
         addVariable(this.hookDamageVar = new ComputedVariable(this, "hookDamage"));
         addVariable(this.isFixedVar = new ComputedVariable(this, "isFixed"));
-        addVariable(this.attachToBlocksVar = new ComputedVariable(this, "attachToBlocks"));
-        addVariable(this.attachToEntitiesVar = new ComputedVariable(this, "attachToEntities"));
-        addVariable(this.attachToVehiclesVar = new ComputedVariable(this, "attachToVehicles"));
+        addVariable(this.disableBlockAttachVar = new ComputedVariable(this, "disableBlockAttach"));
+        addVariable(this.disableEntityAttachVar = new ComputedVariable(this, "disableEntityAttach"));
+        addVariable(this.disableVehicleAttachVar = new ComputedVariable(this, "disableVehicleAttach"));
         addVariable(this.disableMantleVar = new ComputedVariable(this, "disableMantle"));
 
         addVariable(this.fireVar = new ComputedVariable(this, VAR_FIRE, data));
@@ -203,9 +203,9 @@ public class PartGrapple extends APart {
         maxAimAngleVar.setTo(definition.grapple.maxAimAngle, false);
         hookDamageVar.setTo(definition.grapple.hookDamage, false);
         isFixedVar.setTo(definition.grapple.isFixed ? 1 : 0, false);
-        attachToBlocksVar.setTo(definition.grapple.attachToBlocks ? 1 : 0, false);
-        attachToEntitiesVar.setTo(definition.grapple.attachToEntities ? 1 : 0, false);
-        attachToVehiclesVar.setTo(definition.grapple.attachToVehicles ? 1 : 0, false);
+        disableBlockAttachVar.setTo(definition.grapple.disableBlockAttach ? 1 : 0, false);
+        disableEntityAttachVar.setTo(definition.grapple.disableEntityAttach ? 1 : 0, false);
+        disableVehicleAttachVar.setTo(definition.grapple.disableVehicleAttach ? 1 : 0, false);
         disableMantleVar.setTo(definition.grapple.disableMantle ? 1 : 0, false);
     }
 
@@ -420,12 +420,12 @@ public class PartGrapple extends APart {
 
     private boolean canAttach(Hit hit) {
         if (hit.entity != null) {
-            return attachToEntitiesVar.isActive;
+            return !disableEntityAttachVar.isActive;
         } else if (hit.multipart instanceof EntityVehicleF_Physics) {
-            return attachToVehiclesVar.isActive;
+            return !disableVehicleAttachVar.isActive;
         } else {
             //Blocks and placed parts.
-            return attachToBlocksVar.isActive;
+            return !disableBlockAttachVar.isActive;
         }
     }
 
