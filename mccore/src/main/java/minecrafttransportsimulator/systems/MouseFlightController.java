@@ -52,8 +52,16 @@ public class MouseFlightController {
     /** How quickly the camera follows the aim (higher = faster, 0-1 range per tick). */
     private static final double CAM_SMOOTH_SPEED = 5.0;
 
-    /** Autopilot proportional gain for control surfaces (fixed-wing). */
-    private static final double AUTOPILOT_GAIN = 2.0;
+    /** Fixed-wing attitude responses and angular rates, in degrees per tick. */
+    private static final double AIRPLANE_AIM_RESPONSE = 0.12;
+    private static final double AIRPLANE_ROLL_RESPONSE = 0.16;
+    private static final double AIRPLANE_RATE_DAMPING = 0.18;
+    private static final double AIRPLANE_MAX_AIM_RATE = 3.0;
+    private static final double AIRPLANE_MAX_ROLL_RATE = 4.0;
+    private static final double MAX_BANK_ANGLE = 60.0;
+    private static final double MAX_SIDESLIP_ANGLE = 15.0;
+    private static final double BANK_PER_HEADING_ERROR = 2.0;
+    private static double lastAirplaneYawError = 0;
 
     /** Mouse-aim instructor tuning for helicopters.  Rates are in degrees per tick. */
     private static final double HELI_AIM_DEAD_ZONE = 0.35;
@@ -73,9 +81,6 @@ public class MouseFlightController {
     private static final double HELI_VERTICAL_AIM_BLEND = 0.05;
     private static double lastHelicopterYawError = 0;
 
-    /** Angle threshold for blending between banking turn and wings-level. */
-    private static final double AGGRESSIVE_TURN_ANGLE = 10.0;
-
     // Orientation matrices built from angles for camera use.
     private static final RotationMatrix aimOrientation = new RotationMatrix();
     private static final RotationMatrix camOrientation = new RotationMatrix();
@@ -85,6 +90,10 @@ public class MouseFlightController {
     private static final Point3D tempLocal = new Point3D();
     private static final Point3D tempRight = new Point3D();
     private static final Point3D tempUp = new Point3D();
+    private static final Point3D tempVelocity = new Point3D();
+    private static final Point3D neutralControls = new Point3D();
+    private static final Point3D controlSurfaceRates = new Point3D();
+    private static final Point3D aimRotationRate = new Point3D();
 
     /**
      * Activates mouse flight. Initializes aim to match aircraft heading.
@@ -93,6 +102,7 @@ public class MouseFlightController {
         isMouseFlightActive = true;
         isHelicopter = hasRotors;
         activeAircraft = aircraft;
+        lastAirplaneYawError = 0;
         lastHelicopterYawError = 0;
         if (hasRotors) {
             aircraft.mouseAimControlVar.setActive(true, false);
@@ -124,6 +134,7 @@ public class MouseFlightController {
         isMouseFlightActive = false;
         isHelicopter = false;
         activeAircraft = null;
+        lastAirplaneYawError = 0;
         lastHelicopterYawError = 0;
     }
 
@@ -255,7 +266,8 @@ public class MouseFlightController {
 
     /**
      * Runs the fixed-wing autopilot: converts aim direction into control surface deflections.
-     * Uses banking turns for large heading changes and wings-level for small corrections.
+     * Compensates for airflow and trim before applying aim corrections, and banks
+     * to bring the flight path around while damping rotation near the target.
      * Axes with active keyboard override are skipped to let keyboard take full control.
      */
     private static void runAutopilot(EntityVehicleF_Physics aircraft,
@@ -264,31 +276,67 @@ public class MouseFlightController {
         tempLocal.set(mouseAimForward);
         aircraft.orientation.reOrigin(tempLocal);
 
-        // Rudder: positive rudder = yaw right. Aim right = negative local X.
-        double yawInput = -tempLocal.x * AUTOPILOT_GAIN;
-
-        // Elevator: positive elevator = pitch up. Aim above = positive local Y.
-        double pitchInput = tempLocal.y * AUTOPILOT_GAIN;
-
-        // Calculate angle off target for roll blending.
-        double dot = clamp(tempLocal.z, -1.0, 1.0);
-        double angleOffTarget = Math.toDegrees(Math.acos(dot));
-
-        // Roll: bank into the target direction.
-        double aggressiveRoll = -tempLocal.x * AUTOPILOT_GAIN;
-
-        // Wings level: counter current bank using aircraft's right vector world Y.
-        // Negative because positive tempRight.y (banked right) needs negative aileron (roll left).
-        tempRight.set(1, 0, 0).rotate(aircraft.orientation);
-        double wingsLevelRoll = -tempRight.y * AUTOPILOT_GAIN;
-
-        double rollInput;
-        if (angleOffTarget > AGGRESSIVE_TURN_ANGLE) {
-            rollInput = aggressiveRoll;
-        } else {
-            double blend = angleOffTarget / AGGRESSIVE_TURN_ANGLE;
-            rollInput = wingsLevelRoll * (1.0 - blend) + aggressiveRoll * blend;
+        // Use angular errors so a target behind the aircraft still commands a turn.
+        double planarAimLength = Math.hypot(tempLocal.x, tempLocal.z);
+        double pitchError = Math.toDegrees(Math.atan2(tempLocal.y, planarAimLength));
+        double yawError = Math.toDegrees(Math.atan2(tempLocal.x, tempLocal.z));
+        if (tempLocal.z < 0 && Math.abs(tempLocal.x) < 0.02D && Math.abs(lastAirplaneYawError) > 90D) {
+            yawError = Math.copySign(180D, lastAirplaneYawError);
         }
+        lastAirplaneYawError = yawError;
+        // Let the bank turn the flight path on large heading changes.  Trying to
+        // yaw the nose all the way around first would put the aircraft broadside
+        // to its velocity and remove the airflow needed by every control surface.
+        tempVelocity.set(aircraft.motion).normalize();
+        aircraft.orientation.reOrigin(tempVelocity);
+        if (tempVelocity.z > 0.1D) {
+            double sideslipAngle = Math.toDegrees(Math.atan2(tempVelocity.x, tempVelocity.z));
+            yawError = clamp(yawError, sideslipAngle - MAX_SIDESLIP_ANGLE, sideslipAngle + MAX_SIDESLIP_ANGLE);
+        }
+        yawError *= clamp(planarAimLength / 0.05D, 0, 1);
+        // Follow a moving cursor at its angular rate, rather than requiring a
+        // permanent attitude error to keep turning while tracking a moving target.
+        double aimYawRadians = Math.toRadians(aimYaw);
+        double aimPitchChange = aimPitch - prevAimPitch;
+        aimRotationRate.set(aimPitchChange * Math.cos(aimYawRadians), shortestAngleDelta(prevAimYaw, aimYaw),
+                -aimPitchChange * Math.sin(aimYawRadians));
+        aimRotationRate.addScaled(mouseAimForward, -aimRotationRate.dotProduct(mouseAimForward, false));
+        aircraft.orientation.reOrigin(aimRotationRate);
+        double rateBlend = clamp(tempLocal.z, 0, 1);
+        double targetYawRate = clampFinite(aimRotationRate.y, -AIRPLANE_MAX_AIM_RATE, AIRPLANE_MAX_AIM_RATE) * rateBlend;
+        double targetPitchRate = clampFinite(aimRotationRate.x, -AIRPLANE_MAX_AIM_RATE, AIRPLANE_MAX_AIM_RATE) * rateBlend;
+        double yawRate = clamp(targetYawRate + yawError * AIRPLANE_AIM_RESPONSE
+                - (clampFinite(aircraft.rotation.angles.y, -5D, 5D) - targetYawRate) * AIRPLANE_RATE_DAMPING,
+                -AIRPLANE_MAX_AIM_RATE, AIRPLANE_MAX_AIM_RATE);
+        double pitchRate = clamp(targetPitchRate - pitchError * AIRPLANE_AIM_RESPONSE
+                - (clampFinite(aircraft.rotation.angles.x, -5D, 5D) - targetPitchRate) * AIRPLANE_RATE_DAMPING,
+                -AIRPLANE_MAX_AIM_RATE, AIRPLANE_MAX_AIM_RATE);
+
+        // Bank from flight-path error, not just nose error.  The nose can reach the
+        // cursor before inertia has brought the velocity around to the same heading.
+        tempVelocity.set(aircraft.motion).normalize();
+        double horizontalVelocityLength = Math.hypot(tempVelocity.x, tempVelocity.z);
+        if (horizontalVelocityLength < 0.1D) {
+            tempVelocity.set(aircraft.headingVector);
+        }
+        double horizontalAimLength = Math.hypot(mouseAimForward.x, mouseAimForward.z);
+        double headingError = Math.toDegrees(Math.atan2(tempVelocity.z * mouseAimForward.x - tempVelocity.x * mouseAimForward.z,
+                tempVelocity.x * mouseAimForward.x + tempVelocity.z * mouseAimForward.z));
+        double targetBank = clamp(-headingError * BANK_PER_HEADING_ERROR, -MAX_BANK_ANGLE, MAX_BANK_ANGLE)
+                * clamp(horizontalAimLength / 0.1D, 0, 1);
+        tempRight.set(1, 0, 0).rotate(aircraft.orientation);
+        tempUp.set(0, 1, 0).rotate(aircraft.orientation);
+        double currentBank = Math.toDegrees(Math.atan2(tempRight.y, tempUp.y));
+        double horizontalForwardLength = Math.hypot(aircraft.headingVector.x, aircraft.headingVector.z);
+        double bankError = horizontalForwardLength < 0.1D ? 0 : shortestAngleDelta(currentBank, targetBank);
+        double rollRate = clamp(bankError * AIRPLANE_ROLL_RESPONSE - clampFinite(aircraft.rotation.angles.z, -5D, 5D) * AIRPLANE_RATE_DAMPING,
+                -AIRPLANE_MAX_ROLL_RATE, AIRPLANE_MAX_ROLL_RATE);
+
+        // A zero stick is not a zero aerodynamic moment when angle of attack,
+        // sideslip, or trim is present.  Correct about the actual neutral controls
+        // so those moments cannot balance the instructor at a persistent aim error.
+        aircraft.getNeutralControlSurfaceAngles(neutralControls);
+        aircraft.getControlSurfaceRotationRates(controlSurfaceRates);
 
         // Clamp to control surface limits.
         double maxAil = EntityVehicleF_Physics.MAX_AILERON_ANGLE;
@@ -297,15 +345,15 @@ public class MouseFlightController {
 
         // Only send autopilot commands for axes NOT overridden by keyboard.
         if (!keyboardRoll) {
-            double aileronValue = clamp(rollInput * maxAil, -maxAil, maxAil);
+            double aileronValue = getControlSurfaceInput(rollRate, neutralControls.z, controlSurfaceRates.z, maxAil);
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.aileronInputVar, aileronValue));
         }
         if (!keyboardPitch) {
-            double elevatorValue = clamp(pitchInput * maxElev, -maxElev, maxElev);
+            double elevatorValue = getControlSurfaceInput(pitchRate, neutralControls.x, controlSurfaceRates.x, maxElev);
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.elevatorInputVar, elevatorValue));
         }
         if (!keyboardYaw) {
-            double rudderValue = clamp(yawInput * maxRud, -maxRud, maxRud);
+            double rudderValue = getControlSurfaceInput(yawRate, neutralControls.y, controlSurfaceRates.y, maxRud);
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.rudderInputVar, rudderValue));
         }
         InterfaceManager.packetInterface.sendToServer(new PacketVehicleControlNotification(aircraft, InterfaceManager.clientInterface.getClientPlayer()));
@@ -415,6 +463,11 @@ public class MouseFlightController {
         while (delta > 180) delta -= 360;
         while (delta < -180) delta += 360;
         return delta;
+    }
+
+    private static double getControlSurfaceInput(double rate, double neutral, double response, double limit) {
+        double correction = Double.isFinite(response) && Math.abs(response) > 0.000001D ? rate / response : 0;
+        return clamp(neutral + correction, -limit, limit);
     }
 
     private static double removeDeadZone(double value, double deadZone) {

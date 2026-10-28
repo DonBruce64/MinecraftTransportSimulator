@@ -44,6 +44,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public final ComputedVariable elevatorAreaVar;
     public static final double MAX_ELEVATOR_ANGLE = 25;
     public static final double MAX_ELEVATOR_TRIM = 10;
+    private static final double ELEVATOR_LIFT_OFFSET = -2.5;
     public static final double ELEVATOR_DAMPEN_RATE = 0.6;
 
     //Rudder.
@@ -372,7 +373,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             double yawAngleDelta = Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocityVector, true)));
             wingLiftCoeff = getLiftCoeff(trackAngle, 2 + flapActualAngleVar.currentValue / MAX_FLAP_ANGLE_REFERENCE);
             aileronLiftCoeff = getLiftCoeff((aileronAngleVar.currentValue + aileronTrimVar.currentValue), 2);
-            elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngleVar.currentValue + elevatorTrimVar.currentValue), 2);
+            elevatorLiftCoeff = getLiftCoeff(ELEVATOR_LIFT_OFFSET + trackAngle - (elevatorAngleVar.currentValue + elevatorTrimVar.currentValue), 2);
             rudderLiftCoeff = getLiftCoeff(yawAngleDelta - (rudderAngleVar.currentValue + rudderTrimVar.currentValue), 2);
 
             //Get the drag coefficient and force.
@@ -436,10 +437,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             elevatorTorque = elevatorForce * definition.motorized.tailDistance;
             rudderTorque = rudderForce * definition.motorized.tailDistance;
 
-            //If the elevator torque is low, don't apply it.  This prevents elevators from
-            //having effects at slow speeds.  We use a faux-torque here from the main plane
-            //body to check if we are below this point.
-            if (Math.abs(elevatorTorque) < 2D * currentMass / 400D) {
+            //Disable elevators only when airflow cannot provide meaningful authority.
+            //Testing the resulting torque instead creates a dead zone around equilibrium
+            //and discards the small corrections needed for precise aiming and trim.
+            double maxElevatorTorque = 0.5F * airDensity * axialVelocity * axialVelocity * elevatorAreaVar.currentValue * 2D * Math.abs(definition.motorized.tailDistance);
+            if (maxElevatorTorque < 2D * currentMass / 400D) {
                 elevatorTorque = 0;
             }
 
@@ -731,6 +733,38 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             correction = Math.max(-maxRate, Math.min(maxRate, correction));
         }
         return correction;
+    }
+
+    /**
+     * Writes the input angles that produce no control-surface moment for the current
+     * airflow and trim.  Components are elevator (X), rudder (Y), and aileron (Z).
+     */
+    public void getNeutralControlSurfaceAngles(Point3D store) {
+        store.set(motion).normalize();
+        orientation.reOrigin(store);
+        double pitchAngle = -Math.toDegrees(Math.asin(Math.max(-1D, Math.min(1D, store.y))));
+        double yawAngle = Math.toDegrees(Math.asin(Math.max(-1D, Math.min(1D, store.x))));
+        store.set(ELEVATOR_LIFT_OFFSET + pitchAngle - elevatorTrimVar.currentValue,
+                yawAngle - rudderTrimVar.currentValue, -aileronTrimVar.currentValue);
+    }
+
+    /**
+     * Writes the local rotation per degree of control input near neutral, including
+     * the same dynamic pressure, moments of inertia, and damping as the force solver.
+     */
+    public void getControlSurfaceRotationRates(Point3D store) {
+        double q = 0.5D * airDensity * axialVelocity * axialVelocity;
+        if (q <= 0) {
+            store.set(0, 0, 0);
+            return;
+        }
+        double tailArm = definition.motorized.tailDistance;
+        double rollArm = wingSpanVar.currentValue * 0.5D * 0.75D;
+        //At neutral, getLiftCoeff(angle, 2) has slope PI / 15 per degree.
+        //Converting its torque to degrees per tick gives the factor of 12 below.
+        store.set(-12D * q * elevatorAreaVar.currentValue * tailArm / Math.max(1D, momentPitch + 4D * q * elevatorAreaVar.currentValue * tailArm * tailArm),
+                -12D * q * rudderAreaVar.currentValue * tailArm / Math.max(1D, momentYaw + 4D * q * rudderAreaVar.currentValue * tailArm * tailArm),
+                12D * q * aileronAreaVar.currentValue * rollArm / Math.max(1D, momentRoll + 4D * q * aileronAreaVar.currentValue * rollArm * rollArm));
     }
 
     protected static double getLiftCoeff(double angleOfAttack, double maxLiftCoeff) {
