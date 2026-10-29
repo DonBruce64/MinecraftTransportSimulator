@@ -690,50 +690,50 @@ public class JSONPart extends AJSONPartProvider {
     public static class JSONPartGrapple {
         @ModifiableValue
         @JSONDescription("How far the hook can fly, in blocks.  This is also the longest the line can be let out to.  If the two ends are pulled more than 1.5 times this far apart, the line snaps.  Defaults to 100.")
-        public float range = 100;
+        public float range;
 
         @ModifiableValue
         @JSONDescription("How fast the hook flies, in m/s.  Defaults to 80.")
-        public float hookSpeed = 80;
+        public float hookSpeed;
 
         @ModifiableValue
         @JSONDescription("How fast the winch reels the line in or lets it out, in m/s.  Defaults to 5.")
-        public float reelSpeed = 5;
+        public float reelSpeed;
 
         @ModifiableValue
-        @JSONDescription("The shortest the winch can reel the line, in blocks.  Short lines let the vehicle be pulled right up over the top of a wall when the hook is just past the edge.  Defaults to 0.5.")
-        public float minLength = 0.5F;
+        @JSONDescription("The shortest the winch can reel the line, in blocks.  Short lines let the vehicle be pulled right up over the top of a wall when the hook is just past the edge.  Defaults to 0, which lets the line be reeled all the way in.")
+        public float minLength;
 
         @ModifiableValue
         @JSONDescription("The widest angle, in degrees from the part's +Z axis, that the hook can be fired at.  If the controller aims further out than this, the hook is fired at the edge of this cone instead.  0 (default) lets the hook be fired in any direction.")
-        public float maxAimAngle = 0;
+        public float maxAimAngle;
 
         @ModifiableValue
         @JSONDescription("How much damage the hook does to an entity or vehicle when it sticks into it.  This is raw damage: unlike bullets, it is not scaled by speed or by the bullet damage config factors.  It does nothing to blocks, or when the hook bounces off.  0 (default) does no damage.")
-        public float hookDamage = 0;
+        public float hookDamage;
 
         @ModifiableValue
         @JSONDescription("If true, the launcher body doesn't turn to follow the controller's view or the hook, so grapple_body_yaw and grapple_body_pitch are always 0.  The hook is still fired where the controller aims, within maxAimAngle, and the cable still swings out from the part's origin. Defaults to false.")
-        public boolean isFixed = false;
+        public boolean isFixed;
 
         @ModifiableValue
         @JSONDescription("If true, the hook can't attach to blocks or placed parts.  It bounces off them and is reeled back in instead.  Use this for harpoons that should only catch mobs and vehicles.  Defaults to false.")
-        public boolean disableBlockAttach = false;
+        public boolean disableBlockAttach;
 
         @ModifiableValue
         @JSONDescription("If true, the hook can't attach to mobs, players or other entities, and bounces off them instead.  Otherwise, hooked entities are reeled in.  Defaults to false.")
-        public boolean disableEntityAttach = false;
+        public boolean disableEntityAttach;
 
         @ModifiableValue
         @JSONDescription("If true, the hook can't attach to other vehicles, and bounces off them instead.  Otherwise, hooked vehicles share the line's pull by mass.  Defaults to false.")
-        public boolean disableVehicleAttach = false;
+        public boolean disableVehicleAttach;
 
         @ModifiableValue
         @JSONDescription("Normally, a vehicle winched up a wall to a hook on top of it is hauled up and over the lip onto the top.  If true, this won't happen, and the vehicle will just hang from the line. Defaults to false.")
-        public boolean disableMantle = false;
+        public boolean disableMantle;
 
         @JSONDescription("The point the launcher body turns about for grapple_body_yaw and grapple_body_pitch, in part coordinates.  This must match the centerPoint of the animations that use those variables, so the cable lines up with the turned barrel.  Defaults to the part's origin.")
-        public Point3D grapplePivotPoint = new Point3D();
+        public Point3D grapplePivotPoint;
     }
 
     @Deprecated
