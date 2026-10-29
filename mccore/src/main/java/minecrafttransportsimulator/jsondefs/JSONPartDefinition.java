@@ -31,7 +31,7 @@ public class JSONPartDefinition {
     @JSONDescription("Tells MTS that this part is located oustide the vehicle.  Used only for seats, this will result in MTS treating the player like they are standing outside of the vehicle for sound purpouses.")
     public boolean isExterior;
 
-    @JSONDescription("This parameter is optional.  If included and set to true, and this is on a gun part, and the part in this slot is also a gun, then when the part-slot gun is active, it will be allowed to control the main gun.  This allows for switching to SMGs placed on turrets while still moving the turret, but not firing from it.")
+    @JSONDescription("If true, this gun shares aiming control with its parent gun.  If the parent is not a gun, it instead shares aiming control with other guns marked isCoAxial on that same parent part.  Selecting any of these guns keeps the others aimed without firing them.  Guns that do not drive the parent part's rotation inherit its animated orientation, so fixed guns turn with the mount and movable guns aim relative to it.")
     public boolean isCoAxial;
 
     @JSONDescription("This parameter is optional.  If included and set to true, any part in this position will not be able to be removed.  Useful in conjunction with a defaultPart.")
