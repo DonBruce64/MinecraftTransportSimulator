@@ -275,6 +275,11 @@ public class LanguageSystem {
     public static final LanguageEntry GUI_PART_BENCH_CARGO = new LanguageEntry("gui.part_bench.cargo", "Cargo: ");
     public static final LanguageEntry GUI_PART_BENCH_MIXED = new LanguageEntry("gui.part_bench.mixed", "Mixed: ");
     public static final LanguageEntry GUI_PART_BENCH_ENGINE = new LanguageEntry("gui.part_bench.engine", "Engine Size: ");
+    public static final LanguageEntry GUI_PARTINSTALL_INSTALLING = new LanguageEntry("gui.partinstall.installing", "Installing part...");
+    public static final LanguageEntry GUI_PARTREMOVE_REMOVING = new LanguageEntry("gui.partremove.removing", "Removing part...");
+    public static final LanguageEntry GUI_VEHICLEDEPLOY_DEPLOYING = new LanguageEntry("gui.vehicledeploy.deploying", "Deploying vehicle...");
+    public static final LanguageEntry GUI_VEHICLEPACK_PACKING = new LanguageEntry("gui.vehiclepack.packing", "Packing vehicle...");
+
     public static final LanguageEntry GUI_PART_BENCH_WHEEL = new LanguageEntry("gui.part_bench.wheel", "Wheel Size: ");
     public static final LanguageEntry GUI_PART_BENCH_COLOR = new LanguageEntry("gui.part_bench.color", "Color: ");
 

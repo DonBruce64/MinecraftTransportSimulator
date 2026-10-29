@@ -26,6 +26,7 @@ import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -67,6 +68,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public double weightTransfer = 0;
     public final RotationMatrix rotation = new RotationMatrix();
     private final IWrapperPlayer placingPlayer;
+    private IWrapperItemStack placementStackToReturn;
 
     //Properties
     public final ComputedVariable steeringForceIgnoresSpeedVar;
@@ -154,6 +156,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         addVariable(this.hasSkidSteerVar = new ComputedVariable(this, "hasSkidSteer"));
     }
 
+    /**Records the original item to return if the first-tick placement check fails.*/
+    public void setPlacementStack(IWrapperItemStack deploymentStack) {
+        placementStackToReturn = deploymentStack.copy().split(1);
+    }
+
     @Override
     public void update() {
         super.update();
@@ -199,10 +206,18 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 coreBox.updateToEntity(this, null);
                 if (coreBox.updateCollisions(world, new Point3D(0D, -furthestDownPoint, 0D), false)) {
                     //New vehicle shouldn't have been spawned.  Bail out.
-                    placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, LanguageSystem.INTERACT_VEHICLE_NOSPACE));
-                    //Need to add stack back as it will have been removed here.
-                    if (!placingPlayer.isCreative()) {
-                        placingPlayer.setHeldStack(getStack());
+                    if (placingPlayer != null && placingPlayer.isValid()) {
+                        placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, LanguageSystem.INTERACT_VEHICLE_NOSPACE));
+                    }
+                    //Return the original stack without overwriting whichever slot is currently selected.
+                    if (placementStackToReturn != null && !placementStackToReturn.isEmpty()) {
+                        if (placingPlayer != null && placingPlayer.isValid()) {
+                            placingPlayer.getInventory().addStack(placementStackToReturn);
+                        }
+                        if (!placementStackToReturn.isEmpty()) {
+                            world.spawnItemStack(placementStackToReturn, position, null);
+                        }
+                        placementStackToReturn = null;
                     }
                     remove();
                     world.endProfiling();
@@ -211,6 +226,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     addToServerDeltas(null, null, 0);
                 }
             }
+            placementStackToReturn = null;
         }
 
         //Now do update calculations and logic.

@@ -22,6 +22,7 @@ import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentAimReticle;
+import minecrafttransportsimulator.guis.components.GUIComponentTimedActionProgress;
 import minecrafttransportsimulator.guis.components.GUIComponentCrosshair;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentPartSlotMarkers;
@@ -65,6 +66,7 @@ public class GUIOverlay extends AGUIBase {
     @Override
     public void setupComponents() {
         super.setupComponents();
+        addComponent(new GUIComponentTimedActionProgress());
 
         addComponent(mouseoverLabel = new GUIComponentLabel(screenWidth / 2, screenHeight / 2 + 10, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F));
         addComponent(gunLabel = new GUIComponentLabel(screenWidth, 0, ColorRGB.WHITE, "", TextAlignment.RIGHT_ALIGNED, 1.0F));
