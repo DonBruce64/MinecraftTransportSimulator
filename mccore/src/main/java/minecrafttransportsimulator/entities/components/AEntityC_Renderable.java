@@ -93,7 +93,9 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
             world.endProfiling();
 
             //Render the main model.
-            renderModel(rotatedMatrix, blendingEnabled, partialTicks);
+            if (!disableModelRendering()) {
+                renderModel(rotatedMatrix, blendingEnabled, partialTicks);
+            }
 
             //End rotation render matrix.
             //Render holoboxes.
@@ -122,6 +124,13 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
     protected boolean disableRendering() {
         //Don't render on the first tick, as we might have not created some variables yet.
         return ticksExisted == 0;
+    }
+
+    /**
+     * If only the main model needs to be skipped, return true here.
+     */
+    protected boolean disableModelRendering() {
+        return false;
     }
 
     /**

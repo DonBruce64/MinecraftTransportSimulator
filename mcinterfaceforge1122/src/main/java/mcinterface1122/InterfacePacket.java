@@ -149,12 +149,16 @@ class InterfacePacket implements IInterfacePacket {
                         world = InterfaceManager.clientInterface.getClientWorld();
                     }
                     if (world != null) {
-                        message.packet.handle(world);
+                        if (ctx.side.isServer()) {
+                            message.packet.handleFromClient(world, WrapperPlayer.getWrapperFor(ctx.getServerHandler().player));
+                        } else {
+                            message.packet.handle(world);
+                        }
                     }
                 });
             } else {
                 if (ctx.side.isServer()) {
-                    message.packet.handle(getServerWorld(ctx));
+                    message.packet.handleFromClient(getServerWorld(ctx), WrapperPlayer.getWrapperFor(ctx.getServerHandler().player));
                 } else {
                     message.packet.handle(InterfaceManager.clientInterface.getClientWorld());
                 }

@@ -11,6 +11,8 @@ import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -21,8 +23,11 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.neoforge.client.event.RenderArmEvent;
 import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
+import net.neoforged.neoforge.client.event.RenderNameTagEvent;
 import net.neoforged.neoforge.client.event.ViewportEvent.ComputeCameraAngles;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
+import net.neoforged.neoforge.common.util.TriState;
+import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 
@@ -37,7 +42,10 @@ import net.neoforged.fml.common.EventBusSubscriber;
 public class InterfaceEventsEntityRendering {
     public static final Point3D cameraAdjustedPosition = new Point3D();
     public static final RotationMatrix cameraAdjustedOrientation = new RotationMatrix();
+    private static final RotationMatrix cameraShakeRotation = new RotationMatrix();
+    public static final RotationMatrix cameraShakeProjectionRotation = new RotationMatrix();
     public static boolean adjustedCamera;
+    public static boolean cameraShakeActive;
     private static Player mcPlayer;
 
     private static int lastScreenWidth;
@@ -47,6 +55,7 @@ public class InterfaceEventsEntityRendering {
      */
     @SubscribeEvent
     public static void onIVCameraSetup(ComputeCameraAngles event) {
+        cameraShakeActive = false;
         Camera camera = event.getCamera();
         if (camera.getEntity() instanceof Player) {
             mcPlayer = (Player) camera.getEntity();
@@ -69,6 +78,20 @@ public class InterfaceEventsEntityRendering {
                 //our position at the tail of Camera.setup(), since in MC 1.21
                 //setup() overwrites the position after this event returns.
                 adjustedCamera = true;
+            }
+            cameraShakeRotation.setToZero();
+            cameraShakeActive = CameraSystem.applyCameraShake(cameraShakeRotation);
+            if (cameraShakeActive) {
+                cameraShakeRotation.convertToAngles();
+                event.setRoll((float) (event.getRoll() + cameraShakeRotation.angles.z));
+                event.setPitch((float) (event.getPitch() + cameraShakeRotation.angles.x));
+                event.setYaw((float) (event.getYaw() - cameraShakeRotation.angles.y));
+                if (InterfaceManager.clientInterface.getCameraMode() == CameraMode.THIRD_PERSON_INVERTED) {
+                    cameraShakeProjectionRotation.angles.set(-event.getPitch(), -event.getYaw() - 180, -event.getRoll());
+                } else {
+                    cameraShakeProjectionRotation.angles.set(event.getPitch(), -event.getYaw(), event.getRoll());
+                }
+                cameraShakeProjectionRotation.updateToAngles();
             }
         }
     }
@@ -127,6 +150,26 @@ public class InterfaceEventsEntityRendering {
         }
 
         InterfaceRender.renderGUI(event.getGuiGraphics(), mouseX, mouseY, screenWidth, screenHeight, partialTicks, updateGUIs);
+    }
+
+    /**
+     * A chunk arrived on the client: the dynamic light block grid reads its sections again.
+     */
+    @SubscribeEvent
+    public static void onIVChunkLoad(ChunkEvent.Load event) {
+        if (event.getLevel().isClientSide()) {
+            DynamicLightSystem.markColumn(event.getChunk().getPos().x, event.getChunk().getPos().z);
+        }
+    }
+
+    /**
+     * No name tag inside a dynamic light shadow tile.
+     */
+    @SubscribeEvent
+    public static void onIVRenderNameTag(RenderNameTagEvent event) {
+        if (DynamicLightShadowAtlas.isRendering()) {
+            event.setCanRender(TriState.FALSE);
+        }
     }
 
     /**

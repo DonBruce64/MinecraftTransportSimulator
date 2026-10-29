@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.jsondefs;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +33,7 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Boolean> opSignEditingOnly = new JSONConfigEntry<>(false, "If true, only OPs will be able to edit signs on servers.  Does not affect client worlds.");
         public JSONConfigEntry<Boolean> opPickupVehiclesOnly = new JSONConfigEntry<>(false, "If true, only OPs will be able to pick up vehicles with wrenches.  Does not affect client worlds.");
         public JSONConfigEntry<Boolean> creativePickupVehiclesOnly = new JSONConfigEntry<>(false, "If true, vehicles can only be picked up in creative mode.");
+        public JSONConfigEntry<Boolean> preventBlockBreakingWhileRiding = new JSONConfigEntry<>(false, "If true, players seated in vehicles or mounted parts cannot break blocks by hand or with held tools.");
         public JSONConfigEntry<Boolean> keyRequiredToStartVehicles = new JSONConfigEntry<>(false, "If true, vehicles can only be started if the player has the key in their hand.");
         public JSONConfigEntry<Boolean> noclipVehicles = new JSONConfigEntry<>(false, "If true, vehicles will not be able to collide with blocks.  This also prevents them from moving if they do not have wheels on them, as otherwise they would phase through the ground into the void.");
         public JSONConfigEntry<Boolean> chunkloadVehicles = new JSONConfigEntry<>(true, "If true, vehicles will be chunkloaded when on roads/tracks.  This allows them to travel into unloaded chunks.");
@@ -100,16 +102,32 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Double> blockCrashDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage received by vehicles when they crash into blocks and use crash speed thresholds.");
         public JSONConfigEntry<Double> crashDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage received by players when their vehicle explodes in a crash.");
         public JSONConfigEntry<Double> bulletDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by bullets on vehicles.");
+        public JSONConfigEntry<Double> cameraShakeFactor = new JSONConfigEntry<>(1.0D, "Factor applied to camera shake from nearby bullet explosions.  Set this to 0 to disable explosion camera shake.");
+        public JSONConfigEntry<Double> gunCameraShakeFactor = new JSONConfigEntry<>(0.25D, "Factor applied to camera shake from nearby gunshots.  Set this to 0 to disable gunshot camera shake.");
         public JSONConfigEntry<Double> wheelDamageMinimumVelocity = new JSONConfigEntry<>(0.2D, "Minimum velocity (blocks/second) which vehicles must be going to damage entities with their wheels.");
         public JSONConfigEntry<Map<String, Double>> packBulletDamageFactors = new JSONConfigEntry<>(new HashMap<>(), "A mapping of pack-speciifc bullet damage factors.  These values will apply to all bullets in a pack when they hit something, be it a vehicle or entity.");
     }
 
     public static class ConfigFuel {
-        public String comment1 = "The following section is used for fuel configs for engines.  Each entry here is a single fuel type for engines.";
-        public String comment2 = "Inside each entry exist values for the potency of the fluids that can be considered to be that fuel type.";
-        public String comment3 = "You can make engines take different types of fluids for their fuels by editing these values.  See the in-game handbook for more information.";
-        public String comment4 = "If you are having troubles getting the name for a particular fluid, run the game with the mods you want and check the 'lastLoadedFluids' list.  This contains all the fluids that were present during the last run of the game.";
-        public String comment5 = "The first entry in the list is the registered fluid name, while the second entry will be the displayed name.  Only use the first name, as the second name changes based on game language settings.";
+        public List<String> _comment = Arrays.asList(
+            "The following section is used for fuel configs for engines.",
+            "Each entry here is a single fuel type / fuel category for engines.",
+            "",
+            "Example: Avgas is not a real fluid. It is a category. An engine can use the avgas category for fuel.",
+            "In the avgas category, there is lava and gasoline. This means an avgas-type engine can use lava and gasoline fluids.",
+            "",
+            "You can make engines take different types of fluids for their fuels by editing these values.",
+            "For example, you can add 'creosote' to 'avgas', and now any avgas engine can also use creosote oil for fuel.",
+            "",
+            "The number is the potency of the fuel.",
+            "Higher potency reduces consumption, but does not affect engine power.",
+            "This means a fluid with potency 2.0 lasts twice as long / the engine consumes only half its fuel rate for the same performance.",
+            "",
+            "If you want to add a fluid as fuel but do not know the correct name, run the game with the mods you want and check the 'lastLoadedFluids' list.",
+            "This contains all the fluids that were present during the last run of the game.",
+            "The first entry in the list is the registered fluid name, while the second entry will be the displayed name.",
+            "Only use the first name, as the second name changes based on game language settings!"
+        );
         public Map<String, Map<String, Double>> fuels;
         public Map<String, String> lastLoadedFluids;
 

@@ -313,7 +313,14 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 
     @Override
     public boolean canCollideWith(AEntityB_Existing entityToCollide) {
-        return super.canCollideWith(entityToCollide) && !(entityToCollide instanceof AEntityG_Towable) || (!areWeTowedBy((AEntityG_Towable<?>) entityToCollide) && !areWeTowing((AEntityG_Towable<?>) entityToCollide));
+        //Non-towable entities just use the super collision check.
+        //Towable entities collide with anything they aren't towing or towed by.
+        if (entityToCollide instanceof AEntityG_Towable) {
+            AEntityG_Towable<?> towable = (AEntityG_Towable<?>) entityToCollide;
+            return !areWeTowedBy(towable) && !areWeTowing(towable);
+        } else {
+            return super.canCollideWith(entityToCollide);
+        }
     }
 
     protected boolean areWeTowedBy(AEntityG_Towable<?> entity) {

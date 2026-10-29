@@ -7,6 +7,8 @@ import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableVertices;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightRenderer;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightVoxelWindow;
 
 /**
  * Interface for the various MC rendering engines.  This class has functions for
@@ -80,4 +82,37 @@ public interface IInterfaceRender {
      * Returns true if bounding boxes should be rendered.
      */
     boolean shouldRenderBoundingBoxes();
+
+    /**
+     * Returns this version's GL calls for the deferred dynamic light pass ({@link DynamicLightRenderer}), or null if
+     * its context cannot draw it: dynamic lights then light the world in their fallback mode (block light, cone and flare).
+     */
+    default IInterfaceDynamicLightingGL getDynamicLightGL() {
+        return null;
+    }
+
+    /**
+     * Marks the chunk sections touching the passed-in block boxes for a mesh rebuild, so block light raised by
+     * dynamic lights under a shader pack shows.  Box {@code i} is {@code boxes[6i .. 6i+5]} = minX minY minZ maxX maxY maxZ, inclusive.
+     */
+    default void markLightSectionsDirty(int[] boxes, int count) {
+    }
+
+    /**
+     * Daylight at this point, 0..1: its open-sky share times the sun's height, weather included.  0 at night even
+     * in the open.  Dims dynamic lights by day.
+     */
+    float getDaylight(AWrapperWorld world, Point3D position);
+
+    /**
+     * The world's rain level, 0..1, independent of position.  Thickens the air dynamic light beams show in.
+     */
+    float getRainLevel(AWrapperWorld world, float partialTicks);
+
+    /**
+     * Reads which blocks of the 16-block section {@code sx, sy, sz} are solid into the dynamic light block grid,
+     * with {@link DynamicLightVoxelWindow#set} or {@link DynamicLightVoxelWindow#fillSection}.  Returns false if this
+     * version cannot, which leaves the section empty (no block shadows).
+     */
+    boolean readDynamicLightSection(AWrapperWorld world, int sx, int sy, int sz, DynamicLightVoxelWindow window);
 }

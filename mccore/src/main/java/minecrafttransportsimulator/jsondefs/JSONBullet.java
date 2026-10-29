@@ -50,6 +50,9 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Only affects explosive bullets.  The damage dealt and size of the blast radius are normally determined by the diameter of the bullet, but you can override that by setting this value. A value of 1 is about equivalent to a single block of TNT. Useful if you want a little more oomph in your explosions, or if you want to tone them down.")
         public float blastStrength;
 
+        @JSONDescription("Camera shake settings for this bullet's explosion. Strength defaults to half the sum of blastDamage and the explosion's effective blastStrength. If omitted, the default shake settings are used.")
+        public JSONCameraShake cameraShakeParams;
+
         @JSONDescription("If set, this bullet, when it hits an entity, will push it back this far.")
         public float knockback;
 

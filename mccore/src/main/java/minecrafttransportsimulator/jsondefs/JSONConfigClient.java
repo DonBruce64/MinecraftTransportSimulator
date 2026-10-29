@@ -33,11 +33,17 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> renderFlares = new JSONConfigEntry<>(true, "If false, flares on lights will not render.");
         public JSONConfigEntry<Boolean> renderBeams = new JSONConfigEntry<>(true, "If false, beams on lights will not render.");
 
+        public JSONConfigEntry<Boolean> dynamicLights = new JSONConfigEntry<>(true, "If true, light components marked isDynamicLight light up the world around them, cast shadows and draw a volumetric beam and corona.  If false, they render as regular beams and flares.");
+        public JSONConfigEntry<Boolean> DynL_shadows = new JSONConfigEntry<>(true, "If true, dynamic lights cast shadows from blocks, vehicles and mobs.  Turn off to save GPU time.");
+        public JSONConfigEntry<Integer> DynL_MaxLights = new JSONConfigEntry<>(48, "How many dynamic lights may light the world at once, 0 to 256, and how many beams and coronas are drawn.  The strongest and closest are kept.  Fewer lights cost less GPU time; raise it on a powerful machine.");
+        public JSONConfigEntry<Boolean> DynL_ShaderFB = new JSONConfigEntry<>(false, "If true, dynamic lights still light the world under a shader pack (Iris, Oculus, OptiFine) by raising block light and drawing a simple beam cone and flare.  If false, they render as regular beams and flares while a shader pack is active.");
+
         public JSONConfigEntry<Boolean> brightLights = new JSONConfigEntry<>(true, "If false, lights from vehicles and blocks will not make themselves bright and instead will render as if they were part of the model at that same brightness.  Useful if you have shaders and this is causing troubles.");
         public JSONConfigEntry<Boolean> blendedLights = new JSONConfigEntry<>(true, "If false, beam-based lights from vehicles and blocks will not do brightness blending.  This is different from the general brightness setting as this will do OpenGL blending on the world to make it brighter, not just the beams themselves.");
 
         public JSONConfigEntry<Boolean> lightsTransp = new JSONConfigEntry<>(false, "If true, textures that light up will be rendered on the transperent pass.  This is required for some shaders to prevent lit textures without alpha channels from becoming invible, but it may break rendering on non-shader builds.");
         public JSONConfigEntry<Boolean> playerTweaks = new JSONConfigEntry<>(true, "If true, player hands will be modified when holding guns, and hands and legs will be modified when riding in vehicles.  Set this to false (and restart the game) if mods cause issues, like two-hand rendering or player model issues.  Automatically set to false if some mods are detected.");
+        public JSONConfigEntry<Boolean> gunCrosshair = new JSONConfigEntry<>(true, "If false, the aiming crosshair for active guns will not be rendered.");
 
         public JSONConfigEntry<Integer> renderingMode = new JSONConfigEntry<>(0, "Internal rendering mode value, don't touch!");
     }
@@ -55,7 +61,7 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> useShifter = new JSONConfigEntry<>(false, "Set to true if you are using a real life physical shifter controller for shifting gears.  Required since IV doesn't know this automatically since a shifter in neutral won't press any buttons.");
         public JSONConfigEntry<Boolean> heliAutoLevel = new JSONConfigEntry<>(false, "If true, helicopters will automatically return to level flight when you let off the control stick.  However, this will prevent them from doing loops.  The realistic value for this config is false, but the one that's more player-freindly is true.");
         public JSONConfigEntry<Boolean> mouseYoke = new JSONConfigEntry<>(false, "If true, aircraft pitch and roll are controlled by an invisible on-screen mouse yoke.  Cursor center is neutral; window edges are full input.");
-        public JSONConfigEntry<Boolean> arcadeMode = new JSONConfigEntry<>(false, "If true, arcade-style flight and aiming will be enabled. This allows the mouse cursor to control aircraft/helicopter steering systems and enables the gun aiming crosshair.");
+        public JSONConfigEntry<Boolean> arcadeMode = new JSONConfigEntry<>(false, "If true, arcade-style flight and mouse aiming will be enabled. This allows the mouse cursor to control aircraft/helicopter steering systems.");
         public JSONConfigEntry<Boolean> showTutorial = new JSONConfigEntry<>(true, "If true, tutorial and onboarding overlays may be shown.  Set this to false to hide those prompts.");
         public JSONConfigEntry<Boolean> showHoverTxt = new JSONConfigEntry<>(true, "If true, hover text helpers may be shown when looking at supported vehicle elements.  Set this to false to hide those prompts.");
         public JSONConfigEntry<Boolean> cullingWarn = new JSONConfigEntry<>(true, "If true, IV will show a one-time startup warning when Entity Culling is detected.");

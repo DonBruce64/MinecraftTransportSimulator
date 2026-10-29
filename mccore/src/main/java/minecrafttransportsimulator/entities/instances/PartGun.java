@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -18,6 +19,8 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONCameraShake;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.LockOnType;
@@ -33,9 +36,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packloading.PackParser;
-import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
+import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.MouseFlightController;
 
 /**
  * Basic gun class.  This class is responsible for representing a gun in the world.  This gun
@@ -126,6 +128,10 @@ public class PartGun extends APart {
     private IWrapperEntity currentController;
     public IWrapperEntity lastController;
     private PartSeat lastControllerSeat;
+    private UUID cameraControllerID;
+    private final Point3D cameraControlAngles = new Point3D();
+    private UUID cameraControllerSentID;
+    private boolean cameraControlActiveThisTick;
     private Point3D controllerRelativeLookVector = new Point3D();
     public IWrapperEntity entityTarget;
     public PartEngine engineTarget;
@@ -315,6 +321,7 @@ public class PartGun extends APart {
     @Override
     public void update() {
         //Set gun state and do updates.
+        cameraControlActiveThisTick = false;
         firedThisTick = false;
         isRunningInCoaxialMode = false;
         prevInternalOrientation.set(internalOrientation);
@@ -483,6 +490,8 @@ public class PartGun extends APart {
 
                         //If we are in our cam, fire the bullets.
                         if (camOffset == 0) {
+                            JSONCameraShake cameraShakeParams = definition.gun.cameraShakeParams;
+                            double cameraShakeStrength = 0;
                             for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
                                 //Spawn a bullet for each pellet.
                                 for (int i = 0; i < (lastLoadedBullet.definition.bullet.pellets > 0 ? lastLoadedBullet.definition.bullet.pellets : 1); i++) {
@@ -528,6 +537,7 @@ public class PartGun extends APart {
                                 //Decrement bullets, but check to make sure we still have some.
                                 //We might have a partial volley with only some muzzles firing in this group, so if we did, break out early.
                                 //Also add a bullet to the fired list, since the last loaded could be changed if we change ammo.
+                                cameraShakeStrength += cameraShakeParams != null && cameraShakeParams.strength != null ? cameraShakeParams.strength : lastLoadedBullet.definition.bullet.diameter;
                                 firedBullets.add(lastLoadedBullet);
                                 if (loadedBulletCount > 0) {
                                     --loadedBulletCount;
@@ -548,6 +558,10 @@ public class PartGun extends APart {
                                         loadedBulletCounts.set(0, count);
                                     }
                                 }
+                            }
+
+                            if (!world.isClient()) {
+                                CameraSystem.sendGunshotCameraShake(world, position, cameraShakeStrength, cameraShakeParams != null ? cameraShakeParams.radius : 0, cameraShakeParams != null ? cameraShakeParams.duration : 0, cameraShakeParams != null ? cameraShakeParams.intensity : 1);
                             }
 
                             //Update states.
@@ -674,6 +688,10 @@ public class PartGun extends APart {
         isHandHeldGunReloadRequested = false;
         playerPressedTrigger = false;
 
+        if (!cameraControlActiveThisTick) {
+            clearCameraControl();
+        }
+
         //Now run super.  This needed to wait for the gun states to ensure proper states.
         super.update();
 
@@ -683,7 +701,17 @@ public class PartGun extends APart {
             orientation.convertToAngles();
             lastControllerSeat.riderRelativeOrientation.angles.y -= (orientation.angles.y - prevOrientation.angles.y);
             lastControllerSeat.riderRelativeOrientation.angles.x -= (orientation.angles.x - prevOrientation.angles.x);
+            if (lastControllerSeat.isRiderCameraInputActive) {
+                lastControllerSeat.riderCameraInputOrientation.angles.y -= (orientation.angles.y - prevOrientation.angles.y);
+                lastControllerSeat.riderCameraInputOrientation.angles.x -= (orientation.angles.x - prevOrientation.angles.x);
+            }
         }
+    }
+
+    @Override
+    public void remove() {
+        clearCameraControl();
+        super.remove();
     }
 
     @Override
@@ -861,14 +889,15 @@ public class PartGun extends APart {
                         for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
                             //Make sure we don't lock-on to our own vehicle.  Also, ensure if we want aircraft, or ground, we only get those.
                             if (vehicle != vehicleOn && (definition.gun.targetType != TargetType.AIRCRAFT || vehicle.definition.motorized.isAircraft) && (definition.gun.targetType != TargetType.GROUND || !vehicle.definition.motorized.isAircraft)) {
-                                targetVector.set(vehicle.position).subtract(startPoint);
-                                if (world.getBlockHit(startPoint, targetVector) == null) {
-                                    double entityDistance = vehicle.position.distanceTo(startPoint);
-                                    if (entityDistance < smallestDistance) {
-                                        //Potential match by distance, check if the entity is inside the cone.
-                                        normalizedEntityVector.set(vehicle.position).subtract(startPoint).normalize();
-                                        double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
-                                        if (targetAngle < coneAngle) {
+                                //Check range and cone before the raycast.  The raycast loads every chunk it passes through,
+                                //so casting it to out-of-range vehicles force-loads chunks across the world every tick.
+                                double entityDistance = vehicle.position.distanceTo(startPoint);
+                                if (entityDistance < smallestDistance) {
+                                    normalizedEntityVector.set(vehicle.position).subtract(startPoint).normalize();
+                                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
+                                    if (targetAngle < coneAngle) {
+                                        targetVector.set(vehicle.position).subtract(startPoint);
+                                        if (world.getBlockHit(startPoint, targetVector) == null) {
                                             smallestDistance = entityDistance;
                                             vehicleTarget = vehicle;
                                         }
@@ -895,14 +924,14 @@ public class PartGun extends APart {
                         BoundingBox searchBox = new BoundingBox(position, smallestDistance, smallestDistance, smallestDistance);
                         for (IWrapperEntity entity : world.getEntitiesWithin(searchBox)) {
                             if (entity.isValid() && entity != controller) {
-                                targetVector.set(entity.getPosition()).subtract(startPoint);
-                                if (world.getBlockHit(startPoint, targetVector) == null) {
-                                    double entityDistance = entity.getPosition().distanceTo(startPoint);
-                                    if (entityDistance < smallestDistance) {
-                                        //Potential match by distance, check if the entity is inside the cone.
-                                        normalizedEntityVector.set(entity.getPosition()).subtract(startPoint).normalize();
-                                        double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
-                                        if (targetAngle < coneAngle) {
+                                //Check range and cone before the raycast, as with vehicles above.
+                                double entityDistance = entity.getPosition().distanceTo(startPoint);
+                                if (entityDistance < smallestDistance) {
+                                    normalizedEntityVector.set(entity.getPosition()).subtract(startPoint).normalize();
+                                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
+                                    if (targetAngle < coneAngle) {
+                                        targetVector.set(entity.getPosition()).subtract(startPoint);
+                                        if (world.getBlockHit(startPoint, targetVector) == null) {
                                             smallestDistance = entityDistance;
                                             entityTarget = entity;
                                         }
@@ -936,8 +965,42 @@ public class PartGun extends APart {
 
         //Get the delta between our orientation and the player's orientation.
         if (lastControllerSeat != null) {
-            controllerRelativeLookVector.computeVectorAngles(controller.getOrientation(), zeroReferenceOrientation);
+            boolean localCameraControl = world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && lastControllerSeat.activeCameraSwitchbox != null && lastControllerSeat.activeCameraSwitchbox.hasRotationAnimations && isActiveCameraOnGun();
+            boolean remoteCameraControl = !lastControllerSeat.riderIsClient && cameraControllerID != null && cameraControllerID.equals(controller.getID());
+            if (remoteCameraControl) {
+                controllerRelativeLookVector.set(cameraControlAngles);
+                cameraControlActiveThisTick = true;
+            } else if (localCameraControl && lastControllerSeat.isRiderCameraInputActive) {
+                if (lastControllerSeat.hasHeadTracking) {
+                    controllerCameraGunOrientation.setToAngles(lastControllerSeat.headTrackingOrientation);
+                    controllerCameraOrientation.set(lastControllerSeat.orientation).multiply(controllerCameraGunOrientation);
+                } else {
+                    //Apply only new input to the gun; camera scale and offset must not steer it on the next tick.
+                    double yawDelta = (controller.getYaw() - lastControllerSeat.riderCameraLastAngles.y) % 360;
+                    if (yawDelta > 180) {
+                        yawDelta -= 360;
+                    } else if (yawDelta < -180) {
+                        yawDelta += 360;
+                    }
+                    controllerCameraGunOrientation.setToAngles(internalOrientation.angles);
+                    controllerCameraOrientation.set(zeroReferenceOrientation).multiply(controllerCameraGunOrientation).convertToAngles();
+                    controllerCameraOrientation.angles.y += yawDelta;
+                    controllerCameraOrientation.angles.x += controller.getPitch() - lastControllerSeat.riderCameraLastAngles.x;
+                    controllerCameraOrientation.updateToAngles();
+                }
+                controllerRelativeLookVector.computeVectorAngles(controllerCameraOrientation, zeroReferenceOrientation);
+            } else {
+                controllerRelativeLookVector.computeVectorAngles(controller.getOrientation(), zeroReferenceOrientation);
+            }
             handleMovement(controllerRelativeLookVector.y - internalOrientation.angles.y, controllerRelativeLookVector.x - internalOrientation.angles.x);
+            if (localCameraControl) {
+                cameraControlActiveThisTick = true;
+                //Refresh even stationary aim so newly tracking clients receive the control state.
+                cameraControllerSentID = controller.getID();
+                InterfaceManager.packetInterface.sendToServer(new PacketPartGun(this, cameraControllerSentID, internalOrientation.angles));
+            } else if (!remoteCameraControl) {
+                clearCameraControl();
+            }
             //If the seat is a part on us, or the seat has animations linked to us, adjust player rotations.
             //This is required to ensure this gun doesn't rotate forever.
             if (!lastControllerSeat.externalAnglesRotated.isZero() && lastControllerSeat.placementDefinition.animations != null) {
@@ -952,17 +1015,76 @@ public class PartGun extends APart {
                 }
                 if (updateYaw) {
                     lastControllerSeat.riderRelativeOrientation.angles.y -= (internalOrientation.angles.y - prevInternalOrientation.angles.y);
+                    if (lastControllerSeat.isRiderCameraInputActive) {
+                        lastControllerSeat.riderCameraInputOrientation.angles.y -= (internalOrientation.angles.y - prevInternalOrientation.angles.y);
+                    }
 
                 }
                 if (updatePitch) {
                     lastControllerSeat.riderRelativeOrientation.angles.x -= (internalOrientation.angles.x - prevInternalOrientation.angles.x);
+                    if (lastControllerSeat.isRiderCameraInputActive) {
+                        lastControllerSeat.riderCameraInputOrientation.angles.x -= (internalOrientation.angles.x - prevInternalOrientation.angles.x);
+                    }
                 }
             }
-            boolean mouseFlightFirstPerson = lastControllerSeat.riderIsClient && MouseFlightController.isMouseFlightActive && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON;
-            if (world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && (lastControllerSeat.activeCameraEntity == this || allParts.contains(lastControllerSeat.activeCameraEntity)) && !mouseFlightFirstPerson) {
+            //Animated cameras synchronize the rider after input is updated; retain the legacy lock for static gun cameras.
+            if (world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && (lastControllerSeat.activeCameraSwitchbox == null || !lastControllerSeat.activeCameraSwitchbox.hasRotationAnimations) && isActiveCameraOnGun()) {
                 lockControllerToActiveCamera(controller);
             }
         }
+    }
+
+    /**Receives the physical aim independently of the controller's animated camera orientation.**/
+    public boolean setCameraControlAngles(UUID controllerID, Point3D angles) {
+        if (controllerID == null) {
+            return false;
+        }
+        if (angles == null) {
+            if (!controllerID.equals(cameraControllerID)) {
+                return false;
+            }
+            cameraControllerID = null;
+            return true;
+        }
+        if (!Double.isFinite(angles.x) || !Double.isFinite(angles.y)) {
+            return false;
+        }
+        IWrapperEntity controller = getGunController();
+        if (controller == null || !controllerID.equals(controller.getID())) {
+            controller = currentController;
+        }
+        if (controller == null || !controllerID.equals(controller.getID()) || !(controller.getEntityRiding() instanceof PartSeat)) {
+            return false;
+        }
+        cameraControllerID = controllerID;
+        cameraControlAngles.set(Math.max(minPitch, Math.min(maxPitch, angles.x)), Math.max(minYaw, Math.min(maxYaw, angles.y)), 0);
+        return true;
+    }
+
+    private void clearCameraControl() {
+        cameraControllerID = null;
+        if (cameraControllerSentID != null) {
+            InterfaceManager.packetInterface.sendToServer(new PacketPartGun(this, cameraControllerSentID, null));
+            cameraControllerSentID = null;
+        }
+    }
+
+    private boolean isActiveCameraOnGun() {
+        if (lastControllerSeat.activeCameraEntity == this || allParts.contains(lastControllerSeat.activeCameraEntity)) {
+            return true;
+        }
+        //Any rotation sourced from this gun can feed back into its controller, including numbered custom variables.
+        if (lastControllerSeat.activeCamera != null && lastControllerSeat.activeCamera.animations != null) {
+            for (JSONAnimationDefinition animation : lastControllerSeat.activeCamera.animations) {
+                if (animation.animationType == AnimationComponentType.ROTATION) {
+                    ComputedVariable variable = lastControllerSeat.activeCameraEntity.getOrCreateVariable(animation.variable);
+                    if (variable.entity == this) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private void lockControllerToActiveCamera(IWrapperEntity controller) {
@@ -1415,7 +1537,7 @@ public class PartGun extends APart {
             case ("gun_inhand_equipped"):
                 return new ComputedVariable(this, variable, partialTicks -> isHandHeldGunEquipped && isValid ? 1 : 0, false);
             case ("gun_controller_firstperson"):
-                return new ComputedVariable(this, variable, partialTicks -> InterfaceManager.clientInterface.getClientPlayer().equals(currentController) && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON ? 1 : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(currentController) && InterfaceManager.clientInterface.getCameraMode() == CameraSystem.CameraMode.FIRST_PERSON ? 1 : 0, false);
             case ("gun_active"):
                 return new ComputedVariable(this, variable, partialTicks -> state.isAtLeast(GunState.CONTROLLED) ? 1 : 0, false);
             case ("gun_firing"):

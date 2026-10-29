@@ -6,7 +6,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
+        classpath "gradle.plugin.com.github.johnrengelman:shadow:${project.shadow_version}"
     }
 }
 
@@ -41,19 +41,18 @@ configurations {
 
 //Specify dependencies.
 dependencies {
-    //The following dependencies are included by MC, but may update their versions at any point.
-    //We include the oldest for best compatibility.
+    //Minecraft supplies these libraries at runtime; keep usage compatible with older Minecraft versions.
 
     //GSON for JSON parsing.
-    compileOnly("com.google.code.gson:gson:2.8.0")
+    compileOnly("com.google.code.gson:gson:${project.gson_version}")
 
     //Netty for networking.
-    compileOnly("io.netty:netty-all:4.1.9.Final")
+    compileOnly("io.netty:netty-all:${project.netty_version}")
 
 
     //Set sound code bits as embeds so they are included into the jar.  These don't come with MC.
-    embed("com.googlecode.soundlibs:jlayer:1.0.1.4")
-    embed("org.jcraft:jorbis:0.0.17")
+    embed("com.googlecode.soundlibs:jlayer:${project.jlayer_version}")
+    embed("org.jcraft:jorbis:${project.jorbis_version}")
 }
 
 //Here is where we zip up all embeds and add them to our jar.

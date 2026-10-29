@@ -2047,6 +2047,15 @@ public final class LegacyCompatSystem {
     }
 
     private static void performParticleLegacyCompats(JSONParticle particleDef) {
+        //A particle's light sits at the particle center and is a point light unless it has an axis.
+        if (particleDef.light != null) {
+            if (particleDef.light.pos == null) {
+                particleDef.light.pos = new Point3D();
+            }
+            if (particleDef.light.axis == null) {
+                particleDef.light.axis = new Point3D();
+            }
+        }
         if (particleDef.spreadFactorVertical != 0 || particleDef.spreadFactorHorizontal != 0) {
             particleDef.spreadRandomness = new Point3D(particleDef.initialVelocity.x * particleDef.spreadFactorHorizontal, particleDef.spreadFactorVertical / 2D, particleDef.initialVelocity.z * particleDef.spreadFactorHorizontal);
             particleDef.spreadFactorVertical = 0;
