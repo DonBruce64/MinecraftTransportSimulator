@@ -121,6 +121,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public final List<PartGrapple> grapples = new ArrayList<>();
     /**True if a grapple line is holding our pitch this tick, so ground pitch correction shouldn't level us.**/
     public boolean pitchHeldByGrapple;
+    /**True if a grapple line is holding our roll this tick, so ground roll correction shouldn't level us.**/
+    public boolean rollHeldByGrapple;
+    /**Pulls from grapple lines on us or a vehicle we tow, applied in our next update.  Lines hooked into us from other vehicles only queue these on the server.**/
+    public final List<PartGrapple.LinePull> grapplePulls = new ArrayList<>();
     /**Push out of a wall to apply after moving this tick, if a grapple line has dragged us into one.**/
     private Point3D grapplePushOut;
 
@@ -383,6 +387,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      */
     private void updateGrapples() {
         pitchHeldByGrapple = false;
+        rollHeldByGrapple = false;
         grapplePushOut = null;
         if (!grapples.isEmpty()) {
             boolean attached = false;
@@ -396,6 +401,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             if (attached && towedByConnection == null) {
                 grapplePushOut = findWallPushOut(getBoxesForWallChecks());
             }
+        }
+        if (!grapplePulls.isEmpty()) {
+            for (PartGrapple.LinePull pull : grapplePulls) {
+                PartGrapple.applyPull((EntityVehicleF_Physics) this, pull);
+            }
+            grapplePulls.clear();
         }
     }
 
@@ -617,6 +628,18 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             }
         }
         return brakingFactor;
+    }
+
+    /**
+     * Returns how hard our brakes hold the passed-in grounded wheel against rolling, in kg*m/ticks^2, or 0 if
+     * the brakes are off.  This is that wheel's share of the braking in {@link #performGroundOperations()}.
+     * Trailers don't brake.
+     */
+    public double getWheelBrakingForce(PartGroundDevice groundDevice) {
+        if (towedByConnection != null || (!parkingBrakeVar.isActive && brakeVar.currentValue <= 0)) {
+            return 0;
+        }
+        return 20D * groundDevice.motiveFrictionVar.currentValue * brakingFactorVar.currentValue;
     }
 
     /**
@@ -929,8 +952,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     if (!pitchHeldByGrapple) {
                         groundDeviceCollective.performPitchCorrection(groundMotion);
                     }
-                    //Don't do roll correction if we don't have roll.
-                    if (groundDeviceCollective.canDoRollChecks()) {
+                    //Don't do roll correction if we don't have roll, or a grapple line is holding it.
+                    if (!rollHeldByGrapple && groundDeviceCollective.canDoRollChecks()) {
                         world.beginProfiling("GroundHandlingRoll", false);
                         groundDeviceCollective.performRollCorrection(groundMotion);
                     }
@@ -1126,7 +1149,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      * every move and turn is blocked, so we stick.
      * -clampMotionToWalls: cuts motion on any horizontal axis that would put a wheel or box into a
      * block, so we slide along the wall instead.
-     * -limitTiltToWalls: shrinks a tilt that would swing a wheel or collision box into a block.
+     * -limitTiltToWalls / limitTurnToWalls: shrinks a tilt or turn that would swing a wheel or collision box into a block.
      * -findWallPushOut: steps us out a little each tick if we're already stuck, towards the nearest free spot.
      *
      * Wheels are checked by their top half only, so the ground they sit on (or a slab they're climbing) doesn't count.
@@ -1194,16 +1217,25 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      * @param tilt the pitch to apply, in degrees.  Positive is nose down.
      */
     public double limitTiltToWalls(List<BoundingBox> freeBoxes, Point3D pivot, double tilt) {
-        for (int i = 0; i < WALL_CUT_TRIES && tilt != 0; ++i, tilt /= 2) {
-            if (!tiltCollidesWithWalls(freeBoxes, pivot, tilt)) {
-                return tilt;
+        return limitTurnToWalls(freeBoxes, pivot, new Point3D(1, 0, 0), tilt);
+    }
+
+    /**
+     * Like {@link #limitTiltToWalls(List, Point3D, double)}, but for a turn about any axis.
+     *
+     * @param axis the axis we turn about, in our own frame.  Must be normalized.
+     * @param angle the turn to apply, in degrees, right-handed about the axis.
+     */
+    public double limitTurnToWalls(List<BoundingBox> freeBoxes, Point3D pivot, Point3D axis, double angle) {
+        for (int i = 0; i < WALL_CUT_TRIES && angle != 0; ++i, angle /= 2) {
+            if (!turnCollidesWithWalls(freeBoxes, pivot, new RotationMatrix().setToAxisAngle(axis, angle))) {
+                return angle;
             }
         }
         return 0;
     }
 
-    private boolean tiltCollidesWithWalls(List<BoundingBox> boxes, Point3D pivot, double tilt) {
-        RotationMatrix turn = new RotationMatrix().setToAxisAngle(1, 0, 0, tilt);
+    private boolean turnCollidesWithWalls(List<BoundingBox> boxes, Point3D pivot, RotationMatrix turn) {
         for (BoundingBox box : boxes) {
             //Turn the box centre about the pivot in our frame, then take it back to the world.
             Point3D turned = box.globalCenter.copy().subtract(position).reOrigin(orientation).subtract(pivot).rotate(turn).add(pivot);

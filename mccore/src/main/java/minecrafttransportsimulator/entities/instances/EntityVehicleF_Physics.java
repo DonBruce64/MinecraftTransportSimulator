@@ -123,10 +123,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     private final Point3D towingThrustForce = new Point3D();//kg*m/ticks^2
     private final Point3D totalForce = new Point3D();//kg*m/ticks^2
 
-    //Torques.
-    private double momentRoll;//kg*m^2
-    private double momentPitch;//kg*m^2
-    private double momentYaw;//kg*m^2
+    //Torques.  Moments are visible to grapple lines, which turn us with the same physics.
+    double momentRoll;//kg*m^2
+    double momentPitch;//kg*m^2
+    double momentYaw;//kg*m^2
     private double aileronTorque;//kg*m^2/ticks^2
     private double elevatorTorque;//kg*m^2/ticks^2
     private double rudderTorque;//kg*m^2/ticks^2
@@ -331,14 +331,16 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             }
         }
 
+        //Set moments.  Trailers need these too, as grapple lines can turn them.
+        momentRoll = definition.motorized.emptyMass * (1.5F + fuelTank.getFluidLevel() / 10000F);
+        momentPitch = 2D * currentMass;
+        momentYaw = 3D * currentMass;
+
         //If we are free, do normal updates.  But if we are towed by a vehicle, do trailer forces instead.
         //This prevents trailers from behaving badly and flinging themselves into the abyss.
         if (towedByConnection == null) {
-            //Set moments and air density.
+            //Set air density.
             airDensity = 1.225 * Math.pow(2, -(position.y-seaLevel) / (500D * world.getMaxHeight() / 256D));
-            momentRoll = definition.motorized.emptyMass * (1.5F + fuelTank.getFluidLevel() / 10000F);
-            momentPitch = 2D * currentMass;
-            momentYaw = 3D * currentMass;
 
             //If we are towing any non-mounted vehicles, get their thrust contributions as well.
             double towedThrust = getRecursiveTowingThrust();
@@ -488,7 +490,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             }
 
             //Finally, get gravity.  Blimps sink when dead.
-            gravitationalForce = !ballastVolumeVar.isActive || outOfHealth ? currentMass * 0.0245D * gravityFactorVar.currentValue : 0;
+            gravitationalForce = getGravitationalForce();
 
             if (waterBallastFactorVar.isActive && world.isBlockLiquid(position)) {
                 gravitationalForce -= gravitationalForce * waterBallastFactorVar.currentValue;
@@ -714,6 +716,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         } else {
             return 0;
         }
+    }
+
+    /**
+     * Returns the force of gravity on us, in kg*m/ticks^2.  Blimps don't feel it while their ballast holds them up.
+     */
+    public double getGravitationalForce() {
+        return !ballastVolumeVar.isActive || outOfHealth ? currentMass * 0.0245D * gravityFactorVar.currentValue : 0;
     }
 
     /**
