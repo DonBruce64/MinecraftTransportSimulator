@@ -174,7 +174,13 @@ public class CameraSystem {
                 if (sittingSeat.vehicleOn != null && sittingSeat.vehicleOn.definition.motorized != null && sittingSeat.vehicleOn.definition.motorized.cameraOffset != null) {
                     //Use the configured vehicle-relative camera anchor.
                     cameraAdjustedPosition.set(sittingSeat.vehicleOn.prevPosition).interpolate(sittingSeat.vehicleOn.position, partialTicks);
-                    sittingSeat.vehicleOn.getInterpolatedOrientation(cameraOffsetOrientation, partialTicks);
+                    if (MouseFlightController.isMouseFlightActive && !freecamThirdPerson) {
+                        //A detached aim camera must not orbit an offset that banks
+                        //with the airframe: that makes the apparent roll pivot move.
+                        cameraOffsetOrientation.set(cameraRotation);
+                    } else {
+                        sittingSeat.vehicleOn.getInterpolatedOrientation(cameraOffsetOrientation, partialTicks);
+                    }
                     cameraAdjustedPosition.add(cameraOffset.set(sittingSeat.vehicleOn.definition.motorized.cameraOffset).rotate(cameraOffsetOrientation));
                 } else {
                     //Without a configured offset, retain the rider-relative camera anchor.
