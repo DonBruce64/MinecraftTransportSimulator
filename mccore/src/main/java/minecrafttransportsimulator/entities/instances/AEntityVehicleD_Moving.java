@@ -1065,6 +1065,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private boolean isCollisionBoxCollided() {
         if (!ConfigSystem.settings.general.noclipVehicles.value && motion.length() > 0.001) {
             boolean clearedCache = false;
+            //The tick rotation is vehicle-local, as in orientation.multiply(rotationApplied).
+            //Transform the world-space box offset into that frame before applying it.
             for (BoundingBox box : allBlockCollisionBoxes) {
                 tempBoxPosition.set(box.globalCenter).subtract(position).reOrigin(orientation).rotate(rotation).rotate(orientation).subtract(box.globalCenter).add(position).addScaled(motion, speedFactor);
                 if (!box.collidesWithLiquids && world.checkForCollisions(box, tempBoxPosition, !clearedCache, !world.isClient() && ConfigSystem.settings.damage.vehicleBlockBreaking.value)) {
@@ -1171,7 +1173,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             }
         }
 
-        //Check the rotation.
+        //Check the rotation in the same vehicle-local frame used when applying it.
         if (!rotation.angles.isZero()) {
             for (BoundingBox box : allBlockCollisionBoxes) {
                 tempBoxPosition.set(box.globalCenter).subtract(position).reOrigin(orientation).rotate(rotation).rotate(orientation).add(position).addScaled(motion, speedFactor);

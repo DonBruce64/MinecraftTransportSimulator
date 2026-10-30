@@ -344,7 +344,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 } else if (part instanceof PartPropeller) {
                     PartPropeller propeller = (PartPropeller) part;
                     thrustForceValue += propeller.addToForceOutput(thrustForce, thrustTorque);
-                    if (propeller.definition.propeller.isRotor && groundDeviceCollective.isAnythingOnGround()) {
+                    if (propeller.definition.propeller.isRotor && groundDeviceCollective.isAirborne()) {
                         hasRotors = true;
                         if (controllerCount > 0 && mouseAimControlVar.isActive) {
                             //Mouse aim has its own attitude controller, so legacy auto-level
@@ -539,7 +539,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
             //As a special case, if the vehicle is a stalled plane, add a forwards pitch to allow the plane to right itself.
             //This is needed to prevent the plane from getting stuck in a vertical position and crashing.
-            if (wingAreaVar.currentValue > 0 && trackAngle > 40 && orientation.angles.x < 45 && motion.y < -0.1 && groundDeviceCollective.isAnythingOnGround()) {
+            if (wingAreaVar.currentValue > 0 && trackAngle > 40 && orientation.angles.x < 45 && motion.y < -0.1 && groundDeviceCollective.isAirborne()) {
                 elevatorTorque += 100;
             }
 
