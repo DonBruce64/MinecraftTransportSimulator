@@ -327,6 +327,9 @@ public class PartGun extends APart {
         isRunningInCoaxialMode = false;
         prevInternalOrientation.set(internalOrientation);
         updateCoaxialReferenceOrientation();
+        if (placementDefinition.isCoAxial && partOn instanceof PartGun) {
+            synchronizeCoaxialOrientation((PartGun) partOn);
+        }
         if (currentBullet != null && !currentBullet.isValid) {
             currentBullet = null;
         }
@@ -804,6 +807,27 @@ public class PartGun extends APart {
     }
 
     /**
+     * Coaxial guns on a gun share its physical movement, including while selected or uncontrolled.
+     * Applying a second slew rate would let a moving turret leave its coaxial guns behind.
+     */
+    private void synchronizeCoaxialOrientation(PartGun parentGun) {
+        zeroReferenceOrientation.set(parentGun.zeroReferenceOrientation);
+        if (placementDefinition.rot != null) {
+            zeroReferenceOrientation.multiply(placementDefinition.rot);
+        }
+        controllerCameraGunOrientation.setToAngles(parentGun.internalOrientation.angles);
+        controllerCameraOrientation.set(parentGun.zeroReferenceOrientation).multiply(controllerCameraGunOrientation);
+        controllerRelativeLookVector.computeVectorAngles(controllerCameraOrientation, zeroReferenceOrientation);
+        internalOrientation.angles.x = Math.max(minPitch, Math.min(maxPitch, controllerRelativeLookVector.x));
+        internalOrientation.angles.y = Math.max(minYaw, Math.min(maxYaw, controllerRelativeLookVector.y));
+        if (internalOrientation.angles.y - prevInternalOrientation.angles.y > 180) {
+            prevInternalOrientation.angles.y += 360;
+        } else if (internalOrientation.angles.y - prevInternalOrientation.angles.y < -180) {
+            prevInternalOrientation.angles.y -= 360;
+        }
+    }
+
+    /**
      * Helper method to calculate yaw/pitch movement.  Takes controller
      * look vector into account, as well as gun position.  Does not take
      * gun clamping into account as that's done in {@link #handleMovement(double, double)}
@@ -991,6 +1015,10 @@ public class PartGun extends APart {
 
         //Get the delta between our orientation and the player's orientation.
         if (lastControllerSeat != null) {
+            //The parent aims this shared mount and handles its rider/camera rotation once.
+            if (placementDefinition.isCoAxial && partOn instanceof PartGun) {
+                return;
+            }
             boolean localCameraControl = world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && lastControllerSeat.activeCameraSwitchbox != null && lastControllerSeat.activeCameraSwitchbox.hasRotationAnimations && isActiveCameraOnGun();
             boolean remoteCameraControl = !lastControllerSeat.riderIsClient && cameraControllerID != null && cameraControllerID.equals(controller.getID());
             if (remoteCameraControl) {
