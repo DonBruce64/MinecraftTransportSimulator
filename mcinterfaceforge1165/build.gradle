@@ -28,7 +28,12 @@ archivesBaseName = project.archive_name
 //java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 compileJava {
     options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
-		options.release = 8
+    sourceCompatibility = "1.8"
+    targetCompatibility = "1.8"
+    //The --release flag is only supported by Java 9 and newer compilers.
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.release = 8
+    }
 }
 
 //Minecraft mappings and run configs.
