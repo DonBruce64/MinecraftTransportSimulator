@@ -424,7 +424,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 double newDamage = entity.damageVar.currentValue - amountRepaired;
                                 entity.damageVar.setTo(newDamage, true);
                                 if (definition.repair.canRepairTotaled && entity instanceof EntityVehicleF_Physics) {
-                                    ((EntityVehicleF_Physics) entity).electricPower = ((EntityVehicleF_Physics) entity).batteryCapacityVar.currentValue * AEntityVehicleE_Powered.BATTERY_DEFAULT_CHARGE;
+                                    EntityVehicleF_Physics vehicleToCharge = (EntityVehicleF_Physics) entity;
+                                    vehicleToCharge.electricUsageVar.adjustBy(vehicleToCharge.electricPower - vehicleToCharge.batteryCapacityVar.currentValue * AEntityVehicleE_Powered.BATTERY_DEFAULT_CHARGE, true);
                                 }
                                 if (entity instanceof PartEngine) {
                                     ((PartEngine) entity).hoursVar.setTo(0, true);
