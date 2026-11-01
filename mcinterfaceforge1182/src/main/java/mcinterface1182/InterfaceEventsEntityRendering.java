@@ -12,6 +12,8 @@ import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -24,7 +26,10 @@ import net.minecraftforge.client.event.RenderArmEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.PreLayer;
 import net.minecraftforge.client.event.RenderHandEvent;
+import net.minecraftforge.client.event.RenderNameplateEvent;
 import net.minecraftforge.client.gui.ForgeIngameGui;
+import net.minecraftforge.event.world.ChunkEvent;
+import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
@@ -150,6 +155,27 @@ public class InterfaceEventsEntityRendering {
 
         InterfaceRender.renderGUI(event.getMatrixStack(), mouseX, mouseY, screenWidth, screenHeight, partialTicks, updateGUIs);
     }
+
+    /**
+     * A chunk arrived on the client: the dynamic light block grid reads its sections again.
+     */
+    @SubscribeEvent
+    public static void onIVChunkLoad(ChunkEvent.Load event) {
+        if (event.getWorld().isClientSide()) {
+            DynamicLightSystem.markColumn(event.getChunk().getPos().x, event.getChunk().getPos().z);
+        }
+    }
+
+    /**
+     * No name tag inside a dynamic light shadow tile.
+     */
+    @SubscribeEvent
+    public static void onIVRenderNameplate(RenderNameplateEvent event) {
+        if (DynamicLightShadowAtlas.isRendering()) {
+            event.setResult(Event.Result.DENY);
+        }
+    }
+
 
     /**
      * Hand and arm render events.  We use these to disable rendering of the item in the player's hand

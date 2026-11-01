@@ -30,6 +30,12 @@ public class JSONVehicle extends AJSONPartProvider {
 
         @JSONDescription("If set to true, this vehicle will attempt to get and use the light states of any vehicle that is towing it. Useful for trailers where you want the lights to come on with the vehicle, but not towed cars where you want them to stay off.")
         public boolean isTrailer;
+
+        @JSONDescription("How long, in ticks, this vehicle takes to deploy while holding right-click on the target block.  Defaults to instant if left out.")
+        public int deployTime;
+
+        @JSONDescription("How long, in ticks, this vehicle takes to pack while holding sneak and left-click with the required tool.  Defaults to instant if left out.")
+        public int packTime;
         
         @JSONDescription("Sets the default third-person zoom level when this vehicle is spawned.  0 is the closest possible camera position, 1 is one step out, 2 is two steps out, and so on.  This only affects the starting zoom level; players can still zoom in or out normally after entering the vehicle.")
         public int defaultZoom;
@@ -184,6 +190,18 @@ public class JSONVehicle extends AJSONPartProvider {
         @ModifiableValue
         @JSONDescription("The factor of which to apply ballast for water operations.  0 is no change, 0.5 makes them fall half speed, 1.0 makes vehicles neither float nor sink, and anything higher makes them float up.  Only applied when the vehicle is in water.")
         public float waterBallastFactor;
+
+        @ModifiableValue
+        @JSONDescription("How fast this vehicle can yaw in place, in degrees per tick at full rudder.  Unlike the rudder, this does not need airspeed, so it lets blimps and hovering aircraft turn on the spot.  0 (the default) disables it.  Make this a variableModifier to only enable it in certain modes, like a hover mode.")
+        public float blimpSkidSteer;
+
+        @ModifiableValue
+        @JSONDescription("How strongly this vehicle eases its pitch and roll back to level while airborne, as the fraction of the current tilt removed each tick, from 0 to 1.  0.05 levels out over a few seconds, and tilts under 0.01 degrees snap to exactly level.  Like blimpSkidSteer, this does not need airspeed.  0 (the default) disables it.  Make this a variableModifier to only enable it in certain modes, like a hover mode.")
+        public float blimpLevelFactor;
+
+        @ModifiableValue
+        @JSONDescription("The most blimpLevelFactor may rotate this vehicle, in degrees per tick, so large tilts level at a steady rate instead of snapping.  0 (the default) means no limit.")
+        public float blimpLevelMaxRate;
 
         @ModifiableValue
         @JSONDescription("The factor of which to apply gravity to this vehicle. If defined, will override the main mtsconfig file value.")

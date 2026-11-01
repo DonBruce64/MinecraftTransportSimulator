@@ -88,6 +88,14 @@ public class InterfaceEventsModelLoader {
                     if (allEntities != null) {
                         boolean blendingEnabled = (MinecraftForgeClient.getRenderPass() == -1 ? InterfaceRender.lastRenderPassActualPass : MinecraftForgeClient.getRenderPass()) == 1;
 
+                        //Dynamic lights go over the finished world and the solid models, under the blended pass.
+                        //The solid models are also the bodies the light pass casts shadows from.
+                        if (blendingEnabled) {
+                            InterfaceRender.renderDynamicLightFrame(partialTicks);
+                        } else {
+                            InterfaceRender.setCapturingBodies(true);
+                        }
+
                         //Use smooth shading for model rendering.
                         GL11.glShadeModel(GL11.GL_SMOOTH);
                         //Enable normal re-scaling for model rendering.
@@ -109,6 +117,8 @@ public class InterfaceEventsModelLoader {
                             GL11.glPopMatrix();
                             world.endProfiling();
                         }
+
+                        InterfaceRender.setCapturingBodies(false);
 
                         //Reset states.
                         GL11.glShadeModel(GL11.GL_FLAT);
