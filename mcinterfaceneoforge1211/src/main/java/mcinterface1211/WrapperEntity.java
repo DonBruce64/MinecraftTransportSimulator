@@ -28,6 +28,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -37,7 +38,10 @@ import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.LeadItem;
-import net.minecraft.world.item.alchemy.Potion;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -251,6 +255,26 @@ public class WrapperEntity implements IWrapperEntity {
     }
 
     @Override
+    public void correctHorizontalPosition(Point3D position) {
+        double deltaX = position.x - entity.getX();
+        double deltaZ = position.z - entity.getZ();
+        double motionX = entity.getDeltaMovement().x;
+        double motionY = entity.getDeltaMovement().y;
+        double motionZ = entity.getDeltaMovement().z;
+        entity.setPos(position.x, entity.getY(), position.z);
+        entity.setDeltaMovement(motionX * deltaX < 0 ? 0 : motionX, motionY, motionZ * deltaZ < 0 ? 0 : motionZ);
+    }
+
+    @Override
+    public void correctCeilingPosition(double y) {
+        double motionX = entity.getDeltaMovement().x;
+        double motionY = entity.getDeltaMovement().y;
+        double motionZ = entity.getDeltaMovement().z;
+        entity.setPos(entity.getX(), y, entity.getZ());
+        entity.setDeltaMovement(motionX, Math.min(motionY, 0), motionZ);
+    }
+
+    @Override
     public void applyMotion(Point3D motion) {
         entity.push(motion.x, motion.y, motion.z);
         entity.hurtMarked = true;
@@ -460,11 +484,9 @@ public class WrapperEntity implements IWrapperEntity {
     @Override
     public void addPotionEffect(JSONPotionEffect effect) {
         if ((entity instanceof LivingEntity)) {
-            Potion potion = BuiltInRegistries.POTION.get(ResourceLocation.parse(effect.name));
-            if (potion != null) {
-                potion.getEffects().forEach(mcEffect -> {
-                    ((LivingEntity) entity).addEffect(new MobEffectInstance(mcEffect.getEffect(), effect.duration, effect.amplifier, false, false));
-                });
+            Holder<MobEffect> mcEffect = BuiltInRegistries.MOB_EFFECT.getHolder(ResourceLocation.parse(effect.name)).orElse(null);
+            if (mcEffect != null) {
+                ((LivingEntity) entity).addEffect(new MobEffectInstance(mcEffect, effect.duration, effect.amplifier, false, false));
             } else {
                 throw new NullPointerException("Potion " + effect.name + " does not exist.");
             }
@@ -474,15 +496,55 @@ public class WrapperEntity implements IWrapperEntity {
     @Override
     public void removePotionEffect(JSONPotionEffect effect) {
         if ((entity instanceof LivingEntity)) {
-            Potion potion = BuiltInRegistries.POTION.get(ResourceLocation.parse(effect.name));
-            if (potion != null) {
-                potion.getEffects().forEach(mcEffect -> {
-                    ((LivingEntity) entity).removeEffect(mcEffect.getEffect());
-                });
+            Holder<MobEffect> mcEffect = BuiltInRegistries.MOB_EFFECT.getHolder(ResourceLocation.parse(effect.name)).orElse(null);
+            if (mcEffect != null) {
+                ((LivingEntity) entity).removeEffect(mcEffect);
             } else {
                 throw new NullPointerException("Potion " + effect.name + " does not exist.");
             }
         }
+    }
+
+    @SubscribeEvent
+    public static void onIVLivingAttack(LivingIncomingDamageEvent event) {
+        if (event.getEntity() instanceof Player && !event.getEntity().level().isClientSide) {
+            DamageSource source = event.getSource();
+            Entity attacker = source.getDirectEntity();
+            if (attacker instanceof Mob && attacker.equals(source.getEntity()) && (source.is(DamageTypes.MOB_ATTACK) || source.is(DamageTypes.MOB_ATTACK_NO_AGGRO) || source.is(DamageTypes.STING))) {
+                AEntityB_Existing riding = WrapperPlayer.getWrapperFor((Player) event.getEntity()).getEntityRiding();
+                if (riding instanceof PartSeat && ((PartSeat) riding).interceptRiderMeleeAttack(getWrapperFor(attacker), event.getAmount())) {
+                    event.setCanceled(true);
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVAttackEntity(AttackEntityEvent event) {
+        if (event.getTarget() instanceof BuilderEntityExisting) {
+            AEntityB_Existing riding = WrapperPlayer.getWrapperFor(event.getEntity()).getEntityRiding();
+            if (riding instanceof PartSeat && ((PartSeat) riding).masterEntity.equals(((BuilderEntityExisting) event.getTarget()).entity)) {
+                event.setCanceled(true);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
+        if (shouldPreventBlockBreaking(event.getEntity())) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVBlockBreak(BlockEvent.BreakEvent event) {
+        if (shouldPreventBlockBreaking(event.getPlayer())) {
+            event.setCanceled(true);
+        }
+    }
+
+    private static boolean shouldPreventBlockBreaking(Player player) {
+        return ConfigSystem.settings.general.preventBlockBreakingWhileRiding.value && WrapperPlayer.getWrapperFor(player).getEntityRiding() instanceof PartSeat;
     }
 
     /**

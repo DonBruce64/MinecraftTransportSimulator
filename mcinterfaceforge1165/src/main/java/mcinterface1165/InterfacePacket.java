@@ -22,7 +22,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
 
 class InterfacePacket implements IInterfacePacket {
-    private static final String PROTOCOL_VERSION = "1";
+    private static final String PROTOCOL_VERSION = "3";
     private static final SimpleChannel network = NetworkRegistry.newSimpleChannel(new ResourceLocation(InterfaceLoader.MODID, "main"), () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
     private static final BiMap<Byte, Class<? extends APacketBase>> packetMappings = HashBiMap.create();
 
@@ -137,12 +137,16 @@ class InterfacePacket implements IInterfacePacket {
                         world = InterfaceManager.clientInterface.getClientWorld();
                     }
                     if (world != null) {
-                        message.packet.handle(world);
+                        if (ctx.get().getDirection() == NetworkDirection.PLAY_TO_SERVER) {
+                            message.packet.handleFromClient(world, WrapperPlayer.getWrapperFor(ctx.get().getSender()));
+                        } else {
+                            message.packet.handle(world);
+                        }
                     }
                 });
             } else {
                 if (ctx.get().getDirection() == NetworkDirection.PLAY_TO_SERVER) {
-                    message.packet.handle(getServerWorld(ctx));
+                    message.packet.handleFromClient(getServerWorld(ctx), WrapperPlayer.getWrapperFor(ctx.get().getSender()));
                 } else {
                     message.packet.handle(InterfaceManager.clientInterface.getClientWorld());
                 }

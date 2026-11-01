@@ -24,10 +24,12 @@ import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleSpawningOrienta
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
 import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
 import minecrafttransportsimulator.rendering.RenderableVertices;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -45,6 +47,7 @@ public class EntityParticle extends AEntityC_Renderable {
     private static final Point3D helperPoint = new Point3D();
     private static final Point3D helperScale = new Point3D();
     private static final ColorRGB helperColor = new ColorRGB();
+    private static final float[] dynamicLight = new float[3];
     private static final Map<String, RenderableVertices> parsedParticleModels = new HashMap<>();
     private static final Random particleRandom = new Random();
 
@@ -73,6 +76,8 @@ public class EntityParticle extends AEntityC_Renderable {
     private int timeOfCurrentColor;
     private int timeOfNextColor;
     private int colorIndex;
+    private final Point3D lightPoint = new Point3D();
+    private final Point3D lightAxis = new Point3D();
     private int colorDelayIndex;
 
     public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, Point3D spawningPosition, Point3D spawningAngles, AnimationSwitchbox spawningSwitchbox) {
@@ -613,12 +618,13 @@ public class EntityParticle extends AEntityC_Renderable {
             renderable.setAlpha(renderable.alpha * (1 - (definition.daytimeReductionFactor * world.getLightBrightness(position, true))));
         }
 
+        if (!blendingEnabled && definition.light != null && definition.light.isDynamic()) {
+            submitLight(partialTicks);
+        }
+
         if (renderable.isTranslucent == blendingEnabled) {
             if (staticColor == null) {
-                float colorDelta = (ticksExisted + partialTicks - timeOfCurrentColor) / (timeOfNextColor - timeOfCurrentColor);
-                helperColor.red = interpolate(startColor.red, endColor.red, colorDelta, true, partialTicks);
-                helperColor.green = interpolate(startColor.green, endColor.green, colorDelta, true, partialTicks);
-                helperColor.blue = interpolate(startColor.blue, endColor.blue, colorDelta, true, partialTicks);
+                updateColor(partialTicks);
                 renderable.setColor(helperColor);
             }
             renderable.transform.set(transform);
@@ -654,9 +660,98 @@ public class EntityParticle extends AEntityC_Renderable {
             } else {
                 renderable.transform.applyScaling(helperScale.x * entitySpawning.scale.x, helperScale.y * entitySpawning.scale.y, helperScale.z * entitySpawning.scale.z);
             }
-            renderable.setLightValue(worldLightValue);
+            renderable.setLightValue(applyDynamicLight(partialTicks));
             renderable.render();
         }
+    }
+
+    /**
+     * A particle the world lights (not bright) also takes the dynamic lights around it: its
+     * block light rises to their strength and its color tints toward theirs.  Sets the tinted color and returns the
+     * light value to draw with.  Light values are MC's packed form, block light in bits 4 to 7, in every version.
+     */
+    private int applyDynamicLight(float partialTicks) {
+        if (renderable.lightingMode == LightingMode.IGNORE_ALL_LIGHTING) {
+            return worldLightValue;
+        }
+        lightPoint.set(prevPosition).interpolate(position, partialTicks);
+        DynamicLightSystem.lightAt(lightPoint.x, lightPoint.y, lightPoint.z, dynamicLight);
+        float max = Math.max(dynamicLight[0], Math.max(dynamicLight[1], dynamicLight[2]));
+        if (!(max > 1.0e-3F)) {
+            if (staticColor != null) {
+                renderable.setColor(staticColor);
+            }
+            return worldLightValue;
+        }
+        float t = Math.min(1F, max);
+        ColorRGB base = staticColor != null ? staticColor : renderable.color;
+        helperColor.red = base.red * (1F - t + t * dynamicLight[0] / max);
+        helperColor.green = base.green * (1F - t + t * dynamicLight[1] / max);
+        helperColor.blue = base.blue * (1F - t + t * dynamicLight[2] / max);
+        renderable.setColor(helperColor);
+        int block = Math.max((worldLightValue & 0xFFFF) >> 4, Math.round(t * 15F));
+        return (worldLightValue & 0xFFFF0000) | (block << 4);
+    }
+
+    /** This frame's color of a particle with a color list or fade, into {@link #helperColor}. */
+    private void updateColor(float partialTicks) {
+        float colorDelta = (ticksExisted + partialTicks - timeOfCurrentColor) / (timeOfNextColor - timeOfCurrentColor);
+        helperColor.red = interpolate(startColor.red, endColor.red, colorDelta, true, partialTicks);
+        helperColor.green = interpolate(startColor.green, endColor.green, colorDelta, true, partialTicks);
+        helperColor.blue = interpolate(startColor.blue, endColor.blue, colorDelta, true, partialTicks);
+    }
+
+    /**
+     * Hands this particle's dynamic light to the dynamic light system (on the solid pass, before its frame): at the
+     * light's pos and axis turned with the particle, in its own color or the particle's current one, at
+     * {@link #lightAlpha(float)}.
+     */
+    private void submitLight(float partialTicks) {
+        JSONLightBlendableComponent lightDef = definition.light;
+        ColorRGB lightColor = lightDef.color;
+        if (lightColor == null) {
+            if (staticColor != null) {
+                lightColor = staticColor;
+            } else {
+                updateColor(partialTicks);
+                lightColor = helperColor;
+            }
+        }
+        lightAxis.set(lightDef.pos).rotate(orientation);
+        lightPoint.set(prevPosition).interpolate(position, partialTicks).add(lightAxis);
+        lightAxis.set(lightDef.axis).rotate(orientation);
+        double length = lightAxis.length();
+        float dx = length > 1e-6 ? (float) (lightAxis.x / length) : 0;
+        float dy = length > 1e-6 ? (float) (lightAxis.y / length) : 0;
+        float dz = length > 1e-6 ? (float) (lightAxis.z / length) : 0;
+        DynamicLightSystem.submitLight(lightDef, lightPoint.x, lightPoint.y, lightPoint.z, dx, dy, dz, lightColor, lightAlpha(partialTicks), DynamicLightSystem.PARTICLE_PRIORITY);
+    }
+
+    /**
+     * The light's share of its intensity over the particle's life: transparency
+     * and toTransparency clamped to 0..1 before the lerp (so a toTransparency of -0.001 fades to exactly 0), the
+     * transparency fades, and daytimeReductionFactor against the daylight on the particle (open sky times the sun),
+     * not the block light the sprite's reduction also counts.
+     */
+    private float lightAlpha(float partialTicks) {
+        float from = Math.max(0F, Math.min(1F, definition.transparency));
+        float to = Math.max(0F, Math.min(1F, definition.toTransparency));
+        float alpha;
+        if (definition.toTransparency != 0) {
+            alpha = from + (to - from) * (ticksExisted + partialTicks) / maxAge;
+        } else {
+            alpha = definition.transparency != 0 ? from : 1F;
+        }
+        if (definition.fadeInTransparencyTime > 0 && definition.fadeInTransparencyTime >= ticksExisted) {
+            alpha *= ticksExisted / (float) definition.fadeInTransparencyTime;
+        }
+        if (definition.fadeOutTransparencyTime > 0 && definition.fadeOutTransparencyTime > maxAge - ticksExisted) {
+            alpha *= (maxAge - ticksExisted) / (float) definition.fadeOutTransparencyTime;
+        }
+        if (definition.daytimeReductionFactor != 0) {
+            alpha *= 1F - definition.daytimeReductionFactor * InterfaceManager.renderingInterface.getDaylight(world, position);
+        }
+        return Math.max(0F, Math.min(1F, alpha));
     }
 
     @Override

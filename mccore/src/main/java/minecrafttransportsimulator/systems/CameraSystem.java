@@ -21,6 +21,7 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketCameraShake;
 
 /**
  * System for handling camera zoom, position, and overlays.  Note that actual overlay
@@ -38,12 +39,23 @@ public class CameraSystem {
     public static String customCameraOverlay;
 
     private static final double CAMERA_COLLISION_PADDING = 0.25D;
+    private static final double CAMERA_SHAKE_MAX_DISTANCE = 128.0D;
+    private static final double CAMERA_SHAKE_ANGLE_FACTOR = 0.1D;
+    private static final double CAMERA_SHAKE_MIN_ANGLE = 0.01D;
+    private static final double CAMERA_SHAKE_MAX_ANGLE = 10.0D;
+    private static final int CAMERA_SHAKE_DURATION_TICKS = 10;
     private static final Point3D cameraOffset = new Point3D();
     private static final Point3D cameraCollisionStart = new Point3D();
     private static final Point3D cameraCollisionVector = new Point3D();
     private static final RotationMatrix riderOrientation = new RotationMatrix();
     private static final Point3D riderCameraRelativeAngles = new Point3D();
     private static final RotationMatrix cameraOffsetOrientation = new RotationMatrix();
+    private static double cameraShakeAmplitude;
+    private static double cameraShakePhase;
+    private static double cameraShakeTime;
+    private static double cameraShakeIntensity = 1.0D;
+    private static long cameraShakeStartTime;
+    private static long cameraShakeEndTime;
 
     private static final JSONPotionEffect NIGHT_VISION_CAMERA_POTION = new JSONPotionEffect();
 
@@ -238,6 +250,111 @@ public class CameraSystem {
         if (closestDistance < desiredDistance) {
             cameraAdjustedPosition.set(startPoint).add(cameraCollisionVector.normalize().scale(Math.max(0, closestDistance - CAMERA_COLLISION_PADDING)));
         }
+    }
+
+    public static void sendExplosionCameraShake(AWrapperWorld world, Point3D source, double strength, double radius, int duration, double intensity) {
+        sendCameraShake(world, source, strength, ConfigSystem.settings.damage.cameraShakeFactor.value, radius, duration, intensity);
+    }
+
+    public static void sendGunshotCameraShake(AWrapperWorld world, Point3D source, double strength, double radius, int duration, double intensity) {
+        sendCameraShake(world, source, strength, ConfigSystem.settings.damage.gunCameraShakeFactor.value, radius, duration, intensity);
+    }
+
+    /**
+     * Sends a camera shake impulse to players close enough to the source.  Strength is attenuated
+     * by distance on the server so the server config remains authoritative without synchronizing it
+     * to every client.  Radius is in blocks and duration is in ticks, with non-positive values
+     * retaining the default radius and duration.  Intensity multiplies the oscillation speed,
+     * with non-positive or non-finite values retaining the default speed.
+     */
+    private static void sendCameraShake(AWrapperWorld world, Point3D source, double strength, double factor, double radius, int duration, double intensity) {
+        if (world.isClient() || strength <= 0 || Double.isNaN(strength) || Double.isInfinite(strength)) {
+            return;
+        }
+        if (factor <= 0 || Double.isNaN(factor) || Double.isInfinite(factor)) {
+            return;
+        }
+
+        if (radius <= 0 || Double.isNaN(radius) || Double.isInfinite(radius)) {
+            radius = CAMERA_SHAKE_MAX_DISTANCE;
+        }
+        if (duration <= 0) {
+            duration = CAMERA_SHAKE_DURATION_TICKS;
+        }
+        if (intensity <= 0 || Double.isNaN(intensity) || Double.isInfinite(intensity)) {
+            intensity = 1.0D;
+        }
+
+        for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(source, radius))) {
+            double distance = source.distanceTo(player.getEyePosition());
+            if (distance <= radius) {
+                double adjustedStrength = strength * factor / Math.max(1.0D, distance);
+                if (!Double.isNaN(adjustedStrength) && !Double.isInfinite(adjustedStrength) && adjustedStrength * CAMERA_SHAKE_ANGLE_FACTOR >= CAMERA_SHAKE_MIN_ANGLE) {
+                    player.sendPacket(new PacketCameraShake(adjustedStrength, duration, intensity));
+                }
+            }
+        }
+    }
+
+    /**
+     * Starts a client-side shake impulse.  Overlapping impulses add to the currently visible
+     * amplitude without causing the previous impulse to jump back to its original strength.
+     */
+    public static void startCameraShake(double strength, int duration, double intensity) {
+        if (strength <= 0 || Double.isNaN(strength) || Double.isInfinite(strength) || duration <= 0) {
+            return;
+        }
+        if (intensity <= 0 || Double.isNaN(intensity) || Double.isInfinite(intensity)) {
+            intensity = 1.0D;
+        }
+
+        long currentTime = System.nanoTime();
+        double remainingAmplitude = 0;
+        if (currentTime < cameraShakeEndTime) {
+            double elapsed = (double) (currentTime - cameraShakeStartTime) / (cameraShakeEndTime - cameraShakeStartTime);
+            double decay = Math.max(0, 1.0D - elapsed);
+            remainingAmplitude = cameraShakeAmplitude * decay * decay;
+            //Anchor the current oscillation before changing its speed to preserve phase.
+            cameraShakeTime += (currentTime - cameraShakeStartTime) * 0.000000001D * cameraShakeIntensity;
+        } else {
+            cameraShakePhase = currentTime * 0.000000001D;
+            cameraShakeTime = cameraShakePhase;
+        }
+        cameraShakeIntensity = intensity;
+        double impulseAmplitude = Math.min(strength * CAMERA_SHAKE_ANGLE_FACTOR, CAMERA_SHAKE_MAX_ANGLE);
+        cameraShakeAmplitude = Math.min(remainingAmplitude + impulseAmplitude, CAMERA_SHAKE_MAX_ANGLE);
+        cameraShakeStartTime = currentTime;
+        cameraShakeEndTime = currentTime + duration * 50000000L;
+    }
+
+    /**
+     * Applies the current shake as an additive camera rotation.  Returns true while an impulse is active.
+     */
+    public static boolean applyCameraShake(RotationMatrix cameraRotation) {
+        long currentTime = System.nanoTime();
+        if (currentTime >= cameraShakeEndTime) {
+            cameraShakeAmplitude = 0;
+            return false;
+        }
+
+        double elapsed = (double) (currentTime - cameraShakeStartTime) / (cameraShakeEndTime - cameraShakeStartTime);
+        double decay = 1.0D - elapsed;
+        decay *= decay;
+        double amplitude = cameraShakeAmplitude * decay;
+        double time = cameraShakeTime + (currentTime - cameraShakeStartTime) * 0.000000001D * cameraShakeIntensity;
+        cameraRotation.rotateY(Math.sin(time * 38.0D + cameraShakePhase * 1.3D) * amplitude * 0.75D);
+        cameraRotation.rotateX(Math.sin(time * 45.0D + cameraShakePhase) * amplitude);
+        cameraRotation.rotateZ(Math.sin(time * 51.0D + cameraShakePhase * 0.7D) * amplitude * 0.5D);
+        return true;
+    }
+
+    public static void clearCameraShake() {
+        cameraShakeAmplitude = 0;
+        cameraShakePhase = 0;
+        cameraShakeTime = 0;
+        cameraShakeIntensity = 1.0D;
+        cameraShakeStartTime = 0;
+        cameraShakeEndTime = 0;
     }
     
     public static void resetCameraProperties() {

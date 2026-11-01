@@ -48,6 +48,7 @@ public class RenderableData {
     /**Draw order for renderers that batch by texture.  Higher values are rendered later and
      * receive a progressively stronger depth bias to separate coplanar texture layers.**/
     public int renderingOrder;
+    public boolean writeDepth;
 
     private double lastWidthRadius;
     private double lastHeightRadius;
@@ -101,6 +102,17 @@ public class RenderableData {
         if (this.isTranslucentForced) {
             this.isTranslucentForced = false;
             this.isTranslucent = isTranslucentForced || vertexObject.isTranslucent || isTextureTranslucent || alpha < 1.0;
+            this.changedSinceLastRender = true;
+        }
+    }
+
+    /**
+     * Allows translucent renderables to write to the depth buffer.  This should only be used
+     * for independently-positioned overlays that must occlude each other based on their Z value.
+     */
+    public void setDepthWriting(boolean writeDepth) {
+        if (this.writeDepth != writeDepth) {
+            this.writeDepth = writeDepth;
             this.changedSinceLastRender = true;
         }
     }
