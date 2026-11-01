@@ -16,7 +16,12 @@
 				"client.BipedModelMixin",
 				"client.VillagerModelMixin",
 				"client.WorldRendererMixin",
-				"client.MinecraftMixin"
+				"client.ClientWorldMixin",
+				"client.EntityRendererMixin",
+				"client.MinecraftMixin",
+				"client.RenderTypeStateMixin",
+				"client.RenderTypeTypeMixin",
+				"client.TextureStateMixin"
     ],
     "injectors": {
         "defaultRequire": 1

@@ -111,6 +111,12 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("The height of the part.")
         public float height;
 
+        @JSONDescription("How long, in ticks, this part takes to install while holding right-click.  Defaults to instant if left out.")
+        public int installTime;
+
+        @JSONDescription("How long, in ticks, this part takes to remove while holding left-click with the required tool.  Defaults to instant if left out.")
+        public int removeTime;
+
         @JSONDescription("The multiplier for forwarded damage.  If set, this part will forward damage onto the vehicle it is on when hit.  This will also cause any bullets to stop when they hit this part.  Defaults to 1.0 for engines, 0.0 for other parts.")
         public float forwardsDamageMultiplier;
 
@@ -206,6 +212,9 @@ public class JSONPart extends AJSONPartProvider {
 
         @JSONDescription("The rate at which this engine accrues hours. If you make it lower, it'll be more reliable. If you make it higher, it'll collect that wearout like the infinity stones.")
         public float engineWearFactor;
+
+        @JSONDescription("If true, this engine will never accrue hours, no matter how it's run or damaged.  This means it won't lose top-end RPM or backfire from wear.  Can be toggled with variable modifiers on the noEngineWear variable.")
+        public boolean noEngineWear;
 
         @ModifiableValue
         @JSONDescription("How many mb/t the engine uses, and how powerful the engine is. This value is calculated at maxRPM and scaled down based on the percentage of speed the engine is at, so an engine with a maxRPM of 4000 with a fuel consumption of 1.0 running at 2000RPM is actually running at a rate of 0.5.  This value is the key to determining the raw power output of your engine, as it's directly related to how much force the engine can output.  However, even the most powerful engines won't do much if they're geared improperly, and even weak engines with low consumption can reach high speeds if they can maintain high RPMs.")
@@ -486,6 +495,9 @@ public class JSONPart extends AJSONPartProvider {
         
         @JSONDescription("How much knocback this gun provides to the shooter.")
         public float knockback;
+
+        @JSONDescription("Camera shake settings for this gun's shots. Strength defaults to the loaded bullet's diameter and is applied once per fired cartridge, regardless of pellet count. If omitted, the default shake settings are used.")
+        public JSONCameraShake cameraShakeParams;
 
         @JSONDescription("How much pitch recoil this gun provides to the shooter.  This will apply this value every shot.  Only for hand-held mode.")
         public float pitchRecoil;

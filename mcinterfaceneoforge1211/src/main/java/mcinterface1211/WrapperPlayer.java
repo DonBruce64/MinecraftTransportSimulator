@@ -3,6 +3,7 @@ package mcinterface1211;
 import java.util.HashMap;
 import java.util.Map;
 
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemItem;
@@ -56,6 +57,16 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
     protected WrapperPlayer(Player player) {
         super(player);
         this.player = player;
+    }
+
+    @Override
+    public void setPosition(Point3D position, boolean onGround) {
+        super.setPosition(position, onGround);
+        //Clear active flight when riding, including players who mounted while already flying.
+        if (getEntityRiding() != null && !player.isSpectator() && player.getAbilities().flying) {
+            player.getAbilities().flying = false;
+            player.onUpdateAbilities();
+        }
     }
 
     @Override

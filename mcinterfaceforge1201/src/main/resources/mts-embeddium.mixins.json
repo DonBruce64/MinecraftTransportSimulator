@@ -1,0 +1,14 @@
+{
+    "required": false,
+    "minVersion": "0.8",
+    "package": "mcinterface1201.mixin.embeddium",
+    "plugin": "mcinterface1201.mixin.embeddium.EmbeddiumMixinPlugin",
+    "compatibilityLevel": "JAVA_17",
+    "client": [
+        "LightDataAccessMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 0
+    },
+    "refmap": "mts.refmap.json"
+}

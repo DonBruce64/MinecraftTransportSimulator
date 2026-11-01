@@ -216,6 +216,12 @@ public class InterfaceClient implements IInterfaceClient {
             upX  = up.x();   upY  = up.y();   upZ  = up.z();
             rgtX = -left.x(); rgtY = -left.y(); rgtZ = -left.z();
         }
+        if (InterfaceEventsEntityRendering.cameraShakeActive) {
+            RotationMatrix ori = InterfaceEventsEntityRendering.cameraShakeProjectionRotation;
+            fwdX = ori.m02; fwdY = ori.m12; fwdZ = ori.m22;
+            upX  = ori.m01; upY  = ori.m11; upZ  = ori.m21;
+            rgtX = -ori.m00; rgtY = -ori.m10; rgtZ = -ori.m20;
+        }
 
         double dx = worldPos.x - camX;
         double dy = worldPos.y - camY;
@@ -329,6 +335,7 @@ public class InterfaceClient implements IInterfaceClient {
             if (world != null) {
                 if (event.phase.equals(Phase.START)) {
                     ConfigSystem.displayPendingConfigWarnings(player);
+                    ControlSystem.cancelTimedActionsForSpectator(player);
                     if (!player.isSpectator()) {
                         //Handle controls.  This has to happen prior to vehicle updates to ensure click handling is based on current position of the player.
                         ControlSystem.controlGlobal(player);

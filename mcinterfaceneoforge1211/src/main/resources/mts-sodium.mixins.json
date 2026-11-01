@@ -1,0 +1,13 @@
+{
+    "required": false,
+    "minVersion": "0.8",
+    "package": "mcinterface1211.mixin.sodium",
+    "plugin": "mcinterface1211.mixin.sodium.SodiumMixinPlugin",
+    "compatibilityLevel": "JAVA_21",
+    "client": [
+        "LightDataAccessMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 0
+    }
+}
