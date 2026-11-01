@@ -19,7 +19,6 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONCameraShake;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
@@ -36,7 +35,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packloading.PackParser;
-import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -498,8 +496,6 @@ public class PartGun extends APart {
 
                         //If we are in our cam, fire the bullets.
                         if (camOffset == 0) {
-                            JSONCameraShake cameraShakeParams = definition.gun.cameraShakeParams;
-                            double cameraShakeStrength = 0;
                             for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
                                 //Spawn a bullet for each pellet.
                                 for (int i = 0; i < (lastLoadedBullet.definition.bullet.pellets > 0 ? lastLoadedBullet.definition.bullet.pellets : 1); i++) {
@@ -545,7 +541,6 @@ public class PartGun extends APart {
                                 //Decrement bullets, but check to make sure we still have some.
                                 //We might have a partial volley with only some muzzles firing in this group, so if we did, break out early.
                                 //Also add a bullet to the fired list, since the last loaded could be changed if we change ammo.
-                                cameraShakeStrength += cameraShakeParams != null && cameraShakeParams.strength != null ? cameraShakeParams.strength : lastLoadedBullet.definition.bullet.diameter;
                                 firedBullets.add(lastLoadedBullet);
                                 if (loadedBulletCount > 0) {
                                     --loadedBulletCount;
@@ -566,10 +561,6 @@ public class PartGun extends APart {
                                         loadedBulletCounts.set(0, count);
                                     }
                                 }
-                            }
-
-                            if (!world.isClient()) {
-                                CameraSystem.sendGunshotCameraShake(world, position, cameraShakeStrength, cameraShakeParams != null ? cameraShakeParams.radius : 0, cameraShakeParams != null ? cameraShakeParams.duration : 0, cameraShakeParams != null ? cameraShakeParams.intensity : 1);
                             }
 
                             //Update states.
