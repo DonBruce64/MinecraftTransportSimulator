@@ -364,15 +364,23 @@ public final class ControlSystem {
         }
     }
 
-    private static void controlBrake(EntityVehicleF_Physics vehicle, ControlsJoystick joystickBrakeAxis, ControlsJoystick joystickBrakeButton, ControlsKeyboard keyboardBrakeButton, ControlsKeyboard parkingBrakeButton) {
+    private static boolean controlBrake(EntityVehicleF_Physics vehicle, ControlsJoystick joystickBrakeAxis, ControlsJoystick joystickBrakeButton, ControlsKeyboard keyboardBrakeButton, ControlsKeyboard parkingBrakeButton) {
         if (parkingBrakeButton.isPressed()) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle.parkingBrakeVar));
         }
-        double brakeValue = joystickBrakeAxis.isJoystickActive() ? joystickBrakeAxis.getAxisState(true) : ((joystickBrakeButton.isPressed() || keyboardBrakeButton.isPressed()) ? EntityVehicleF_Physics.MAX_BRAKE : 0);
+        boolean brakeButtonPressed = false;
+        final double brakeValue;
+        if (joystickBrakeAxis.isJoystickActive()) {
+            brakeValue = joystickBrakeAxis.getAxisState(true);
+        } else {
+            brakeButtonPressed = joystickBrakeButton.isPressed() || keyboardBrakeButton.isPressed();
+            brakeValue = brakeButtonPressed ? EntityVehicleF_Physics.MAX_BRAKE : 0;
+        }
         if (brakeValue != brakeRequestLastCheck) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle.brakeVar, brakeValue));
         }
         brakeRequestLastCheck = brakeValue;
+        return brakeButtonPressed;
     }
 
     private static void controlGun(AEntityF_Multipart<?> multipart, ControlsKeyboard gunTrigger, ControlsKeyboard gunSwitch) {
@@ -509,15 +517,10 @@ public final class ControlSystem {
         return true;
     }
 
-    /**
-     * Handles blimps with car/boat-style keyboard controls while retaining the
-     * aircraft joystick mappings.  Airship keyboard mappings are intentionally
-     * separate from aircraft mappings so the two vehicle types can be configured
-     * independently.
-     */
+    /** Handles blimps with car/boat-style controls. */
     private static void controlAirship(EntityVehicleF_Physics airship, boolean isPlayerController) {
-        controlCamera(ControlsKeyboard.AIRSHIP_ZOOM_I, ControlsKeyboard.AIRSHIP_ZOOM_O, ControlsKeyboard.AIRSHIP_CHANGEVIEW, ControlsJoystick.AIRCRAFT_LOOK_UD, ControlsJoystick.AIRCRAFT_LOOK_LR);
-        rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
+        controlCamera(ControlsKeyboard.AIRSHIP_ZOOM_I, ControlsKeyboard.AIRSHIP_ZOOM_O, ControlsKeyboard.AIRSHIP_CHANGEVIEW, ControlsJoystick.AIRSHIP_LOOK_UD, ControlsJoystick.AIRSHIP_LOOK_LR);
+        rotateCamera(ControlsJoystick.AIRSHIP_LOOK_R, ControlsJoystick.AIRSHIP_LOOK_L, ControlsJoystick.AIRSHIP_LOOK_U, ControlsJoystick.AIRSHIP_LOOK_D, ControlsJoystick.AIRSHIP_LOOK_A);
         controlFreecam(ControlsKeyboard.AIRSHIP_CAMLOCK);
         controlGun(airship, ControlsKeyboard.AIRSHIP_GUN_FIRE, ControlsKeyboard.AIRSHIP_GUN_SWITCH);
         controlRadio(airship, ControlsKeyboard.AIRSHIP_RADIO);
@@ -537,49 +540,34 @@ public final class ControlSystem {
         controlPanel(airship, ControlsKeyboard.AIRSHIP_PANEL);
 
         //S applies the normal brake while held.  Parking brakes remain a separate toggle.
-        if (ControlsKeyboard.AIRSHIP_PARK.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(airship.parkingBrakeVar));
-        }
-        boolean joystickBrakeOverridesKeyboard = ConfigSystem.client.controlSettings.kbOverride.value
-                && (ControlsJoystick.AIRCRAFT_BRAKE.isJoystickActive() || ControlsJoystick.AIRCRAFT_BRAKE_DIGITAL.isJoystickActive());
-        boolean keyboardBrakePressed = !joystickBrakeOverridesKeyboard && ControlsKeyboard.AIRSHIP_BRAKE.isKeyboardInputPressed();
-        boolean digitalBrakePressed = ControlsJoystick.AIRCRAFT_BRAKE_DIGITAL.isPressed();
-        double brakeValue = ControlsJoystick.AIRCRAFT_BRAKE.isJoystickActive() ? ControlsJoystick.AIRCRAFT_BRAKE.getAxisState(true) : 0;
-        if (keyboardBrakePressed || digitalBrakePressed) {
-            brakeValue = EntityVehicleF_Physics.MAX_BRAKE;
-        }
-        if (brakeValue != brakeRequestLastCheck) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(airship.brakeVar, brakeValue));
-        }
-        brakeRequestLastCheck = brakeValue;
+        boolean brakeButtonPressed = controlBrake(airship, ControlsJoystick.AIRSHIP_BRAKE, ControlsJoystick.AIRSHIP_BRAKE_DIGITAL, ControlsKeyboard.AIRSHIP_BRAKE, ControlsKeyboard.AIRSHIP_PARK);
 
-        //Retain the existing airship joystick functions.
-        if (ControlsJoystick.AIRCRAFT_REVERSE.isPressed()) {
+        if (ControlsJoystick.AIRSHIP_REVERSE.isPressed()) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(airship.reverseThrustVar));
         }
-        if (ControlsJoystick.AIRCRAFT_GEAR.isPressed()) {
+        if (ControlsJoystick.AIRSHIP_GEAR.isPressed()) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(airship.retractGearVar));
         }
 
         //W increases throttle incrementally.  S decreases it while also braking above.
-        if (ControlsJoystick.AIRCRAFT_THROTTLE.isJoystickActive()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(airship.throttleVar, ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState(true) * EntityVehicleF_Physics.MAX_THROTTLE));
+        if (ControlsJoystick.AIRSHIP_THROTTLE.isJoystickActive()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(airship.throttleVar, ControlsJoystick.AIRSHIP_THROTTLE.getAxisState(true) * EntityVehicleF_Physics.MAX_THROTTLE));
         } else {
             if (ControlsKeyboard.AIRSHIP_FORWARD.isPressed()) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(airship.throttleVar, EntityVehicleF_Physics.MAX_THROTTLE / 100D, 0, EntityVehicleF_Physics.MAX_THROTTLE));
             }
-            if (keyboardBrakePressed || digitalBrakePressed) {
+            if (brakeButtonPressed) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(airship.throttleVar, -EntityVehicleF_Physics.MAX_THROTTLE / 100D, 0, EntityVehicleF_Physics.MAX_THROTTLE));
             }
         }
 
         //A/D steer with the rudder, as they do for cars and boats.
-        controlControlSurface(airship, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRSHIP_TURN_R, ControlsKeyboard.AIRSHIP_TURN_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, airship.rudderInputVar, ConfigSystem.client.controlSettings.steeringReturnRate.value);
+        controlControlSurface(airship, ControlsJoystick.AIRSHIP_TURN, ControlsKeyboard.AIRSHIP_TURN_R, ControlsKeyboard.AIRSHIP_TURN_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, airship.rudderInputVar, ConfigSystem.client.controlSettings.steeringReturnRate.value);
 
         //Negative ballast control raises a blimp.  Keyboard height control is
         //momentary: it ramps only while I/K is held and centers immediately on release.
-        if (ControlsJoystick.AIRCRAFT_PITCH.isJoystickActive()) {
-            double pitchAxisValue = ControlsJoystick.AIRCRAFT_PITCH.getAxisState(false);
+        if (ControlsJoystick.AIRSHIP_HEIGHT.isJoystickActive()) {
+            double pitchAxisValue = ControlsJoystick.AIRSHIP_HEIGHT.getAxisState(false);
             double heightControl = pitchAxisValue == 0 ? 0 : EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE * (-1 + 2 * pitchAxisValue);
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(airship.elevatorInputVar, heightControl));
         } else if (ControlsKeyboard.AIRSHIP_HEIGHT_U.isPressed()) {
@@ -592,10 +580,9 @@ public final class ControlSystem {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(airship.elevatorInputVar, 0));
         }
 
-        //Keep existing joystick trim support available for airships.
-        controlControlTrim(airship, ControlsJoystick.AIRCRAFT_TRIM_YAW_R, ControlsJoystick.AIRCRAFT_TRIM_YAW_L, EntityVehicleF_Physics.MAX_RUDDER_TRIM, airship.rudderTrimVar);
-        controlControlTrim(airship, ControlsJoystick.AIRCRAFT_TRIM_PITCH_U, ControlsJoystick.AIRCRAFT_TRIM_PITCH_D, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM, airship.elevatorTrimVar);
-        controlControlTrim(airship, ControlsJoystick.AIRCRAFT_TRIM_ROLL_R, ControlsJoystick.AIRCRAFT_TRIM_ROLL_L, EntityVehicleF_Physics.MAX_AILERON_TRIM, airship.aileronTrimVar);
+        controlControlTrim(airship, ControlsJoystick.AIRSHIP_TRIM_YAW_R, ControlsJoystick.AIRSHIP_TRIM_YAW_L, EntityVehicleF_Physics.MAX_RUDDER_TRIM, airship.rudderTrimVar);
+        controlControlTrim(airship, ControlsJoystick.AIRSHIP_TRIM_PITCH_U, ControlsJoystick.AIRSHIP_TRIM_PITCH_D, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM, airship.elevatorTrimVar);
+        controlControlTrim(airship, ControlsJoystick.AIRSHIP_TRIM_ROLL_R, ControlsJoystick.AIRSHIP_TRIM_ROLL_L, EntityVehicleF_Physics.MAX_AILERON_TRIM, airship.aileronTrimVar);
 
         if (ConfigSystem.client.controlSettings.heliAutoLevel.value ^ airship.autolevelEnabledVar.isActive) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(airship.autolevelEnabledVar, ConfigSystem.client.controlSettings.heliAutoLevel.value ? 1 : 0));
@@ -1078,22 +1065,22 @@ public final class ControlSystem {
         AIRCRAFT_CAMLOCK(ControlsJoystick.AIRCRAFT_CAMLOCK, true, "LMENU", LanguageSystem.INPUT_CAMLOCK),
         AIRCRAFT_JS_INHIBIT(ControlsJoystick.AIRCRAFT_JS_INHIBIT, true, "SCROLL", LanguageSystem.INPUT_JS_INHIBIT),
 
-        AIRSHIP_TURN_R(ControlsJoystick.AIRCRAFT_ROLL, false, "D", LanguageSystem.INPUT_TURN_R),
-        AIRSHIP_TURN_L(ControlsJoystick.AIRCRAFT_ROLL, false, "A", LanguageSystem.INPUT_TURN_L),
-        AIRSHIP_FORWARD(ControlsJoystick.AIRCRAFT_THROTTLE, false, "W", LanguageSystem.INPUT_FORWARD),
-        AIRSHIP_BRAKE(ControlsJoystick.AIRCRAFT_BRAKE, false, "S", LanguageSystem.INPUT_BRAKE),
-        AIRSHIP_HEIGHT_U(ControlsJoystick.AIRCRAFT_PITCH, false, "I", LanguageSystem.INPUT_HEIGHT_U),
-        AIRSHIP_HEIGHT_D(ControlsJoystick.AIRCRAFT_PITCH, false, "K", LanguageSystem.INPUT_HEIGHT_D),
-        AIRSHIP_PARK(ControlsJoystick.AIRCRAFT_PARK, true, "N", LanguageSystem.INPUT_PARK),
-        AIRSHIP_PANEL(ControlsJoystick.AIRCRAFT_PANEL, true, "U", LanguageSystem.INPUT_PANEL),
-        AIRSHIP_RADIO(ControlsJoystick.AIRCRAFT_RADIO, true, "MINUS", LanguageSystem.INPUT_RADIO),
-        AIRSHIP_GUN_FIRE(ControlsJoystick.AIRCRAFT_GUN_FIRE, false, "SPACE", LanguageSystem.INPUT_GUN_FIRE),
-        AIRSHIP_GUN_SWITCH(ControlsJoystick.AIRCRAFT_GUN_SWITCH, true, "V", LanguageSystem.INPUT_GUN_SWITCH),
-        AIRSHIP_ZOOM_I(ControlsJoystick.AIRCRAFT_ZOOM_I, true, "PRIOR", LanguageSystem.INPUT_ZOOM_I),
-        AIRSHIP_ZOOM_O(ControlsJoystick.AIRCRAFT_ZOOM_O, true, "NEXT", LanguageSystem.INPUT_ZOOM_O),
-        AIRSHIP_CHANGEVIEW(ControlsJoystick.AIRCRAFT_CHANGEVIEW, true, "X", LanguageSystem.INPUT_CHANGEVIEW),
-        AIRSHIP_CAMLOCK(ControlsJoystick.AIRCRAFT_CAMLOCK, true, "LMENU", LanguageSystem.INPUT_CAMLOCK),
-        AIRSHIP_JS_INHIBIT(ControlsJoystick.AIRCRAFT_JS_INHIBIT, true, "SCROLL", LanguageSystem.INPUT_JS_INHIBIT),
+        AIRSHIP_TURN_R(ControlsJoystick.AIRSHIP_TURN, false, "D", LanguageSystem.INPUT_TURN_R),
+        AIRSHIP_TURN_L(ControlsJoystick.AIRSHIP_TURN, false, "A", LanguageSystem.INPUT_TURN_L),
+        AIRSHIP_FORWARD(ControlsJoystick.AIRSHIP_THROTTLE, false, "W", LanguageSystem.INPUT_FORWARD),
+        AIRSHIP_BRAKE(ControlsJoystick.AIRSHIP_BRAKE, false, "S", LanguageSystem.INPUT_BRAKE),
+        AIRSHIP_HEIGHT_U(ControlsJoystick.AIRSHIP_HEIGHT, false, "I", LanguageSystem.INPUT_HEIGHT_U),
+        AIRSHIP_HEIGHT_D(ControlsJoystick.AIRSHIP_HEIGHT, false, "K", LanguageSystem.INPUT_HEIGHT_D),
+        AIRSHIP_PARK(ControlsJoystick.AIRSHIP_PARK, true, "N", LanguageSystem.INPUT_PARK),
+        AIRSHIP_PANEL(ControlsJoystick.AIRSHIP_PANEL, true, "U", LanguageSystem.INPUT_PANEL),
+        AIRSHIP_RADIO(ControlsJoystick.AIRSHIP_RADIO, true, "MINUS", LanguageSystem.INPUT_RADIO),
+        AIRSHIP_GUN_FIRE(ControlsJoystick.AIRSHIP_GUN_FIRE, false, "SPACE", LanguageSystem.INPUT_GUN_FIRE),
+        AIRSHIP_GUN_SWITCH(ControlsJoystick.AIRSHIP_GUN_SWITCH, true, "V", LanguageSystem.INPUT_GUN_SWITCH),
+        AIRSHIP_ZOOM_I(ControlsJoystick.AIRSHIP_ZOOM_I, true, "PRIOR", LanguageSystem.INPUT_ZOOM_I),
+        AIRSHIP_ZOOM_O(ControlsJoystick.AIRSHIP_ZOOM_O, true, "NEXT", LanguageSystem.INPUT_ZOOM_O),
+        AIRSHIP_CHANGEVIEW(ControlsJoystick.AIRSHIP_CHANGEVIEW, true, "X", LanguageSystem.INPUT_CHANGEVIEW),
+        AIRSHIP_CAMLOCK(ControlsJoystick.AIRSHIP_CAMLOCK, true, "LMENU", LanguageSystem.INPUT_CAMLOCK),
+        AIRSHIP_JS_INHIBIT(ControlsJoystick.AIRSHIP_JS_INHIBIT, true, "SCROLL", LanguageSystem.INPUT_JS_INHIBIT),
 
         CAR_MOD(ControlsJoystick.CAR_MOD, false, "RSHIFT", LanguageSystem.INPUT_MOD),
         CAR_TURN_R(ControlsJoystick.CAR_TURN, false, "D", LanguageSystem.INPUT_TURN_R),
@@ -1155,21 +1142,21 @@ public final class ControlSystem {
                 //Joystick found, but not pressed, and is overriding keyboard inputs, so return false.
                 wasPressedThisCall = false;
             } else {
-                wasPressedThisCall = isKeyboardInputPressed();
+                if (config.isMouseButton) {
+                    //Mouse button binding: block when any mod GUI is open.
+                    if (AGUIBase.activeInputGUI != null) {
+                        wasPressedThisCall = false;
+                    } else {
+                        wasPressedThisCall = InterfaceManager.inputInterface.isMouseButtonPressed(config.keyCode);
+                    }
+                } else {
+                    wasPressedThisCall = InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
+                }
                 if (isMomentary && wasPressedLastCall) {
                     return false;
                 }
             }
             return wasPressedThisCall;
-        }
-
-        private boolean isKeyboardInputPressed() {
-            if (config.isMouseButton) {
-                //Mouse button binding: block when any mod GUI is open.
-                return AGUIBase.activeInputGUI == null && InterfaceManager.inputInterface.isMouseButtonPressed(config.keyCode);
-            } else {
-                return InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
-            }
         }
 
         /**
@@ -1227,6 +1214,37 @@ public final class ControlSystem {
         AIRCRAFT_TRIM_ROLL_L(false, false, LanguageSystem.INPUT_TRIM_ROLL_L),
         AIRCRAFT_REVERSE(false, true, LanguageSystem.INPUT_REVERSE),
         AIRCRAFT_JS_INHIBIT(false, true, LanguageSystem.INPUT_JS_INHIBIT),
+
+        AIRSHIP_CAMLOCK(false, true, LanguageSystem.INPUT_CAMLOCK),
+        AIRSHIP_TURN(true, false, LanguageSystem.INPUT_TURN),
+        AIRSHIP_HEIGHT(true, false, LanguageSystem.INPUT_HEIGHT),
+        AIRSHIP_THROTTLE(true, false, LanguageSystem.INPUT_THROTTLE),
+        AIRSHIP_BRAKE(true, false, LanguageSystem.INPUT_BRAKE),
+        AIRSHIP_BRAKE_DIGITAL(false, false, LanguageSystem.INPUT_BRAKE),
+        AIRSHIP_GEAR(false, true, LanguageSystem.INPUT_GEAR),
+        AIRSHIP_PANEL(false, true, LanguageSystem.INPUT_PANEL),
+        AIRSHIP_PARK(false, true, LanguageSystem.INPUT_PARK),
+        AIRSHIP_RADIO(false, true, LanguageSystem.INPUT_RADIO),
+        AIRSHIP_GUN_FIRE(false, false, LanguageSystem.INPUT_GUN_FIRE),
+        AIRSHIP_GUN_SWITCH(false, true, LanguageSystem.INPUT_GUN_SWITCH),
+        AIRSHIP_ZOOM_I(false, true, LanguageSystem.INPUT_ZOOM_I),
+        AIRSHIP_ZOOM_O(false, true, LanguageSystem.INPUT_ZOOM_O),
+        AIRSHIP_CHANGEVIEW(false, true, LanguageSystem.INPUT_CHANGEVIEW),
+        AIRSHIP_LOOK_UD(true, false, LanguageSystem.INPUT_LOOK_UD),
+        AIRSHIP_LOOK_LR(true, false, LanguageSystem.INPUT_LOOK_LR),
+        AIRSHIP_LOOK_L(false, false, LanguageSystem.INPUT_LOOK_L),
+        AIRSHIP_LOOK_R(false, false, LanguageSystem.INPUT_LOOK_R),
+        AIRSHIP_LOOK_U(false, false, LanguageSystem.INPUT_LOOK_U),
+        AIRSHIP_LOOK_D(false, false, LanguageSystem.INPUT_LOOK_D),
+        AIRSHIP_LOOK_A(false, false, LanguageSystem.INPUT_LOOK_A),
+        AIRSHIP_TRIM_YAW_R(false, false, LanguageSystem.INPUT_TRIM_YAW_R),
+        AIRSHIP_TRIM_YAW_L(false, false, LanguageSystem.INPUT_TRIM_YAW_L),
+        AIRSHIP_TRIM_PITCH_U(false, false, LanguageSystem.INPUT_TRIM_PITCH_U),
+        AIRSHIP_TRIM_PITCH_D(false, false, LanguageSystem.INPUT_TRIM_PITCH_D),
+        AIRSHIP_TRIM_ROLL_R(false, false, LanguageSystem.INPUT_TRIM_ROLL_R),
+        AIRSHIP_TRIM_ROLL_L(false, false, LanguageSystem.INPUT_TRIM_ROLL_L),
+        AIRSHIP_REVERSE(false, true, LanguageSystem.INPUT_REVERSE),
+        AIRSHIP_JS_INHIBIT(false, true, LanguageSystem.INPUT_JS_INHIBIT),
 
         CAR_MOD(false, false, LanguageSystem.INPUT_MOD),
         CAR_CAMLOCK(false, true, LanguageSystem.INPUT_CAMLOCK),
