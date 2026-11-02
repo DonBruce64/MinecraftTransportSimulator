@@ -98,13 +98,11 @@ public final class VehicleSummonManager {
                 jobs.remove(job.vehicleID, job);
             }
         }
-        VehicleLocationTracker.tick(world);
     }
 
     /**Called every vehicle tick, on both sides, just before the vehicle is moved.**/
     public static void onVehicleTick(EntityVehicleF_Physics vehicle) {
         if (!vehicle.world.isClient()) {
-            VehicleLocationTracker.onVehicleTick(vehicle);
             if (vehicle.ticksExisted % 20 == 0) {
                 boolean held = vehicle.getOrCreateVariable(VehiclePhone.VAR_FLY_HELD).isActive;
                 if (!held && vehicle.getOrCreateVariable(VehicleSummonFlight.VAR_ACTIVE).isActive && !jobs.containsKey(vehicle.uniqueUUID)) {

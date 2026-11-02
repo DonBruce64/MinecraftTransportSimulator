@@ -21,24 +21,22 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
  * Remembers where every vehicle was last seen, per world, so phones can find vehicles
  * whose chunks aren't loaded.  Server only.
  * <p>
- * Positions are kept in memory and saved every so often to a file of their own next to the world's
- * MTS data.  They're never sent to clients, so players can't find out where everyone's vehicles are.
+ * Positions are recorded whenever a vehicle is saved, and kept in memory until the world unloads,
+ * when they're written to a file of their own next to the world's MTS data.  They're never sent to clients, so players can't find out where everyone's vehicles are.
  * Vehicles are forgotten when they're picked up, or when a call finds they're no longer where they were
  * last seen, so the file doesn't fill up with vehicles that are long gone.
  */
 public final class VehicleLocationTracker {
     private static final String FILE_NAME = "mtsvehiclelocations.txt";
-    private static final int TRACK_INTERVAL = 20;
-    private static final int SAVE_INTERVAL = 600;
 
     private static final Map<AWrapperWorld, WorldLocations> worlds = new HashMap<>();
 
     private VehicleLocationTracker() {
     }
 
-    /**Called every vehicle tick on the server.**/
-    static void onVehicleTick(EntityVehicleF_Physics vehicle) {
-        if (vehicle.ticksExisted % TRACK_INTERVAL == 0) {
+    /**Called whenever a vehicle is saved, like when its chunk unloads, so we know where it was left.**/
+    public static void onVehicleSave(EntityVehicleF_Physics vehicle) {
+        if (!vehicle.world.isClient()) {
             update(vehicle);
         }
     }
@@ -71,15 +69,6 @@ public final class VehicleLocationTracker {
     /**Where the vehicle was last seen in this world, or null if it never was.**/
     static Point3D getLastPosition(AWrapperWorld world, UUID vehicleID) {
         return get(world).positions.get(vehicleID);
-    }
-
-    /**Called every server tick for the world.  Saves changed positions now and then.**/
-    static void tick(AWrapperWorld world) {
-        WorldLocations locations = worlds.get(world);
-        if (locations != null && --locations.ticksUntilSave <= 0) {
-            locations.ticksUntilSave = SAVE_INTERVAL;
-            save(world, locations);
-        }
     }
 
     /**Saves and forgets the world, for when it unloads.  It's re-read if it loads again.**/
@@ -148,7 +137,6 @@ public final class VehicleLocationTracker {
 
     private static class WorldLocations {
         final Map<UUID, Point3D> positions = new HashMap<>();
-        int ticksUntilSave = SAVE_INTERVAL;
         boolean dirty;
     }
 }
