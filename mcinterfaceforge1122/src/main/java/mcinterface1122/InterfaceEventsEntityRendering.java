@@ -94,13 +94,7 @@ public class InterfaceEventsEntityRendering {
             IWrapperPlayer player = WrapperPlayer.getWrapperFor((EntityPlayer) event.getEntity());
             cameraAdjustedPosition.set(0, 0, 0);
             cameraAdjustedOrientation.setToZero();
-            adjustedCamera = false;
             if (CameraSystem.adjustCamera(player, cameraAdjustedPosition, cameraAdjustedOrientation, (float) event.getRenderPartialTicks())) {
-                //Save original camera position and orientation for screen projection before modifying them.
-                projectionCameraPosition.set(cameraAdjustedPosition);
-                projectionCameraOrientation.set(cameraAdjustedOrientation);
-                adjustedCamera = true;
-
                 //Set helper to the current camera position.
                 EntityPlayer mcPlayer = ((WrapperPlayer) player).player;
                 playerPosition.set(mcPlayer.posX, mcPlayer.posY, mcPlayer.posZ);

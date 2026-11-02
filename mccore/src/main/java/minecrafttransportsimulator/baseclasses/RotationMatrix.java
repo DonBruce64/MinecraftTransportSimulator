@@ -196,33 +196,19 @@ public class RotationMatrix {
         //m21 = sinX*cosY*cosZ+sinY*sinZ;
         //m22 = cosX*cosY;
 
-        //By this formula, it is obvious that element m12 contains the -sin of the pitch.
-        //Therefore, we can easily obtain the pitch with an aSin function.
-        angles.x = Math.toDegrees(-Math.asin(m12));
+        //Use atan2 instead of asin so rounding at vertical pitch cannot put the input outside [-1, 1].
+        double pitchCos = Math.hypot(m02, m22);
+        angles.x = Math.toDegrees(Math.atan2(-m12, pitchCos));
 
-        //We know that element m02 is cosX*sinY, and m22 is cosX*cosY.
-        //m02/m22 results in sinY/cosY, which is the tangent function.
-        //Therefore, we can do aTan on these values to get the angle of Y.
-        angles.y = Math.toDegrees(Math.atan2(m02, m22));
-
-        //We now need to check for gimbal lock.
-        //This realistically only happens if we manually set the values.
-        //For all normal operations, exact lock will never occur.
-        //If we do get locked, just set roll to 0.  This is because
-        //locks don't normally happen except on axial rotations, and
-        //those don't normally do roll operations.  Since in both
-        //locked cases yaw would equal roll, we just take yaw to be
-        //the "true" rotation and mark roll as 0.
-        if (m12 == -1) {
-            //Gimbal lock with pitch at -90 (down).
-            angles.z = 0;
-        } else if (m12 == 1) {
-            //Gimbal lock with pitch at 90 (up).
+        if (pitchCos < 1.0e-8) {
+            //At vertical pitch, yaw and roll describe the same rotation.  Set roll to zero and
+            //recover their combined rotation from the right vector, which remains horizontal.
+            angles.y = Math.toDegrees(Math.atan2(-m20, m00));
             angles.z = 0;
         } else {
-            //We know that element m10 is cosX*sinZ, and m11 is cosX*cosZ.
-            //m10/m11 results in sinZ/cosZ, which is the tangent function.
-            //Therefore, we can do aTan on these values to get the angle of Z.
+            //m02 and m22 contain cosX*sinY and cosX*cosY, respectively.
+            angles.y = Math.toDegrees(Math.atan2(m02, m22));
+            //m10 and m11 contain cosX*sinZ and cosX*cosZ, respectively.
             angles.z = Math.toDegrees(Math.atan2(m10, m11));
         }
         return angles;
@@ -408,27 +394,69 @@ public class RotationMatrix {
      * probable than using the actual angles for some operation.
      */
     public void interploate(RotationMatrix start, RotationMatrix end, double delta) {
-        //Convert start and end matrix to quaternions.
-        //Need to check for <0 here as FPEs can make us go below and get NaN results.
-        double netValue = 1 + start.m00 + start.m11 + start.m22;
-        double quatStartw = netValue <= 0 ? 0 : Math.sqrt(netValue) / 2D;
-        netValue = 1 + end.m00 + end.m11 + end.m22;
-        double quatEndw = netValue <= 0 ? 0 : Math.sqrt(netValue) / 2D;
-
-        if (quatStartw < 1.0e-6 && quatEndw < 1.0e-6) {
-            //Quaternions are axis-aligned.  If we continue, we get NaNed or get funny results.
-            //TODO find better maths to handle this condition rather than just not interpolating.
-            this.set(start);
-            return;
+        //Convert each matrix using a well-conditioned quaternion component.  Dividing only by w
+        //is unstable near 180-degree rotations, where w approaches zero.
+        double quatStartw;
+        double quatStarti;
+        double quatStartj;
+        double quatStartk;
+        double startTrace = start.m00 + start.m11 + start.m22;
+        if (startTrace > 0) {
+            double scale = Math.sqrt(1 + startTrace) * 2;
+            quatStartw = scale / 4;
+            quatStarti = (start.m21 - start.m12) / scale;
+            quatStartj = (start.m02 - start.m20) / scale;
+            quatStartk = (start.m10 - start.m01) / scale;
+        } else if (start.m00 > start.m11 && start.m00 > start.m22) {
+            double scale = Math.sqrt(1 + start.m00 - start.m11 - start.m22) * 2;
+            quatStartw = (start.m21 - start.m12) / scale;
+            quatStarti = scale / 4;
+            quatStartj = (start.m01 + start.m10) / scale;
+            quatStartk = (start.m02 + start.m20) / scale;
+        } else if (start.m11 > start.m22) {
+            double scale = Math.sqrt(1 + start.m11 - start.m00 - start.m22) * 2;
+            quatStartw = (start.m02 - start.m20) / scale;
+            quatStarti = (start.m01 + start.m10) / scale;
+            quatStartj = scale / 4;
+            quatStartk = (start.m12 + start.m21) / scale;
+        } else {
+            double scale = Math.sqrt(1 + start.m22 - start.m00 - start.m11) * 2;
+            quatStartw = (start.m10 - start.m01) / scale;
+            quatStarti = (start.m02 + start.m20) / scale;
+            quatStartj = (start.m12 + start.m21) / scale;
+            quatStartk = scale / 4;
         }
 
-        double quatStarti = 1 / (4 * quatStartw) * (start.m21 - start.m12);
-        double quatStartj = 1 / (4 * quatStartw) * (start.m02 - start.m20);
-        double quatStartk = 1 / (4 * quatStartw) * (start.m10 - start.m01);
-
-        double quatEndi = 1 / (4 * quatEndw) * (end.m21 - end.m12);
-        double quatEndj = 1 / (4 * quatEndw) * (end.m02 - end.m20);
-        double quatEndk = 1 / (4 * quatEndw) * (end.m10 - end.m01);
+        double quatEndw;
+        double quatEndi;
+        double quatEndj;
+        double quatEndk;
+        double endTrace = end.m00 + end.m11 + end.m22;
+        if (endTrace > 0) {
+            double scale = Math.sqrt(1 + endTrace) * 2;
+            quatEndw = scale / 4;
+            quatEndi = (end.m21 - end.m12) / scale;
+            quatEndj = (end.m02 - end.m20) / scale;
+            quatEndk = (end.m10 - end.m01) / scale;
+        } else if (end.m00 > end.m11 && end.m00 > end.m22) {
+            double scale = Math.sqrt(1 + end.m00 - end.m11 - end.m22) * 2;
+            quatEndw = (end.m21 - end.m12) / scale;
+            quatEndi = scale / 4;
+            quatEndj = (end.m01 + end.m10) / scale;
+            quatEndk = (end.m02 + end.m20) / scale;
+        } else if (end.m11 > end.m22) {
+            double scale = Math.sqrt(1 + end.m11 - end.m00 - end.m22) * 2;
+            quatEndw = (end.m02 - end.m20) / scale;
+            quatEndi = (end.m01 + end.m10) / scale;
+            quatEndj = scale / 4;
+            quatEndk = (end.m12 + end.m21) / scale;
+        } else {
+            double scale = Math.sqrt(1 + end.m22 - end.m00 - end.m11) * 2;
+            quatEndw = (end.m10 - end.m01) / scale;
+            quatEndi = (end.m02 + end.m20) / scale;
+            quatEndj = (end.m12 + end.m21) / scale;
+            quatEndk = scale / 4;
+        }
 
         //Use quternion SLERP to get interpolated quaternion.
         //Copied from javax.vecmath.Quat4d
@@ -457,6 +485,13 @@ public class RotationMatrix {
         double quatNeti = segment1 * quatStarti + segment2 * quatEndi;
         double quatNetj = segment1 * quatStartj + segment2 * quatEndj;
         double quatNetk = segment1 * quatStartk + segment2 * quatEndk;
+
+        //Keep the quaternion unit length, including when using linear interpolation for small rotations.
+        double quatNetScale = 1 / Math.sqrt(quatNetr * quatNetr + quatNeti * quatNeti + quatNetj * quatNetj + quatNetk * quatNetk);
+        quatNetr *= quatNetScale;
+        quatNeti *= quatNetScale;
+        quatNetj *= quatNetScale;
+        quatNetk *= quatNetScale;
 
         //Now convert this quaternion back into this matrix.
         m00 = (1.0 - 2.0 * quatNetj * quatNetj - 2.0 * quatNetk * quatNetk);
