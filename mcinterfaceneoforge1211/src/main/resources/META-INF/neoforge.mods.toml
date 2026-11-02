@@ -17,6 +17,10 @@ Realistic planes and cars for Minecraft!
 [[mixins]]
 config = "mts.mixins.json"
 
+# Optional: its plugin applies it only when Sodium is installed.
+[[mixins]]
+config = "mts-sodium.mixins.json"
+
 [[dependencies.mts]]
     modId = "neoforge"
     type = "required"

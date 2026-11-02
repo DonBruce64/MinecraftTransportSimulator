@@ -1,11 +1,16 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
+import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
@@ -100,6 +105,34 @@ public final class PartSeat extends APart {
             }
         }
         return true;
+    }
+
+    /**
+     * Intercepts a melee attack on the rider on the server and damages the first active
+     * ATTACK box hit, subject to external damage settings.  Returns true if the rider is
+     * protected, even when external damage is disabled.  Camera offsets do not affect the trace.
+     */
+    public boolean interceptRiderMeleeAttack(IWrapperEntity attacker, double damageAmount) {
+        if (rider != null && !world.isClient()) {
+            Point3D attackStart = attacker.getHeadPosition();
+            Point3D attackEnd = new Point3D(0, (rider.getEyeHeight() + rider.getSeatOffset()) * rider.getVerticalScale(), 0).rotate(orientation).add(position);
+            Collection<BoundingBoxHitResult> hitBoxes = masterEntity.getHitBoxes(attackStart, attackEnd, new BoundingBox(attackStart, attackEnd), false);
+            if (hitBoxes != null) {
+                if (ConfigSystem.settings.damage.allowExternalDamage.value) {
+                    if (masterEntity instanceof EntityVehicleF_Physics) {
+                        damageAmount *= ConfigSystem.externalDamageOverrides.overrides.get(masterEntity.definition.packID).get(masterEntity.definition.systemName);
+                    }
+                    if (damageAmount > 0) {
+                        BoundingBoxHitResult hit = hitBoxes.iterator().next();
+                        //Use the external projectile path for armor, collision health, and part damage.
+                        //A mob attack must not be marked as a player hand attack that removes parts.
+                        masterEntity.attackProjectile(new Damage(damageAmount, hit.box, null, attacker, null), null, Collections.singletonList(hit));
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

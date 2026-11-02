@@ -176,6 +176,11 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
+    public long getTickCount() {
+        return world.getGameTime();
+    }
+
+    @Override
     public String getName() {
         return world.dimension().getRegistryName().getPath();
     }
