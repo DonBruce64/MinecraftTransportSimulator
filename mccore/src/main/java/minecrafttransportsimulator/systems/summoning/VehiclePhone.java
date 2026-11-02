@@ -69,10 +69,11 @@ public final class VehiclePhone {
 
     /**
      * True if the player may register and call this vehicle: it has no key, or they're
-     * carrying its key, or they're an operator.
+     * carrying its key.  Operators get no exception, as isOP() is true for every player in
+     * singleplayer and LAN worlds.
      */
     static boolean canControl(IWrapperPlayer player, EntityVehicleF_Physics vehicle) {
-        if (vehicle.keyUUID == null || player.isOP()) {
+        if (vehicle.keyUUID == null) {
             return true;
         }
         for (int i = 0; i < player.getInventory().getSize(); ++i) {
