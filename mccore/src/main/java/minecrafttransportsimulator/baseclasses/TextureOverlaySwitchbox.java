@@ -29,8 +29,9 @@ public class TextureOverlaySwitchbox extends AnimationSwitchbox {
 
     @Override
     protected boolean continueAfterFailedVisibility() {
-        //A blended overlay still needs later translations evaluated while its alpha is zero.
-        return blendedAnimations;
+        //Above the fade range a blended overlay is fully opaque, so later animations still matter.
+        //Below the range its alpha is zero, and the normal early return remains valid.
+        return blendedAnimations && lastVisibilityClock != null && lastVisibilityValue > lastVisibilityClock.animation.clampMax;
     }
 
     @Override
