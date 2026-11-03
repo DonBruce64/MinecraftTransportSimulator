@@ -247,7 +247,7 @@ class InterfacePacket implements IInterfacePacket {
         @Override
         public IMessage onMessage(InventoryOpenPacket message, MessageContext ctx) {
             FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(() ->
-                ((IInventoryGUIClient) InterfaceManager.clientInterface).openInventoryGUI(
+                ((InterfaceClient) InterfaceManager.clientInterface).openInventoryGUI(
                     new WrapperNBT(message.inventoryData), message.inventorySize, message.stackSize,
                     message.texture, message.heldPlayerSlot, message.windowID));
             return null;

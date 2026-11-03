@@ -44,7 +44,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
 
 @EventBusSubscriber(Side.CLIENT)
-public class InterfaceClient implements IInterfaceClient, IInventoryGUIClient {
+public class InterfaceClient implements IInterfaceClient {
     private static CameraMode actualCameraMode;
     private static CameraMode cameraModeRequest;
     private static int ticksToCullingWarning = 200;
@@ -154,7 +154,6 @@ public class InterfaceClient implements IInterfaceClient, IInventoryGUIClient {
         FMLCommonHandler.instance().showGuiScreen(new BuilderGUI(gui));
     }
 
-    @Override
     public void openInventoryGUI(IWrapperNBT inventoryData, int inventorySize, int stackSize, String texture, int heldPlayerSlot, int windowID) {
         Minecraft minecraft = Minecraft.getMinecraft();
         WrapperWorld world = WrapperWorld.getWrapperFor(minecraft.world);
