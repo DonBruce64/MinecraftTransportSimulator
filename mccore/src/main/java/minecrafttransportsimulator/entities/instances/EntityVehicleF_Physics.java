@@ -742,7 +742,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
      * Only meaningful when arcadeFlightMode is non-zero.
      */
     public boolean isArcadeFlightDefault() {
-        return arcadeFlightModeVar.currentValue > 0;
+        return arcadeFlightModeVar.isActive;
     }
 
     /**

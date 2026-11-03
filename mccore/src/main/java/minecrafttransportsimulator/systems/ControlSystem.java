@@ -1294,9 +1294,9 @@ public final class ControlSystem {
             String noticeSuffix = "_" + clientPlayer.getID();
             ComputedVariable noticeVar = aircraft.getOrCreateVariable(noticePrefix + (arcadeDefault ? "arcade" : "standard") + noticeSuffix);
             boolean showEveryTime = ConfigSystem.client.controlSettings.showDefaultAircraftControlsMessageEveryTime.value;
-            boolean shownBefore = showEveryTime ? (arcadeDefault ? arcadeNoticeShownThisRide : standardNoticeShownThisRide) : noticeVar.currentValue != 0;
+            boolean shownBefore = showEveryTime ? (arcadeDefault ? arcadeNoticeShownThisRide : standardNoticeShownThisRide) : noticeVar.isActive;
             if (!shownBefore) {
-                if (noticeVar.currentValue == 0) {
+                if (!noticeVar.isActive) {
                     //Still mark the vehicle, so turning the config off doesn't re-show notices already seen.
                     noticeVar.setTo(1, false);
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(noticeVar, 1));
@@ -1308,7 +1308,7 @@ public final class ControlSystem {
                 }
                 boolean arcadeActive = aircraft.isArcadeFlightActive();
                 boolean isOverridden = arcadeActive != arcadeDefault;
-                boolean isModeChange = showEveryTime ? (arcadeDefault ? standardNoticeShownThisRide : arcadeNoticeShownThisRide) : aircraft.getOrCreateVariable(noticePrefix + (arcadeDefault ? "standard" : "arcade") + noticeSuffix).currentValue != 0;
+                boolean isModeChange = showEveryTime ? (arcadeDefault ? standardNoticeShownThisRide : arcadeNoticeShownThisRide) : aircraft.getOrCreateVariable(noticePrefix + (arcadeDefault ? "standard" : "arcade") + noticeSuffix).isActive;
                 LanguageEntry message;
                 if (isModeChange) {
                     message = isOverridden ? LanguageSystem.INTERACT_ARCADEMODE_NOTICE_MODE_OVERRIDE : LanguageSystem.INTERACT_ARCADEMODE_NOTICE_MODE_DEFAULT;
