@@ -263,9 +263,9 @@ public class VehicleGroundDeviceCollection {
     }
 
     /**
-     * Returns true if any devices are on the ground.
+     * Returns true when none of the ground boxes are supported by the ground.
      */
-    public boolean isAnythingOnGround() {
+    public boolean isAirborne() {
         return !frontLeftGDB.isGrounded && !frontRightGDB.isGrounded && !rearLeftGDB.isGrounded && !rearRightGDB.isGrounded;
     }
 
