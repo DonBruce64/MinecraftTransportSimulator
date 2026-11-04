@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
@@ -174,6 +175,19 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
                 }
             };
         }, Component.literal("")));
+    }
+
+    @Override
+    public void openInventoryGUI(EntityInventoryContainer inventory, String texture, IWrapperItemStack inventoryItem) {
+        int heldPlayerSlot = inventoryItem != null ? getHotbarIndex() : -1;
+        player.openMenu(new SimpleMenuProvider((containerID, playerInventory, player) ->
+            new BuilderInventoryContainerMenu(containerID, playerInventory, inventory, texture, inventoryItem, heldPlayerSlot), Component.literal("")), data -> {
+                data.writeUUID(inventory.uniqueUUID);
+                data.writeInt(inventory.getSize());
+                data.writeInt(inventory.getStackSize());
+                data.writeUtf(texture == null ? "" : texture);
+                data.writeInt(heldPlayerSlot);
+            });
     }
 
     /**
