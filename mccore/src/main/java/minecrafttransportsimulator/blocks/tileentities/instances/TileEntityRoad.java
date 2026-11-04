@@ -12,6 +12,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TextureOverlaySwitchbox;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -24,6 +25,7 @@ import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONRoadCollisionArea;
+import minecrafttransportsimulator.jsondefs.JSONTextureOverlay;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -34,6 +36,8 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
+import minecrafttransportsimulator.rendering.RenderableModelObject;
 import minecrafttransportsimulator.rendering.RenderableVertices;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
@@ -64,6 +68,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
     private boolean isActive;
     public final Map<RoadComponent, ItemRoadComponent> components = new HashMap<>();
     public final Map<RoadComponent, RenderableData> componentRenderables = new HashMap<>();
+    private final Map<RoadComponent, RenderableVertices> componentTextureOverlayVertices = new HashMap<>();
+    private final Map<RoadComponent, List<RoadTextureOverlayRenderable>> componentTextureOverlayRenderables = new HashMap<>();
     public final List<RenderableData> devRenderables = new ArrayList<>();
     public final List<BoundingBox> blockingBoundingBoxes = new ArrayList<>();
     public final List<Point3D> collisionBlockOffsets;
@@ -152,6 +158,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
         for (RenderableData object : componentRenderables.values()) {
             object.destroy();
         }
+        destroyTextureOverlayRenderables();
     }
 
     @Override
@@ -350,12 +357,25 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
 
                             //Cache the model now that we know how big it is.
                             FloatBuffer totalModel = FloatBuffer.allocate(totalVertices);
+                            boolean hasTextureOverlays = componentItem.definition.rendering.textureOverlays != null && !componentItem.definition.rendering.textureOverlays.isEmpty();
+                            FloatBuffer totalOverlayModel = hasTextureOverlays ? FloatBuffer.allocate(totalVertices) : null;
                             for (RenderableVertices object : parsedModel) {
-                                totalModel.put(object.vertices);
+                                FloatBuffer modelVertices = object.vertices.duplicate();
+                                modelVertices.rewind();
+                                totalModel.put(modelVertices);
+                                if (totalOverlayModel != null) {
+                                    FloatBuffer overlayVertices = RenderableModelObject.getTextureOverlayVertexObject(object).vertices.duplicate();
+                                    overlayVertices.rewind();
+                                    totalOverlayModel.put(overlayVertices);
+                                }
                             }
                             totalModel.flip();
                             RenderableData renderable = new RenderableData(new RenderableVertices(component.name(), totalModel, true), componentItem.definition.getTextureLocation(componentItem.subDefinition, 0));
                             componentRenderables.put(component, renderable);
+                            if (totalOverlayModel != null) {
+                                totalOverlayModel.flip();
+                                componentTextureOverlayVertices.put(component, new RenderableVertices(component.name() + "_OVERLAYS", totalOverlayModel, true));
+                            }
                             break;
                         }
                         case CORE_DYNAMIC: {
@@ -366,16 +386,31 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                                 totalVertices += object.vertices.capacity();
                             }
                             FloatBuffer parsedVertices = FloatBuffer.allocate(totalVertices);
+                            boolean hasTextureOverlays = componentItem.definition.rendering.textureOverlays != null && !componentItem.definition.rendering.textureOverlays.isEmpty();
+                            FloatBuffer parsedOverlayVertices = hasTextureOverlays ? FloatBuffer.allocate(totalVertices) : null;
                             for (RenderableVertices object : parsedModel) {
-                                parsedVertices.put(object.vertices);
-                                object.vertices.rewind();//Rewind after put since this might be used on other road segments.
+                                FloatBuffer modelVertices = object.vertices.duplicate();
+                                modelVertices.rewind();
+                                parsedVertices.put(modelVertices);
+                                if (parsedOverlayVertices != null) {
+                                    FloatBuffer overlayVertices = RenderableModelObject.getTextureOverlayVertexObject(object).vertices.duplicate();
+                                    overlayVertices.rewind();
+                                    parsedOverlayVertices.put(overlayVertices);
+                                }
                             }
                             parsedVertices.flip();
+                            if (parsedOverlayVertices != null) {
+                                parsedOverlayVertices.flip();
+                            }
 
                             //Offset vertices to be corner-aligned, as that's how our curve aligns.
                             for (int i = 0; i < parsedVertices.capacity(); i += 8) {
                                 parsedVertices.put(i + 5, (float) (parsedVertices.get(i + 5) - definition.road.cornerOffset.x));
                                 parsedVertices.put(i + 7, (float) (parsedVertices.get(i + 7) - definition.road.cornerOffset.z));
+                                if (parsedOverlayVertices != null) {
+                                    parsedOverlayVertices.put(i + 5, (float) (parsedOverlayVertices.get(i + 5) - definition.road.cornerOffset.x));
+                                    parsedOverlayVertices.put(i + 7, (float) (parsedOverlayVertices.get(i + 7) - definition.road.cornerOffset.z));
+                                }
                             }
 
                             //Core components need to be transformed to wedges.
@@ -394,6 +429,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                             float priorIndex = 0;
                             float currentIndex = 0;
                             List<float[]> segmentVertices = new ArrayList<>();
+                            List<float[]> segmentOverlayVertices = parsedOverlayVertices != null ? new ArrayList<>() : null;
                             while (!finalSegment) {
                                 //If we are at the last index, do special logic to get the very end point.
                                 //We check here in case FPEs have accumulated and we won't end on the exact end segment.
@@ -434,9 +470,14 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                                 //For all points, their magnitude depends on how far away they are on the Z-axis.
                                 for (int i = 0; i < parsedVertices.capacity(); i += 8) {
                                     float[] convertedVertexData = new float[8];
+                                    float[] convertedOverlayVertexData = parsedOverlayVertices != null ? new float[8] : null;
 
                                     //Add the normals and UVs first.  These won't change.
                                     parsedVertices.get(convertedVertexData, 0, 5);
+                                    if (parsedOverlayVertices != null) {
+                                        parsedOverlayVertices.get(convertedOverlayVertexData, 0, 5);
+                                        parsedOverlayVertices.position(parsedOverlayVertices.position() + 3);
+                                    }
 
                                     //Now convert the XYZ points.
                                     float x = parsedVertices.get();
@@ -456,9 +497,18 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
 
                                     //Add transformed vertices to the segment.
                                     segmentVertices.add(convertedVertexData);
+                                    if (convertedOverlayVertexData != null) {
+                                        convertedOverlayVertexData[5] = convertedVertexData[5];
+                                        convertedOverlayVertexData[6] = convertedVertexData[6];
+                                        convertedOverlayVertexData[7] = convertedVertexData[7];
+                                        segmentOverlayVertices.add(convertedOverlayVertexData);
+                                    }
                                 }
                                 //Rewind for next segment.
                                 parsedVertices.rewind();
+                                if (parsedOverlayVertices != null) {
+                                    parsedOverlayVertices.rewind();
+                                }
 
                                 //Set the last index.
                                 priorIndex = currentIndex;
@@ -472,9 +522,21 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                             convertedVertices.flip();
                             RenderableData renderable = new RenderableData(new RenderableVertices(component.name(), convertedVertices, true, AModelParser.isMissingModel(parsedModel)), componentItem.definition.getTextureLocation(componentItem.subDefinition, 0));
                             componentRenderables.put(component, renderable);
+                            if (segmentOverlayVertices != null) {
+                                FloatBuffer convertedOverlayVertices = FloatBuffer.allocate(segmentOverlayVertices.size() * 8);
+                                for (float[] segmentVertex : segmentOverlayVertices) {
+                                    convertedOverlayVertices.put(segmentVertex);
+                                }
+                                convertedOverlayVertices.flip();
+                                componentTextureOverlayVertices.put(component, new RenderableVertices(component.name() + "_OVERLAYS", convertedOverlayVertices, true, AModelParser.isMissingModel(parsedModel)));
+                            }
                             break;
                         }
                     }
+                }
+                if (!componentTextureOverlayRenderables.containsKey(component)) {
+                    RenderableVertices overlayVertices = componentTextureOverlayVertices.containsKey(component) ? componentTextureOverlayVertices.get(component) : componentRenderables.get(component).vertexObject;
+                    initializeTextureOverlayRenderables(component, components.get(component), overlayVertices);
                 }
                 RenderableData object = componentRenderables.get(component);
                 if (isActive()) {
@@ -512,6 +574,110 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                     }
                 }
             }
+        }
+
+        //Roads use a special combined-mesh renderer and therefore need to submit their texture
+        //layers explicitly rather than through AEntityD_Definable's normal model-object path.
+        if (blendingEnabled) {
+            renderTextureOverlays(transform, partialTicks);
+        }
+    }
+
+    @Override
+    public void resetModelsAndAnimations() {
+        super.resetModelsAndAnimations();
+        //This override may be invoked from the superclass constructor before these fields initialize.
+        if (componentRenderables != null) {
+            componentRenderables.values().forEach(RenderableData::destroy);
+            componentRenderables.clear();
+        }
+        if (componentTextureOverlayRenderables != null) {
+            destroyTextureOverlayRenderables();
+            componentTextureOverlayRenderables.clear();
+        }
+        if (componentTextureOverlayVertices != null) {
+            componentTextureOverlayVertices.clear();
+        }
+    }
+
+    private void initializeTextureOverlayRenderables(RoadComponent component, ItemRoadComponent componentItem, RenderableVertices sourceVertices) {
+        List<RoadTextureOverlayRenderable> overlays = new ArrayList<>();
+        if (componentItem.definition.rendering.textureOverlays != null) {
+            int overlayCount = componentItem.definition.rendering.textureOverlays.size();
+            RenderableVertices overlayVertices = RenderableModelObject.getTextureOverlayVertexObject(sourceVertices);
+            for (int overlayIndex = 0; overlayIndex < overlayCount; ++overlayIndex) {
+                JSONTextureOverlay overlayDefinition = componentItem.definition.rendering.textureOverlays.get(overlayIndex);
+                String texture = RenderableModelObject.resolveOverlayTexture(componentItem.definition, overlayDefinition.texture);
+                RenderableData overlayRenderable = new RenderableData(overlayVertices, texture);
+                overlayRenderable.setTransucentOverride();
+                overlayRenderable.setTextureClampToTransparent();
+                overlayRenderable.setRenderingOrder(overlayCount - overlayIndex);
+                if (overlayDefinition.isBright) {
+                    overlayRenderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
+                }
+                int[] dimensions = RenderableModelObject.getTextureDimensions(texture);
+                String normalTexture = componentItem.definition.getTextureLocation(componentItem.subDefinition, 0);
+                if (normalTexture != null && !RenderableData.GLOBAL_TEXTURE_NAME.equals(normalTexture)) {
+                    int[] normalTextureDimensions = RenderableModelObject.getTextureDimensions(normalTexture);
+                    overlayRenderable.setTextureScale(normalTextureDimensions[0] / (float) dimensions[0], normalTextureDimensions[1] / (float) dimensions[1]);
+                }
+                overlays.add(new RoadTextureOverlayRenderable(overlayRenderable, dimensions[0], dimensions[1]));
+                if (overlayDefinition.animations != null && !overlayDefinition.animations.isEmpty() && !textureOverlaySwitchboxes.containsKey(overlayDefinition)) {
+                    textureOverlaySwitchboxes.put(overlayDefinition, new TextureOverlaySwitchbox(this, overlayDefinition));
+                }
+            }
+        }
+        componentTextureOverlayRenderables.put(component, overlays);
+    }
+
+    private void renderTextureOverlays(TransformationMatrix transform, float partialTicks) {
+        for (RoadComponent component : components.keySet()) {
+            ItemRoadComponent componentItem = components.get(component);
+            List<JSONTextureOverlay> overlayDefinitions = componentItem.definition.rendering.textureOverlays;
+            List<RoadTextureOverlayRenderable> overlays = componentTextureOverlayRenderables.get(component);
+            if (overlayDefinitions == null || overlays == null) {
+                continue;
+            }
+
+            for (int overlayIndex = overlayDefinitions.size() - 1; overlayIndex >= 0; --overlayIndex) {
+                JSONTextureOverlay overlayDefinition = overlayDefinitions.get(overlayIndex);
+                TextureOverlaySwitchbox switchbox = textureOverlaySwitchboxes.get(overlayDefinition);
+                if (switchbox != null) {
+                    boolean visible = switchbox.runSwitchbox(partialTicks, false);
+                    if (!overlayDefinition.blendedAnimations && !visible) {
+                        continue;
+                    }
+                }
+
+                float alpha = overlayDefinition.blendedAnimations && switchbox != null ? switchbox.getVisibilityAlpha() : 1.0F;
+                if (!isActive()) {
+                    alpha *= 0.5F;
+                }
+                if (alpha <= 0) {
+                    continue;
+                }
+
+                RoadTextureOverlayRenderable overlay = overlays.get(overlayIndex);
+                double translationX = switchbox != null ? switchbox.translation.x : 0.0D;
+                double translationY = switchbox != null ? switchbox.translation.y : 0.0D;
+                overlay.renderable.setTextureOffset((float) (-(overlayDefinition.centerPoint.x + translationX) / overlay.textureWidth), (float) (-(overlayDefinition.centerPoint.y + translationY) / overlay.textureHeight));
+                overlay.renderable.setColor(isActive() ? ColorRGB.WHITE : ColorRGB.GREEN);
+                overlay.renderable.setAlpha(alpha);
+                overlay.renderable.setLightValue(worldLightValue);
+                if (dynamicCurve != null) {
+                    overlay.renderable.transform.setTranslation(dynamicCurve.startPos.copy().subtract(position));
+                    overlay.renderable.transform.multiply(transform);
+                } else {
+                    overlay.renderable.transform.set(transform);
+                }
+                overlay.renderable.render();
+            }
+        }
+    }
+
+    private void destroyTextureOverlayRenderables() {
+        for (List<RoadTextureOverlayRenderable> overlays : componentTextureOverlayRenderables.values()) {
+            overlays.forEach(overlay -> overlay.renderable.destroy());
         }
     }
 
@@ -702,6 +868,18 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
         data.setPoint3dsCompact("collisionBlockOffsets", collisionBlockOffsets);
         data.setPoint3dsCompact("collidingBlockOffsets", collidingBlockOffsets);
         return data;
+    }
+
+    private static class RoadTextureOverlayRenderable {
+        private final RenderableData renderable;
+        private final int textureWidth;
+        private final int textureHeight;
+
+        private RoadTextureOverlayRenderable(RenderableData renderable, int textureWidth, int textureHeight) {
+            this.renderable = renderable;
+            this.textureWidth = textureWidth;
+            this.textureHeight = textureHeight;
+        }
     }
 
     /**

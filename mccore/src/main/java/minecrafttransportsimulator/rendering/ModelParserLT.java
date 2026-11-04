@@ -117,6 +117,7 @@ public final class ModelParserLT extends AModelParser {
                 //new ColorRGB(tile.tile.color)
                 buffer.flip();
                 RenderableVertices newObject = new RenderableVertices("little_tiles_generated", buffer, true);
+                newObject.setTextureNormalizationBounds(uvPoints[0], uvPoints[1], uvPoints[2], uvPoints[3]);
                 objectList.add(newObject);
             }
 

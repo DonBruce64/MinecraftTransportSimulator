@@ -86,6 +86,9 @@ public final class InterfaceLoader {
             //Populate language system names.
             LanguageSystem.populateNames();
 
+            //Register client resource-reload handling only after the client interface is initialized.
+            InterfaceClient.registerResourceReloadListener();
+
             //Init keybinds.
             InterfaceManager.inputInterface.initConfigKey();
 
