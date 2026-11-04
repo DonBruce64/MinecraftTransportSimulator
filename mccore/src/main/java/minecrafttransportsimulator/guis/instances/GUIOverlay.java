@@ -27,6 +27,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentCrosshair;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentPartSlotMarkers;
 import minecrafttransportsimulator.guis.components.GUIComponentPartSlotScanner;
+import minecrafttransportsimulator.guis.components.GUIComponentTargetingHUD;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -50,6 +51,7 @@ public class GUIOverlay extends AGUIBase {
     private GUIComponentLabel gunLabel;
     private GUIComponentPartSlotScanner scannerPreview;
     private GUIComponentCrosshair aimingCrosshair;
+    private GUIComponentTargetingHUD targetingHUD;
     private GUIComponentAimReticle aimReticle;
     private EntityInteractResult lastInteractResult;
     private AEntityE_Interactable<?> lastCollisionGroupHoverEntity;
@@ -77,6 +79,9 @@ public class GUIOverlay extends AGUIBase {
         addComponent(aimingCrosshair = new GUIComponentCrosshair(screenWidth / 2, screenHeight / 2));
         aimingCrosshair.visible = false;
         aimingCrosshair.ignoreGUILightingState = true;
+        addComponent(targetingHUD = new GUIComponentTargetingHUD(screenWidth, screenHeight));
+        targetingHUD.visible = false;
+        targetingHUD.ignoreGUILightingState = true;
         scannerPreview = new GUIComponentPartSlotScanner();
         addComponent(new GUIComponentPartSlotMarkers(scannerPreview));
         addComponent(scannerPreview);
@@ -92,6 +97,7 @@ public class GUIOverlay extends AGUIBase {
         aimingCrosshair.visible = false;
         aimingCrosshair.pendingImpactPoint = null;
         aimingCrosshair.vehicleRef = null;
+        targetingHUD.setGunGroup(null);
         if (!InterfaceManager.clientInterface.isChatOpen()) {
             EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
             List<PartGun> activeGunGroup = null;
@@ -113,7 +119,9 @@ public class GUIOverlay extends AGUIBase {
                             }
                             List<PartGun> gunGroup = seat.gunGroups.get(seat.activeGunItem);
                             if (gunGroup != null && !gunGroup.isEmpty()) {
-                                activeGunGroup = gunGroup;
+                                activeGunGroup = seat.activeGunItem.definition.gun.fireSolo
+                                        ? java.util.Collections.singletonList(gunGroup.get(seat.gunIndex))
+                                        : gunGroup;
                             }
                         } else {
                             gunLabel.text += "None";
@@ -125,6 +133,7 @@ public class GUIOverlay extends AGUIBase {
             // Update the aiming crosshair position when a gun is active.
             if (activeGunGroup != null && ConfigSystem.client.renderingSettings.gunCrosshair.value) {
                 updateAimingCrosshair(activeGunGroup, player.getWorld());
+                targetingHUD.setGunGroup(activeGunGroup);
             }
         }
 
