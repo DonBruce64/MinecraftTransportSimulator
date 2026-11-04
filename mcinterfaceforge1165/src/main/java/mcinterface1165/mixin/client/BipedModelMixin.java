@@ -16,6 +16,7 @@ import minecrafttransportsimulator.rendering.IPlayerLimbModelPart;
 import minecrafttransportsimulator.rendering.PlayerAnimationSystem;
 import minecrafttransportsimulator.rendering.PlayerAnimationSystem.PlayerLimbPose;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.entity.LivingEntity;
@@ -119,15 +120,19 @@ public abstract class BipedModelMixin<T extends LivingEntity> {
                 }
             }
 
-            float partialTicks = (float) (ageInTicks - Math.floor(ageInTicks));
-            applyVehiclePose(model.leftArm, entityWrapper, PlayerLimb.armLeft, partialTicks);
-            applyVehiclePose(model.rightArm, entityWrapper, PlayerLimb.armRight, partialTicks);
-            applyVehiclePose(model.leftLeg, entityWrapper, PlayerLimb.legLeft, partialTicks);
-            applyVehiclePose(model.rightLeg, entityWrapper, PlayerLimb.legRight, partialTicks);
+            //Vehicle poses are for players only; other humanoids keep their vanilla limbs.
+            if (entity instanceof PlayerEntity) {
+                WrapperPlayer poseWrapper = WrapperPlayer.getWrapperFor((PlayerEntity) entity);
+                float partialTicks = Minecraft.getInstance().getFrameTime();
+                applyVehiclePose(model.leftArm, poseWrapper, PlayerLimb.armLeft, partialTicks);
+                applyVehiclePose(model.rightArm, poseWrapper, PlayerLimb.armRight, partialTicks);
+                applyVehiclePose(model.leftLeg, poseWrapper, PlayerLimb.legLeft, partialTicks);
+                applyVehiclePose(model.rightLeg, poseWrapper, PlayerLimb.legRight, partialTicks);
+            }
         }
     }
 
-    private static void applyVehiclePose(ModelRenderer modelPart, WrapperEntity rider, PlayerLimb limb, float partialTicks) {
+    private static void applyVehiclePose(ModelRenderer modelPart, WrapperPlayer rider, PlayerLimb limb, float partialTicks) {
         IPlayerLimbModelPart scalablePart = (IPlayerLimbModelPart) (Object) modelPart;
         boolean arm = limb == PlayerLimb.armLeft || limb == PlayerLimb.armRight;
         scalablePart.setPlayerLimbLengthScale(1);

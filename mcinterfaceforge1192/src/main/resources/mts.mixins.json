@@ -14,6 +14,7 @@
 				"client.ModelPartMixin",
 				"client.LevelRendererMixin",
 				"client.ListenerMixin",
+				"client.LivingEntityRendererAccessor",
 				"client.LivingEntityRendererMixin",
 				"client.MinecraftMixin",
 				"client.MultiPackResourceManagerMixin",

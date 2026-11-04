@@ -1,8 +1,9 @@
 # Vehicle player animations
 
-Vehicles may define an ordered `playerAnimations` list inside their `rendering`
-section. These client-side animations are enabled by the existing
-`playerTweaks` client setting and are visible in first and third person.
+Vehicles (and only vehicles) may define an ordered `playerAnimations` list
+inside their `rendering` section. These client-side animations are enabled by
+the existing `playerTweaks` client setting and are visible in first and third
+person. They only ever affect players, never other humanoid mobs.
 
 The first active entry for a limb wins. Put short, high-priority actions, such
 as reaching for a starter key, before persistent targets such as a steering
@@ -33,7 +34,7 @@ wheel grip.
     },
     {
       "limb": "armright",
-      "seatSlot": 4,
+      "seatSlot": [4],
       "applyAfter": "steering_wheel",
       "pos": [-0.22, 1.12, 0.63],
       "duration": 0,
@@ -60,9 +61,9 @@ wheel grip.
 
 | Parameter | Required | Default | Function |
 | --- | --- | --- | --- |
-| `limb` | Yes | — | Limb to control: `armleft`, `armright`, `legleft`, or `legright`. Enum values are case-insensitive. |
-| `seatSlot` | Seated only | — | Zero-based vehicle part-slot index of the applicable seat. Accepts one number or an array such as `[6, 7, 8]`. Omit it for an exterior animation. |
-| `applyAfter` | Yes | — | Name of the `rendering.animatedObjects` entry whose complete animated transform is applied to the target. |
+| `limb` | Yes | — | Limb to control: `armleft`, `armright`, `legleft`, or `legright`. |
+| `seatSlot` | Seated only | — | Array of zero-based indices into the vehicle's `parts` list, such as `[6, 7, 8]`, naming the seats this entry applies to. Only seats mounted directly on the vehicle match; a seat on another part never does. Omit it for an exterior animation. |
+| `applyAfter` | Yes | — | `objectName` of the `rendering.animatedObjects` entry whose complete animated transform is applied to the target. |
 | `pos` | Yes | — | Attachment coordinate in vehicle model space. The exact center of the hand or foot end face reaches this point. |
 | `limbScale` | No | `[1, 1, 1]` | Local X/Y/Z scale for the limb. Scaling remains anchored at the end-face center, so changing it does not move the attachment point. |
 | `range` | Exterior only | — | Maximum distance in blocks from `pos` to the center of the player's torso. An exterior entry omits `seatSlot`, uses a positive `range`, and overrides only its targeted limb. |
@@ -73,6 +74,10 @@ wheel grip.
 | `triggerOnChange` | No | `false` | With `oneShot`, triggers on either edge rather than only activation. This lets one entry handle both states of a toggle, such as opening and closing a door. Initial loading is not a trigger. |
 | `initiatingPlayerOnly` | No | `false` | Selects the entry only for the player whose authenticated client action caused the active state to change. Use it for shared controls where only the actual operator should reach. Persistent shared grips should leave this `false`. |
 | `gripOverrides` | No | — | Ordered alternative targets within the entry. The first active override wins and replaces the parent values it defines. |
+
+Each entry must have exactly one of a non-empty `seatSlot` or a `range` above 0.
+`activeAnimations` are evaluated once per vehicle tick, which is also the
+resolution of one-shot and linger timing.
 
 `initiatingPlayerOnly` attribution covers synchronized variable changes,
 clickable actions, GUI interaction, and custom keypresses. Direct variables are
@@ -95,11 +100,29 @@ release retains that actor for its configured `lingerDuration`.
 | `oneShot` | No | Parent value | Enables one-shot behavior for this grip. |
 | `triggerOnChange` | No | Parent value | Makes this one-shot grip trigger on either state change. |
 
-The deprecated root-level `playerAnimations` location is migrated at load time
-for older pack definitions. New definitions should use
-`rendering.playerAnimations`.
+## Load-time validation
+
+When the pack loads, each entry is checked and an invalid one is logged (with
+the pack ID, system name, and entry number) and dropped, while the rest of the
+vehicle loads normally. An entry is invalid if it has both or neither of
+`seatSlot` and `range`, or if its `applyAfter` (or the `applyAfter` of a grip
+override) is not an `objectName` in `rendering.animatedObjects`. Defining
+`rendering.playerAnimations` on anything other than a vehicle is logged as an
+error and the list is cleared.
+
+Schema errors are not covered by this and fail the whole vehicle, as they do for
+any other field: a `limb` value that is not one of the four lowercase names, a
+missing required field, or a `seatSlot` written as a bare number instead of an
+array. A `seatSlot` index that is not a seat mounted directly on the vehicle is
+not an error; the entry simply never matches.
+
+## Rendering
 
 The limb rotates from its vanilla shoulder or hip and stretches along its local
-length to reach the target. Clothing parts inherit the transform. In first
-person, only the required world-space limbs are rendered; the torso and head
-remain hidden so they do not obstruct the cockpit view.
+length to reach the target. Clothing parts inherit the transform.
+
+In first person, the vanilla hand is replaced only for arms that an animation
+controls (including during their release), so a held item in the other hand is
+still drawn normally. The held item of an animated arm is not drawn. The
+animated limbs are drawn in world space instead; the torso and head remain
+hidden so they do not obstruct the cockpit view.

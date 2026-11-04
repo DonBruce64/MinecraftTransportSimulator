@@ -9,7 +9,7 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONRendering {
-    @JSONDescription("Ordered player-limb attachment definitions. Seated entries use seatSlot; exterior entries omit seatSlot and use range. The first active entry for a limb has priority. These client-side animations are controlled by the playerTweaks client config option.")
+    @JSONDescription("Ordered player-limb attachment definitions, supported on vehicles only; other definitions ignore them with an error. Seated entries use seatSlot; exterior entries omit seatSlot and use range. The first active entry for a limb has priority. These client-side animations are controlled by the playerTweaks client config option.")
     public List<JSONPlayerAnimation> playerAnimations;
 
     @JSONDescription("Text objects are used to render text on models.  This can be used for license plates on cars, tail numbers on planes, status information on fuel pumps, etc.  Every entry is its own text section, and therefore you can have multiple objects for different things.  For example, you may want to make a bus with light-up route signs with multiple characters, but also with two license plates that are limited to 7 characters.")

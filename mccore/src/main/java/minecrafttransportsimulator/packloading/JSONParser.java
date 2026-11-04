@@ -289,16 +289,11 @@ public class JSONParser {
                 return null;
             } else {
                 List<Integer> value = new ArrayList<>();
-                if (reader.peek() == JsonToken.BEGIN_ARRAY) {
-                    reader.beginArray();
-                    while (reader.hasNext()) {
-                        value.add(reader.nextInt());
-                    }
-                    reader.endArray();
-                } else {
-                    //Allow list-valued fields to retain compatibility with legacy single-number values.
+                reader.beginArray();
+                while (reader.hasNext()) {
                     value.add(reader.nextInt());
                 }
+                reader.endArray();
                 return value;
             }
         }
@@ -387,7 +382,7 @@ public class JSONParser {
                             reader.nextNull();
                             return null;
                         } else {
-                            return lowercaseToEnum.get(reader.nextString().toLowerCase(Locale.ROOT));
+                            return lowercaseToEnum.get(reader.nextString());
                         }
                     }
                 };
@@ -678,6 +673,8 @@ public class JSONParser {
                 default:
                     return "\nERROR: Attempted to hotload unsuppoorted JSON type:" + definitionToOverride.classification;
             }
+
+            PackParser.validatePlayerAnimations(loadedDefinition);
 
             //Do generic loading.
             if (definitionToOverride instanceof AJSONItem) {

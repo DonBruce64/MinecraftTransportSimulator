@@ -15,7 +15,7 @@
 				"client.SimpleReloadableResourceManagerMixin",
 				"client.BipedModelMixin",
 				"client.ModelRendererMixin",
-				"client.LivingRendererMixin",
+				"client.LivingRendererAccessor",
 				"client.PlayerRendererMixin",
 				"client.VillagerModelMixin",
 				"client.WorldRendererMixin",

@@ -253,13 +253,6 @@ public final class LegacyCompatSystem {
 
         //Do JSON-specific compats.
         if (definition instanceof JSONVehicle) {
-            JSONVehicle vehicle = (JSONVehicle) definition;
-            //Player animations originally lived at the vehicle root. Keep old
-            //packs loading while exporting/documenting the rendering form.
-            if (vehicle.playerAnimations != null && vehicle.rendering.playerAnimations == null) {
-                vehicle.rendering.playerAnimations = vehicle.playerAnimations;
-                vehicle.playerAnimations = null;
-            }
             performVehicleLegacyCompats((JSONVehicle) definition);
         } else if (definition instanceof JSONPart) {
             performPartLegacyCompats((JSONPart) definition);

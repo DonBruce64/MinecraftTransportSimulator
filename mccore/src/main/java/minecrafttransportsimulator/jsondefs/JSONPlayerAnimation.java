@@ -9,17 +9,19 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 /**
  * Defines a vehicle-relative target for one of a player's limbs. Definitions
  * are evaluated in list order, with the first active definition winning.
+ * Only vehicles support these; entries that fail the checks in
+ * {@link minecrafttransportsimulator.packloading.PackParser#validatePlayerAnimations} are dropped at load.
  */
 public class JSONPlayerAnimation {
     @JSONRequired
-    @JSONDescription("The player limb controlled by this entry. Valid values are armLeft, armRight, legLeft, and legRight.")
+    @JSONDescription("The player limb controlled by this entry. Valid values are armleft, armright, legleft, and legright.")
     public PlayerLimb limb;
 
-    @JSONDescription("The zero-based vehicle part-slot index or indices containing the seats this entry applies to. This may be either a single number or an array of numbers. Omit this for an exterior animation and specify range instead.")
+    @JSONDescription("An array of zero-based indices into the vehicle's parts list, naming the seat slots this entry applies to. Only seats mounted directly on the vehicle match; a seat on another part never does. Omit this for an exterior animation and specify range instead. Exactly one of seatSlot and range must be set.")
     public List<Integer> seatSlot;
 
     @JSONRequired
-    @JSONDescription("The rendering.animatedObjects entry whose animation matrix is applied before this target. The hand or foot follows that object exactly.")
+    @JSONDescription("The objectName of the rendering.animatedObjects entry whose animation matrix is applied before this target. The hand or foot follows that object exactly. An entry naming an object that does not exist is ignored at load.")
     public String applyAfter;
 
     @JSONRequired
@@ -29,7 +31,7 @@ public class JSONPlayerAnimation {
     @JSONDescription("Optional local X/Y/Z scale applied to the controlled limb. Defaults to [1, 1, 1]. Scaling is anchored at the center of the hand or foot end face, so pos remains exact even when the limb's length is changed.")
     public Point3D limbScale;
 
-    @JSONDescription("For an exterior animation, the maximum distance in blocks between the animated target and the center of the player's torso. Omit seatSlot and set this to a positive value. Only the targeted limb is overridden while the player remains in range.")
+    @JSONDescription("For an exterior animation, the maximum distance in blocks between the animated target and the center of the player's torso. Omit seatSlot and set this to a positive value; exactly one of seatSlot and range must be set. Only the targeted limb is overridden while the player remains in range.")
     public Double range;
 
     @JSONDescription("Normal MTS active animations controlling whether this target may be selected. Entries in playerAnimations are checked from first to last, so earlier active entries override later entries for the same limb and seat.")
@@ -59,7 +61,7 @@ public class JSONPlayerAnimation {
     }
 
     public static class JSONPlayerGripOverride {
-        @JSONDescription("An optional replacement rendering.animatedObjects entry. If omitted, the parent player-animation applyAfter is used.")
+        @JSONDescription("An optional replacement objectName from rendering.animatedObjects. If omitted, the parent player-animation applyAfter is used.")
         public String applyAfter;
 
         @JSONRequired
