@@ -18,6 +18,7 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.rendering.PlayerAnimationSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
@@ -188,7 +189,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         if (!world.isClient() && controllerCount == 0 && mouseAimControlVar.isActive) {
             mouseAimControlVar.setActive(false, true);
         }
+        if (world.isClient()) {
+            PlayerAnimationSystem.updateVehicle(this);
+        }
         world.endProfiling();
+    }
+
+    @Override
+    public void remove() {
+        super.remove();
+        if (world.isClient()) {
+            PlayerAnimationSystem.removeVehicle(this);
+        }
     }
 
     @Override
@@ -755,6 +767,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             return null;
         }
         return definition.packID + ":" + definition.systemName + (isArcadeFlightDefault() ? "|arcade" : "|standard");
+    }
+
+    /**
      * Returns how many degrees to rotate back towards level this tick for the passed-in tilt.
      * Removes the passed-in fraction of the tilt, capped by blimpLevelMaxRate if set.
      * Tilts under {@link #BLIMP_LEVEL_SNAP_ANGLE} are removed entirely so we stop at exactly level.

@@ -13,10 +13,13 @@
         "client.HumanoidModelMixin",
         "client.LevelRendererMixin",
         "client.ListenerMixin",
+        "client.LivingEntityRendererAccessor",
         "client.LivingEntityRendererMixin",
         "client.MinecraftMixin",
+        "client.ModelPartMixin",
         "client.MultiPackResourceManagerMixin",
         "client.OptionInstanceMixin",
+        "client.PlayerRendererMixin",
         "client.VillagerModelMixin"
     ],
     "mixins": [

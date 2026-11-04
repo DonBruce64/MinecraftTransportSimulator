@@ -42,7 +42,7 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> blendedLights = new JSONConfigEntry<>(true, "If false, beam-based lights from vehicles and blocks will not do brightness blending.  This is different from the general brightness setting as this will do OpenGL blending on the world to make it brighter, not just the beams themselves.");
 
         public JSONConfigEntry<Boolean> lightsTransp = new JSONConfigEntry<>(false, "If true, textures that light up will be rendered on the transperent pass.  This is required for some shaders to prevent lit textures without alpha channels from becoming invible, but it may break rendering on non-shader builds.");
-        public JSONConfigEntry<Boolean> playerTweaks = new JSONConfigEntry<>(true, "If true, player hands will be modified when holding guns, and hands and legs will be modified when riding in vehicles.  Set this to false (and restart the game) if mods cause issues, like two-hand rendering or player model issues.  Automatically set to false if some mods are detected.");
+        public JSONConfigEntry<Boolean> playerTweaks = new JSONConfigEntry<>(true, "If true, player hands will be modified when holding guns, hands and legs will be modified when riding in vehicles, and vehicle-defined rendering.playerAnimations will be shown.  Set this to false (and restart the game) if mods cause issues, like two-hand rendering or player model issues.  Automatically set to false if some mods are detected.");
         public JSONConfigEntry<Boolean> gunCrosshair = new JSONConfigEntry<>(true, "If false, the aiming crosshair for active guns will not be rendered.");
 
         public JSONConfigEntry<Integer> renderingMode = new JSONConfigEntry<>(0, "Internal rendering mode value, don't touch!");

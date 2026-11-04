@@ -41,7 +41,7 @@ class InterfacePacket implements IInterfacePacket {
      * with NeoForge's networking system.
      */
     public static void registerPayloads(RegisterPayloadHandlersEvent event) {
-        PayloadRegistrar registrar = event.registrar(InterfaceLoader.MODID).versioned("3");
+        PayloadRegistrar registrar = event.registrar(InterfaceLoader.MODID).versioned("4");
         registrar.playBidirectional(
             WrapperPayload.TYPE,
             WrapperPayload.CODEC,

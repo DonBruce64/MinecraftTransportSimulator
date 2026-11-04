@@ -674,6 +674,8 @@ public class JSONParser {
                     return "\nERROR: Attempted to hotload unsuppoorted JSON type:" + definitionToOverride.classification;
             }
 
+            PackParser.validatePlayerAnimations(loadedDefinition);
+
             //Do generic loading.
             if (definitionToOverride instanceof AJSONItem) {
                 ((AJSONItem) definitionToOverride).general = ((AJSONItem) loadedDefinition).general;
