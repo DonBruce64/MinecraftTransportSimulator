@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.rendering;
 
-import java.util.EnumMap;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -21,12 +21,19 @@ import minecrafttransportsimulator.jsondefs.JSONPlayerAnimation;
 import minecrafttransportsimulator.jsondefs.JSONPlayerAnimation.JSONPlayerGripOverride;
 import minecrafttransportsimulator.jsondefs.JSONPlayerAnimation.PlayerLimb;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * Resolves vehicle-defined player limb targets into Minecraft model rotations
  * and length scales. This class contains no Minecraft classes, so every game
  * interface shares selection, priority, interpolation, and trigger behavior.
+ * <br><br>
+ * Which entries are active, and all trigger state, is evaluated once per client
+ * vehicle tick by {@link #updateVehicle(EntityVehicleF_Physics)}. Rendering only
+ * reads that selection and interpolates the reach and release transitions with
+ * render time (vehicle ticks plus partial ticks). Everything here runs on the
+ * single client thread, so the scratch objects below are shared.
  */
 public final class PlayerAnimationSystem {
     private static final int DEFAULT_TRANSITION_TICKS = 10;
@@ -42,52 +49,40 @@ public final class PlayerAnimationSystem {
     private static final double LEG_PIVOT_X = 1.9D / 16D;
     private static final double LEG_PIVOT_Y = PLAYER_MODEL_ORIGIN_HEIGHT - 12D / 16D;
     private static final Point3D DEFAULT_LIMB_SCALE = new Point3D(1, 1, 1);
+    private static final PlayerLimb[] LIMBS = PlayerLimb.values();
+    private static final EnumSet<PlayerLimb> NO_LIMBS = EnumSet.noneOf(PlayerLimb.class);
+    /** Calls in the same tick whose partial ticks differ by less than this share one resolved result. */
+    private static final float SAME_FRAME_EPSILON = 0.001F;
+    /**
+     * Slack, in blocks, added to the exterior distance cull for applyAfter animations that move a
+     * target away from its authored position (an opening door, for example).
+     */
+    private static final double EXTERIOR_CULL_MARGIN = 4D;
 
-    private static final Map<EntityVehicleF_Physics, VehicleAnimationState> vehicleStates = new WeakHashMap<>();
-    private static final Map<IWrapperEntity, EnumMap<PlayerLimb, LimbAnimationState>> playerStates = new WeakHashMap<>();
+    /**
+     * States hold their vehicle strongly, so a weak map could never release them. Entries are
+     * removed by {@link #removeVehicle(EntityVehicleF_Physics)} when the vehicle is removed.
+     */
+    private static final Map<EntityVehicleF_Physics, VehicleAnimationState> vehicleStates = new IdentityHashMap<>();
+    /** The states, a subset of {@link #vehicleStates}, that have exterior entries and so may affect any nearby player. */
+    private static final List<VehicleAnimationState> exteriorStates = new ArrayList<>();
+    private static final Map<IWrapperPlayer, PlayerState> playerStates = new WeakHashMap<>();
+
+    private static final PlayerLimbPose targetPose = new PlayerLimbPose();
+    private static final Point3D scratchTarget = new Point3D();
+    private static final Point3D scratchBestTarget = new Point3D();
+    private static final Point3D scratchTorso = new Point3D();
+    private static final Point3D scratchPosition = new Point3D();
+    private static final Point3D scratchScale = new Point3D();
+    private static final Point3D scratchAngles = new Point3D();
+    private static final RotationMatrix scratchOrientation = new RotationMatrix();
 
     private PlayerAnimationSystem() {
     }
 
-    /** Returns true when this player is in a seat with authored animations. */
-    public static boolean hasAnimationsForSeat(IWrapperEntity player) {
-        if (!playerTweaksEnabled()) {
-            return false;
-        }
-        AEntityB_Existing ridingEntity = player.getEntityRiding();
-        if (ridingEntity instanceof PartSeat) {
-            PartSeat seat = (PartSeat) ridingEntity;
-            List<JSONPlayerAnimation> definitions = getDefinitions(seat.vehicleOn);
-            if (definitions != null) {
-                for (JSONPlayerAnimation definition : definitions) {
-                    if (definition.appliesToSeat(seat.placementSlot)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    /** Returns exterior-controlled limbs, including their release transitions. */
-    public static EnumSet<PlayerLimb> getExteriorLimbs(IWrapperEntity player, float partialTicks) {
-        EnumSet<PlayerLimb> limbs = EnumSet.noneOf(PlayerLimb.class);
-        if (!playerTweaksEnabled() || player.getEntityRiding() instanceof PartSeat) {
-            return limbs;
-        }
-        for (PlayerLimb limb : PlayerLimb.values()) {
-            PlayerLimbPose pose = new PlayerLimbPose();
-            if (getPose(player, limb, partialTicks, pose)) {
-                LimbAnimationState state = getExistingLimbState(player, limb);
-                if (state != null && state.exterior) {
-                    limbs.add(limb);
-                }
-            }
-        }
-        return limbs;
-    }
-
-    /** Mutable output object, intended to be cached by callers. Rotations are radians. */
+    /**
+     * Mutable output object, intended to be cached by callers. Rotations are radians.
+     */
     public static final class PlayerLimbPose {
         public double rotationX;
         public double rotationY;
@@ -135,19 +130,58 @@ public final class PlayerAnimationSystem {
         }
     }
 
-    /** Populates output with the selected pose or release transition. */
-    public static boolean getPose(IWrapperEntity player, PlayerLimb limb, float partialTicks, PlayerLimbPose output) {
-        if (!playerTweaksEnabled()) {
-            LimbAnimationState state = getExistingLimbState(player, limb);
-            if (state != null) {
-                state.clear();
+    /**
+     * Evaluates the vehicle's player animation entries for this tick: which entries and grip
+     * overrides are active, and the one-shot, linger, and initiating-player state that follows.
+     * Call this on the client once per vehicle tick. It also registers vehicles with exterior
+     * entries so players walking up to them can be found without scanning the world.
+     */
+    public static void updateVehicle(EntityVehicleF_Physics vehicle) {
+        if (!vehicle.world.isClient()) {
+            return;
+        }
+        List<JSONPlayerAnimation> definitions = getDefinitions(vehicle);
+        if (definitions == null || definitions.isEmpty()) {
+            if (!vehicleStates.isEmpty()) {
+                removeState(vehicleStates.get(vehicle));
             }
+            return;
+        }
+        if (playerTweaksEnabled()) {
+            getVehicleState(vehicle, definitions).tick();
+        } else if (!vehicleStates.isEmpty()) {
+            //Drop the trigger state, so turning playerTweaks back on starts fresh rather than
+            //seeing every change made meanwhile as a one-shot edge.
+            removeState(vehicleStates.get(vehicle));
+        }
+    }
+
+    /**
+     * Returns the limbs of this player that currently have a pose from a vehicle, either selected
+     * or still releasing, whether seated or standing near a vehicle. This is empty for anything
+     * that is not a player and while the playerTweaks setting is off. The result is cached per
+     * player for the rendered frame, so it is cheap to call from several render events. The
+     * returned set is shared: do not modify it.
+     */
+    public static EnumSet<PlayerLimb> getActiveLimbs(IWrapperEntity entity, float partialTicks) {
+        return entity instanceof IWrapperPlayer ? getPlayerState((IWrapperPlayer) entity, partialTicks).activeLimbs : NO_LIMBS;
+    }
+
+    /**
+     * Populates output with the pose of the limb and returns true if the limb is in
+     * {@link #getActiveLimbs(IWrapperEntity, float)}. Returns false for anything that is not a player.
+     * Repeated calls within one frame return the same pose.
+     */
+    public static boolean getPose(IWrapperEntity entity, PlayerLimb limb, float partialTicks, PlayerLimbPose output) {
+        if (!(entity instanceof IWrapperPlayer)) {
             return false;
         }
-        AEntityB_Existing ridingEntity = player.getEntityRiding();
-        return ridingEntity instanceof PartSeat
-            ? getSeatedPose(player, (PartSeat) ridingEntity, limb, partialTicks, output)
-            : getExteriorPose(player, limb, partialTicks, output);
+        PlayerState state = getPlayerState((IWrapperPlayer) entity, partialTicks);
+        if (!state.activeLimbs.contains(limb)) {
+            return false;
+        }
+        output.set(state.poses[limb.ordinal()]);
+        return true;
     }
 
     /**
@@ -155,18 +189,15 @@ public final class PlayerAnimationSystem {
      * variable change.  This is visual state only: normal vehicle variables
      * and their packet behavior are not altered.  Part variables are credited
      * to the part's owning vehicle so vehicle-level player animations can use
-     * the same attribution path.
+     * the same attribution path.  The next {@link #updateVehicle} consumes it.
      */
     public static void recordVariableInteraction(AEntityD_Definable<?> source, String variableKey, UUID playerID) {
         if (source == null || variableKey == null || playerID == null || !source.world.isClient()) {
             return;
         }
-        EntityVehicleF_Physics vehicle = source instanceof EntityVehicleF_Physics
-            ? (EntityVehicleF_Physics) source
-            : source instanceof APart ? ((APart) source).vehicleOn : null;
-        List<JSONPlayerAnimation> definitions = getDefinitions(vehicle);
-        if (vehicle != null && definitions != null && !definitions.isEmpty()) {
-            getVehicleState(vehicle, definitions).recordVariableInteraction(variableKey, playerID);
+        VehicleAnimationState state = getStateForInteraction(source);
+        if (state != null) {
+            state.recordVariableInteraction(variableKey, playerID);
         }
     }
 
@@ -179,162 +210,189 @@ public final class PlayerAnimationSystem {
         if (source == null || playerID == null || !source.world.isClient()) {
             return;
         }
-        EntityVehicleF_Physics vehicle = source instanceof EntityVehicleF_Physics
-            ? (EntityVehicleF_Physics) source
-            : source instanceof APart ? ((APart) source).vehicleOn : null;
-        List<JSONPlayerAnimation> definitions = getDefinitions(vehicle);
-        if (vehicle != null && definitions != null && !definitions.isEmpty()) {
-            getVehicleState(vehicle, definitions).recordPlayerInteraction(playerID);
+        VehicleAnimationState state = getStateForInteraction(source);
+        if (state != null) {
+            state.recordPlayerInteraction(playerID);
         }
     }
 
-    private static boolean getSeatedPose(IWrapperEntity player, PartSeat seat, PlayerLimb limb, float partialTicks, PlayerLimbPose output) {
+    private static VehicleAnimationState getStateForInteraction(AEntityD_Definable<?> source) {
+        EntityVehicleF_Physics vehicle = source instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) source : source instanceof APart ? ((APart) source).vehicleOn : null;
+        List<JSONPlayerAnimation> definitions = getDefinitions(vehicle);
+        return definitions != null && !definitions.isEmpty() && playerTweaksEnabled() ? getVehicleState(vehicle, definitions) : null;
+    }
+
+    private static PlayerState getPlayerState(IWrapperPlayer player, float partialTicks) {
+        PlayerState state = playerStates.get(player);
+        if (state == null) {
+            state = new PlayerState();
+            playerStates.put(player, state);
+        }
+        long tick = player.getWorld() != null ? player.getWorld().getTickCount() : 0;
+        if (state.resolvedTick == tick && Math.abs(state.resolvedPartialTicks - partialTicks) < SAME_FRAME_EPSILON) {
+            return state;
+        }
+        state.resolvedTick = tick;
+        state.resolvedPartialTicks = partialTicks;
+        state.activeLimbs.clear();
+
+        boolean enabled = player.getWorld() != null && playerTweaksEnabled();
+        AEntityB_Existing ridingEntity = enabled ? player.getEntityRiding() : null;
+        for (PlayerLimb limb : LIMBS) {
+            int index = limb.ordinal();
+            LimbAnimationState limbState = state.limbs[index];
+            PlayerLimbPose pose = state.poses[index];
+            boolean hasPose;
+            if (!enabled) {
+                limbState.clear();
+                hasPose = false;
+            } else if (ridingEntity instanceof PartSeat) {
+                hasPose = resolveSeatedPose(player, (PartSeat) ridingEntity, limb, limbState, partialTicks, pose);
+            } else {
+                hasPose = resolveExteriorPose(player, limb, limbState, partialTicks, pose);
+            }
+            if (hasPose) {
+                state.activeLimbs.add(limb);
+            }
+        }
+        return state;
+    }
+
+    /**
+     * Only seats mounted directly on the vehicle take part: for those, the seat's placement slot
+     * is an index into the vehicle's own part list, which is what seatSlot names.
+     */
+    private static boolean resolveSeatedPose(IWrapperPlayer player, PartSeat seat, PlayerLimb limb, LimbAnimationState limbState, float partialTicks, PlayerLimbPose output) {
         EntityVehicleF_Physics vehicle = seat.vehicleOn;
         List<JSONPlayerAnimation> definitions = getDefinitions(vehicle);
         double renderTime = getRenderTime(vehicle, partialTicks);
-        if (definitions == null || definitions.isEmpty()) {
-            return releasePose(player, limb, vehicle, renderTime, output);
+        VehicleAnimationState vehicleState = definitions != null && !definitions.isEmpty() && seat.entityOn == vehicle ? getExistingVehicleState(vehicle, definitions) : null;
+        if (vehicleState == null) {
+            return releasePose(limbState, vehicle, renderTime, output);
         }
 
-        VehicleAnimationState vehicleState = getVehicleState(vehicle, definitions);
-        vehicleState.prepareFrame(partialTicks, renderTime);
         SelectedTarget selected = null;
-        for (JSONPlayerAnimation definition : definitions) {
+        for (int i = 0; i < definitions.size() && selected == null; ++i) {
+            JSONPlayerAnimation definition = definitions.get(i);
             if (definition.limb == limb && definition.appliesToSeat(seat.placementSlot) && vehicleState.isEntrySelected(definition, player)) {
-                selected = getSelectedTarget(vehicleState, definition, partialTicks);
-                if (selected != null) {
-                    break;
-                }
+                selected = vehicleState.getSelectedTarget(definition, partialTicks);
             }
         }
         if (selected == null) {
-            return releasePose(player, limb, vehicle, renderTime, output);
+            return releasePose(limbState, vehicle, renderTime, output);
         }
-
-        Point3D worldTarget = getWorldTarget(vehicle, selected, partialTicks);
-        PlayerLimbPose targetPose = new PlayerLimbPose();
-        if (worldTarget == null || !calculateSeatedTargetPose(player, seat, worldTarget, limb, selected.limbScale, partialTicks, targetPose)) {
-            return releasePose(player, limb, vehicle, renderTime, output);
+        calculateWorldTarget(vehicle, selected, partialTicks, scratchTarget);
+        if (!calculateSeatedTargetPose(player, seat, scratchTarget, limb, selected.limbScale, partialTicks, targetPose)) {
+            return releasePose(limbState, vehicle, renderTime, output);
         }
-        return applySelectedPose(player, limb, vehicle, selected, targetPose, renderTime, false, output);
+        return applySelectedPose(limbState, vehicle, selected, targetPose, renderTime, false, output);
     }
 
-    private static boolean getExteriorPose(IWrapperEntity player, PlayerLimb limb, float partialTicks, PlayerLimbPose output) {
+    private static boolean resolveExteriorPose(IWrapperPlayer player, PlayerLimb limb, LimbAnimationState limbState, float partialTicks, PlayerLimbPose output) {
         SelectedTarget closestTarget = null;
         EntityVehicleF_Physics closestVehicle = null;
-        Point3D closestWorldTarget = null;
         double closestDistance = Double.MAX_VALUE;
-        Point3D playerPosition = player.getInterpolatedPosition(partialTicks);
-        Point3D playerTorsoPosition = playerPosition.copy().add(0, player.getEyeHeight() * 2D / 3D, 0);
+        scratchTorso.set(player.getInterpolatedPosition(partialTicks)).add(0, player.getEyeHeight() * 2D / 3D, 0);
 
-        if (player.getWorld() != null) {
-            for (EntityVehicleF_Physics vehicle : player.getWorld().getEntitiesOfType(EntityVehicleF_Physics.class)) {
-                List<JSONPlayerAnimation> definitions = getDefinitions(vehicle);
-                if (definitions == null || definitions.isEmpty()) {
+        for (int stateIndex = 0; stateIndex < exteriorStates.size(); ++stateIndex) {
+            VehicleAnimationState vehicleState = exteriorStates.get(stateIndex);
+            EntityVehicleF_Physics vehicle = vehicleState.vehicle;
+            if (!vehicle.isValid) {
+                removeState(vehicleState);
+                --stateIndex;
+                continue;
+            }
+            if (!vehicle.world.equals(player.getWorld())) {
+                continue;
+            }
+            double vehicleScale = Math.max(vehicle.scale.x, Math.max(vehicle.scale.y, vehicle.scale.z));
+            if (scratchTorso.distanceTo(vehicle.position) > vehicleState.exteriorReach * vehicleScale + vehicleState.maxExteriorRange + EXTERIOR_CULL_MARGIN) {
+                continue;
+            }
+
+            //List priority applies within one vehicle. Across vehicles, the
+            //nearest eligible authored point wins.
+            List<JSONPlayerAnimation> definitions = vehicleState.definitions;
+            for (int i = 0; i < definitions.size(); ++i) {
+                JSONPlayerAnimation definition = definitions.get(i);
+                if (definition.limb != limb || definition.seatSlot != null || definition.range == null || definition.range <= 0 || !vehicleState.isEntrySelected(definition, player)) {
                     continue;
                 }
-                double renderTime = getRenderTime(vehicle, partialTicks);
-                VehicleAnimationState vehicleState = getVehicleState(vehicle, definitions);
-                vehicleState.prepareFrame(partialTicks, renderTime);
-
-                //List priority applies within one vehicle. Across vehicles, the
-                //nearest eligible authored point wins.
-                for (JSONPlayerAnimation definition : definitions) {
-                    if (definition.limb != limb || definition.seatSlot != null || definition.range == null || definition.range <= 0 || !vehicleState.isEntrySelected(definition, player)) {
-                        continue;
-                    }
-                    SelectedTarget candidate = getSelectedTarget(vehicleState, definition, partialTicks);
-                    Point3D worldTarget = candidate != null ? getWorldTarget(vehicle, candidate, partialTicks) : null;
-                    if (worldTarget != null) {
-                        double distance = playerTorsoPosition.distanceTo(worldTarget);
-                        if (distance <= definition.range) {
-                            if (distance < closestDistance) {
-                                closestTarget = candidate;
-                                closestVehicle = vehicle;
-                                closestWorldTarget = worldTarget;
-                                closestDistance = distance;
-                            }
-                            break;
+                SelectedTarget candidate = vehicleState.getSelectedTarget(definition, partialTicks);
+                if (candidate != null) {
+                    calculateWorldTarget(vehicle, candidate, partialTicks, scratchTarget);
+                    double distance = scratchTorso.distanceTo(scratchTarget);
+                    if (distance <= definition.range) {
+                        if (distance < closestDistance) {
+                            closestTarget = candidate;
+                            closestVehicle = vehicle;
+                            scratchBestTarget.set(scratchTarget);
+                            closestDistance = distance;
                         }
+                        break;
                     }
                 }
             }
         }
 
         if (closestTarget == null) {
-            LimbAnimationState state = getExistingLimbState(player, limb);
-            if (state == null || !state.exterior || state.vehicle == null) {
-                if (state != null) {
-                    state.clear();
-                }
+            if (!limbState.exterior || limbState.vehicle == null) {
+                limbState.clear();
                 return false;
             }
-            return releasePose(player, limb, state.vehicle, getRenderTime(state.vehicle, partialTicks), output);
+            return releasePose(limbState, limbState.vehicle, getRenderTime(limbState.vehicle, partialTicks), output);
         }
 
-        PlayerLimbPose targetPose = new PlayerLimbPose();
-        if (!calculateExteriorTargetPose(player, closestWorldTarget, limb, closestTarget.limbScale, partialTicks, targetPose)) {
-            return releasePose(player, limb, closestVehicle, getRenderTime(closestVehicle, partialTicks), output);
+        double renderTime = getRenderTime(closestVehicle, partialTicks);
+        if (!calculateExteriorTargetPose(player, scratchBestTarget, limb, closestTarget.limbScale, partialTicks, targetPose)) {
+            return releasePose(limbState, closestVehicle, renderTime, output);
         }
-        return applySelectedPose(player, limb, closestVehicle, closestTarget, targetPose, getRenderTime(closestVehicle, partialTicks), true, output);
+        return applySelectedPose(limbState, closestVehicle, closestTarget, targetPose, renderTime, true, output);
     }
 
-    private static SelectedTarget getSelectedTarget(VehicleAnimationState state, JSONPlayerAnimation definition, float partialTicks) {
-        JSONPlayerGripOverride override = state.getSelectedOverride(definition);
-        String applyAfter = override != null && override.applyAfter != null ? override.applyAfter : definition.applyAfter;
-        Point3D position = override != null ? override.pos : definition.pos;
-        Point3D limbScale = override != null && override.limbScale != null ? override.limbScale : definition.limbScale;
-        if (applyAfter == null || position == null || !state.isModelObjectActive(applyAfter, partialTicks)) {
-            return null;
-        }
-        int duration = getDuration(override != null && override.duration != null ? override.duration : definition.duration);
-        return new SelectedTarget(override != null ? override : definition, applyAfter, position, limbScale != null ? limbScale : DEFAULT_LIMB_SCALE, duration);
-    }
-
-    private static Point3D getWorldTarget(EntityVehicleF_Physics vehicle, SelectedTarget selected, float partialTicks) {
-        if (vehicle == null) {
-            return null;
-        }
-        Point3D target = selected.position.copy();
+    /** Transforms the target's authored point into world space, writing it to output. */
+    private static void calculateWorldTarget(EntityVehicleF_Physics vehicle, SelectedTarget selected, float partialTicks, Point3D output) {
+        output.set(selected.position);
         AnimationSwitchbox objectSwitchbox = vehicle.animatedObjectSwitchboxes.get(selected.applyAfter);
         if (objectSwitchbox != null) {
-            target.transform(objectSwitchbox.netMatrix);
+            output.transform(objectSwitchbox.netMatrix);
         }
-        Point3D vehicleScale = vehicle.prevScale.copy().interpolate(vehicle.scale, partialTicks);
-        RotationMatrix vehicleOrientation = new RotationMatrix();
-        vehicle.getInterpolatedOrientation(vehicleOrientation, partialTicks);
-        return target.multiply(vehicleScale).rotate(vehicleOrientation).add(getInterpolatedPosition(vehicle, partialTicks));
+        scratchScale.set(vehicle.prevScale).interpolate(vehicle.scale, partialTicks);
+        vehicle.getInterpolatedOrientation(scratchOrientation, partialTicks);
+        output.multiply(scratchScale).rotate(scratchOrientation);
+        setInterpolatedPosition(vehicle, partialTicks, scratchPosition);
+        output.add(scratchPosition);
     }
 
-    private static boolean calculateSeatedTargetPose(IWrapperEntity player, PartSeat seat, Point3D worldTarget, PlayerLimb limb, Point3D limbScale, float partialTicks, PlayerLimbPose output) {
-        RotationMatrix seatOrientation = new RotationMatrix();
-        seat.getInterpolatedOrientation(seatOrientation, partialTicks);
-        Point3D target = worldTarget.subtract(getInterpolatedPosition(seat, partialTicks)).reOrigin(seatOrientation);
+    /** Converts worldTarget, which is modified, into the seat's frame and aims the limb at it. */
+    private static boolean calculateSeatedTargetPose(IWrapperPlayer player, PartSeat seat, Point3D worldTarget, PlayerLimb limb, Point3D limbScale, float partialTicks, PlayerLimbPose output) {
+        setInterpolatedPosition(seat, partialTicks, scratchPosition);
+        seat.getInterpolatedOrientation(scratchOrientation, partialTicks);
+        worldTarget.subtract(scratchPosition).reOrigin(scratchOrientation);
 
-        Point3D playerScale = seat.riderScale.copy();
+        scratchScale.set(seat.riderScale);
         if (seat.definition.seat.playerScale != null) {
-            playerScale.multiply(seat.definition.seat.playerScale);
+            scratchScale.multiply(seat.definition.seat.playerScale);
         }
         if (seat.placementDefinition.playerScale != null) {
-            playerScale.multiply(seat.placementDefinition.playerScale);
+            scratchScale.multiply(seat.placementDefinition.playerScale);
         }
-        if (Math.abs(playerScale.x) < 1.0E-6 || Math.abs(playerScale.y) < 1.0E-6 || Math.abs(playerScale.z) < 1.0E-6) {
+        if (Math.abs(scratchScale.x) < 1.0E-6 || Math.abs(scratchScale.y) < 1.0E-6 || Math.abs(scratchScale.z) < 1.0E-6) {
             return false;
         }
-        target.x /= playerScale.x;
-        target.y /= playerScale.y;
-        target.z /= playerScale.z;
-        return calculateLimbPose(target, player.getSeatOffset(), limb, limbScale, output);
+        return calculateLimbPose(worldTarget.x / scratchScale.x, worldTarget.y / scratchScale.y, worldTarget.z / scratchScale.z, player.getSeatOffset(), limb, limbScale, output);
     }
 
-    private static boolean calculateExteriorTargetPose(IWrapperEntity player, Point3D worldTarget, PlayerLimb limb, Point3D limbScale, float partialTicks, PlayerLimbPose output) {
-        RotationMatrix bodyOrientation = new RotationMatrix().setToAngles(new Point3D(0, player.getInterpolatedBodyYaw(partialTicks), 0));
-        Point3D target = worldTarget.subtract(player.getInterpolatedPosition(partialTicks)).reOrigin(bodyOrientation);
-        return calculateLimbPose(target, 0, limb, limbScale, output);
+    /** Converts worldTarget, which is modified, into the player's body frame and aims the limb at it. */
+    private static boolean calculateExteriorTargetPose(IWrapperPlayer player, Point3D worldTarget, PlayerLimb limb, Point3D limbScale, float partialTicks, PlayerLimbPose output) {
+        scratchAngles.set(0, player.getInterpolatedBodyYaw(partialTicks), 0);
+        scratchOrientation.setToAngles(scratchAngles);
+        worldTarget.subtract(player.getInterpolatedPosition(partialTicks)).reOrigin(scratchOrientation);
+        return calculateLimbPose(worldTarget.x, worldTarget.y, worldTarget.z, 0, limb, limbScale, output);
     }
 
-    /** Aims the center of the distal hand/foot face at the authored point. */
-    private static boolean calculateLimbPose(Point3D target, double seatOffset, PlayerLimb limb, Point3D limbScale, PlayerLimbPose output) {
+    /** Aims the center of the distal hand/foot face at the authored point, given in the player's frame. */
+    private static boolean calculateLimbPose(double targetX, double targetY, double targetZ, double seatOffset, PlayerLimb limb, Point3D limbScale, PlayerLimbPose output) {
         boolean left = limb == PlayerLimb.armLeft || limb == PlayerLimb.legLeft;
         boolean arm = limb == PlayerLimb.armLeft || limb == PlayerLimb.armRight;
 
@@ -342,43 +400,42 @@ public final class PlayerAnimationSystem {
         //Move the requested point back into the unscaled model space in which
         //ModelPart pivots and cubes are defined.  The seat offset is outside
         //that vanilla scale, so remove it before doing the division.
-        target.set(target.x / PLAYER_MODEL_SCALE, (target.y - seatOffset) / PLAYER_MODEL_SCALE, target.z / PLAYER_MODEL_SCALE);
         double pivotX = (left ? 1 : -1) * (arm ? ARM_PIVOT_X : LEG_PIVOT_X);
         double pivotY = arm ? ARM_PIVOT_Y : LEG_PIVOT_Y;
-        Point3D endpoint = target.subtract(new Point3D(pivotX, pivotY, 0));
+        double endpointX = targetX / PLAYER_MODEL_SCALE - pivotX;
+        double endpointY = (targetY - seatOffset) / PLAYER_MODEL_SCALE - pivotY;
+        double endpointZ = targetZ / PLAYER_MODEL_SCALE;
 
         //The vanilla 4px arm is asymmetric around its rotation axis: its end
         //face center is one pixel outward. Solve the length-axis endpoint
         //exactly so that endpoint plus the rotated one-pixel lateral offset is
-        //the requested coordinate.  The old iterative estimate left a visible
-        //error when limbScale made an arm very thin.
+        //the requested coordinate.
         if (arm) {
             double handCenterX = (left ? 1 : -1) * ARM_HAND_CENTER_X;
-            double requestedHorizontalLength = Math.hypot(endpoint.x, endpoint.z);
+            double requestedHorizontalLength = Math.hypot(endpointX, endpointZ);
             if (requestedHorizontalLength > Math.abs(handCenterX) + 1.0E-6) {
                 double requestedHorizontalLengthSquared = requestedHorizontalLength * requestedHorizontalLength;
                 double axisHorizontalLength = Math.sqrt(requestedHorizontalLengthSquared - handCenterX * handCenterX);
-                double requestedX = endpoint.x;
-                double requestedZ = endpoint.z;
-                endpoint.x = axisHorizontalLength * (axisHorizontalLength * requestedX - handCenterX * requestedZ) / requestedHorizontalLengthSquared;
-                endpoint.z = axisHorizontalLength * (handCenterX * requestedX + axisHorizontalLength * requestedZ) / requestedHorizontalLengthSquared;
+                double requestedX = endpointX;
+                double requestedZ = endpointZ;
+                endpointX = axisHorizontalLength * (axisHorizontalLength * requestedX - handCenterX * requestedZ) / requestedHorizontalLengthSquared;
+                endpointZ = axisHorizontalLength * (handCenterX * requestedX + axisHorizontalLength * requestedZ) / requestedHorizontalLengthSquared;
             }
         }
 
-        double length = endpoint.length();
+        double length = Math.sqrt(endpointX * endpointX + endpointY * endpointY + endpointZ * endpointZ);
         if (length < 1.0E-6) {
             return false;
         }
-        double normalizedY = Math.max(-1, Math.min(1, endpoint.y / length));
+        double normalizedY = Math.max(-1, Math.min(1, endpointY / length));
         //Arms span -2px through +10px about their pivot. Scaling keeps the
         //-2px shoulder face fixed, so the proximal section is included here.
         double lengthScale = arm ? (length + ARM_PROXIMAL_OFFSET) / DEFAULT_LIMB_LENGTH : length / DEFAULT_LIMB_LENGTH;
-        output.set(-Math.PI / 2D - Math.asin(normalizedY), -Math.atan2(endpoint.x, endpoint.z), 0, lengthScale, limbScale.x, limbScale.y, limbScale.z, 1);
+        output.set(-Math.PI / 2D - Math.asin(normalizedY), -Math.atan2(endpointX, endpointZ), 0, lengthScale, limbScale.x, limbScale.y, limbScale.z, 1);
         return true;
     }
 
-    private static boolean applySelectedPose(IWrapperEntity player, PlayerLimb limb, EntityVehicleF_Physics vehicle, SelectedTarget selected, PlayerLimbPose targetPose, double renderTime, boolean exterior, PlayerLimbPose output) {
-        LimbAnimationState limbState = getLimbState(player, limb);
+    private static boolean applySelectedPose(LimbAnimationState limbState, EntityVehicleF_Physics vehicle, SelectedTarget selected, PlayerLimbPose targetPose, double renderTime, boolean exterior, PlayerLimbPose output) {
         if (limbState.vehicle != vehicle || limbState.selectionKey != selected.selectionKey || limbState.exterior != exterior) {
             boolean freshSelection = limbState.vehicle != vehicle || (limbState.selectionKey == null && !limbState.releasing) || limbState.exterior != exterior;
             limbState.captureCurrentPose(renderTime);
@@ -405,12 +462,11 @@ public final class PlayerAnimationSystem {
         return true;
     }
 
-    private static boolean releasePose(IWrapperEntity player, PlayerLimb limb, EntityVehicleF_Physics vehicle, double renderTime, PlayerLimbPose output) {
-        LimbAnimationState limbState = getExistingLimbState(player, limb);
-        if (limbState == null || (limbState.selectionKey == null && !limbState.releasing)) {
+    private static boolean releasePose(LimbAnimationState limbState, EntityVehicleF_Physics vehicle, double renderTime, PlayerLimbPose output) {
+        if (limbState.selectionKey == null && !limbState.releasing) {
             return false;
         }
-        if (!Double.isFinite(renderTime) || limbState.vehicle != vehicle) {
+        if (vehicle == null || !vehicle.isValid || !Double.isFinite(renderTime) || limbState.vehicle != vehicle) {
             limbState.clear();
             return false;
         }
@@ -437,36 +493,56 @@ public final class PlayerAnimationSystem {
         return vehicle != null && vehicle.definition.rendering != null ? vehicle.definition.rendering.playerAnimations : null;
     }
 
+    /** Returns the vehicle's state, creating it, or replacing it if the definition was reloaded. Tick-side only. */
     private static VehicleAnimationState getVehicleState(EntityVehicleF_Physics vehicle, List<JSONPlayerAnimation> definitions) {
         VehicleAnimationState state = vehicleStates.get(vehicle);
         if (state == null || state.definitions != definitions) {
+            removeState(state);
             state = new VehicleAnimationState(vehicle, definitions);
             vehicleStates.put(vehicle, state);
+            if (state.hasExteriorEntries) {
+                exteriorStates.add(state);
+            }
         }
         return state;
     }
 
-    private static LimbAnimationState getLimbState(IWrapperEntity player, PlayerLimb limb) {
-        EnumMap<PlayerLimb, LimbAnimationState> states = playerStates.get(player);
-        if (states == null) {
-            states = new EnumMap<>(PlayerLimb.class);
-            playerStates.put(player, states);
-        }
-        LimbAnimationState state = states.get(limb);
-        if (state == null) {
-            state = new LimbAnimationState();
-            states.put(limb, state);
-        }
-        return state;
+    /** Returns the state created by the vehicle's ticking, or null if it hasn't ticked yet. */
+    private static VehicleAnimationState getExistingVehicleState(EntityVehicleF_Physics vehicle, List<JSONPlayerAnimation> definitions) {
+        VehicleAnimationState state = vehicleStates.get(vehicle);
+        return state != null && state.definitions == definitions ? state : null;
     }
 
-    private static LimbAnimationState getExistingLimbState(IWrapperEntity player, PlayerLimb limb) {
-        EnumMap<PlayerLimb, LimbAnimationState> states = playerStates.get(player);
-        return states != null ? states.get(limb) : null;
+    private static void removeState(VehicleAnimationState state) {
+        if (state != null) {
+            vehicleStates.remove(state.vehicle);
+            exteriorStates.remove(state);
+        }
     }
 
-    private static Point3D getInterpolatedPosition(AEntityB_Existing entity, float partialTicks) {
-        return entity.requiresDeltaUpdates() ? entity.prevPosition.copy().interpolate(entity.position, partialTicks) : entity.position.copy();
+    /**
+     * Drops all state for a removed client vehicle, including limbs still posed or releasing
+     * against it. Called from the vehicle's remove(), which also runs for every entity on
+     * world unload.
+     */
+    public static void removeVehicle(EntityVehicleF_Physics vehicle) {
+        removeState(vehicleStates.get(vehicle));
+        for (PlayerState playerState : playerStates.values()) {
+            for (LimbAnimationState limbState : playerState.limbs) {
+                if (limbState.vehicle == vehicle) {
+                    limbState.clear();
+                }
+            }
+            playerState.resolvedTick = Long.MIN_VALUE;
+        }
+    }
+
+    private static void setInterpolatedPosition(AEntityB_Existing entity, float partialTicks, Point3D output) {
+        if (entity.requiresDeltaUpdates()) {
+            output.set(entity.prevPosition.x + (entity.position.x - entity.prevPosition.x) * partialTicks, entity.prevPosition.y + (entity.position.y - entity.prevPosition.y) * partialTicks, entity.prevPosition.z + (entity.position.z - entity.prevPosition.z) * partialTicks);
+        } else {
+            output.set(entity.position);
+        }
     }
 
     private static double getRenderTime(AEntityB_Existing entity, float partialTicks) {
@@ -500,7 +576,9 @@ public final class PlayerAnimationSystem {
         return start + delta * factor;
     }
 
+    /** The resolved target of an entry or one of its grip overrides. Constant for the life of the definition. */
     private static final class SelectedTarget {
+        /** The entry, or the grip override that replaces its target. Identifies the target across frames. */
         private final Object selectionKey;
         private final String applyAfter;
         private final Point3D position;
@@ -513,6 +591,22 @@ public final class PlayerAnimationSystem {
             this.position = position;
             this.limbScale = limbScale;
             this.duration = duration;
+        }
+    }
+
+    /** Per-player data: the per-limb transition state, plus the pose resolved for the last rendered frame. */
+    private static final class PlayerState {
+        private final LimbAnimationState[] limbs = new LimbAnimationState[LIMBS.length];
+        private final PlayerLimbPose[] poses = new PlayerLimbPose[LIMBS.length];
+        private final EnumSet<PlayerLimb> activeLimbs = EnumSet.noneOf(PlayerLimb.class);
+        private long resolvedTick = Long.MIN_VALUE;
+        private float resolvedPartialTicks;
+
+        private PlayerState() {
+            for (int i = 0; i < LIMBS.length; ++i) {
+                limbs[i] = new LimbAnimationState();
+                poses[i] = new PlayerLimbPose();
+            }
         }
     }
 
@@ -569,7 +663,8 @@ public final class PlayerAnimationSystem {
             return selectedPlayerID != null && selectedPlayerID.equals(player.getID());
         }
 
-        private boolean update(boolean active, boolean oneShot, boolean triggerOnChange, int duration, int lingerDuration, double renderTime, UUID recentPlayerID) {
+        /** Advances this trigger by one vehicle tick, with time being the vehicle's ticksExisted. Returns whether the entry is selected. */
+        private boolean update(boolean active, boolean oneShot, boolean triggerOnChange, int duration, int lingerDuration, double time, UUID recentPlayerID) {
             boolean stateChanged = initialized && active != wasActive;
             boolean hadPlayerInteraction = playerInteractionPending || (recentPlayerID != null && (!initialized || stateChanged));
             UUID interactingPlayerID = playerInteractionPending ? pendingPlayerID : recentPlayerID;
@@ -580,24 +675,24 @@ public final class PlayerAnimationSystem {
                 wasActive = active;
                 wasEverActive = active;
                 if (oneShot) {
-                    //A packet arriving before this definition's first rendered
-                    //frame is a real interaction, rather than initial loading.
+                    //A packet arriving before this definition's first evaluation
+                    //is a real interaction, rather than initial loading.
                     if (hadPlayerInteraction && (triggerOnChange || active)) {
-                        triggerStartedAt = renderTime;
+                        triggerStartedAt = time;
                         selectedPlayerID = interactingPlayerID;
                     }
-                    return Double.isFinite(triggerStartedAt) && renderTime <= triggerStartedAt + duration + lingerDuration;
+                    return Double.isFinite(triggerStartedAt) && time <= triggerStartedAt + duration + lingerDuration;
                 }
                 selectedPlayerID = active && hadPlayerInteraction ? interactingPlayerID : null;
-                return !oneShot && active;
+                return active;
             }
             if (oneShot) {
                 if ((triggerOnChange && active != wasActive) || (!triggerOnChange && active && !wasActive)) {
-                    triggerStartedAt = renderTime;
+                    triggerStartedAt = time;
                     selectedPlayerID = hadPlayerInteraction ? interactingPlayerID : null;
                 }
                 wasActive = active;
-                return Double.isFinite(triggerStartedAt) && renderTime <= triggerStartedAt + duration + lingerDuration;
+                return Double.isFinite(triggerStartedAt) && time <= triggerStartedAt + duration + lingerDuration;
             }
             if (active) {
                 wasEverActive = true;
@@ -609,7 +704,7 @@ public final class PlayerAnimationSystem {
                     selectedPlayerID = null;
                 }
             } else if (wasActive) {
-                deactivatedAt = renderTime;
+                deactivatedAt = time;
                 //An explicit deactivation transfers ownership to its actor.
                 //If a momentary control releases automatically, retain the
                 //player who initiated it so linger can complete for that same
@@ -619,47 +714,80 @@ public final class PlayerAnimationSystem {
                 }
             }
             wasActive = active;
-            return active || (wasEverActive && Double.isFinite(deactivatedAt) && renderTime <= deactivatedAt + lingerDuration);
+            return active || (wasEverActive && Double.isFinite(deactivatedAt) && time <= deactivatedAt + lingerDuration);
         }
     }
 
     private static final class VehicleAnimationState {
         private final EntityVehicleF_Physics vehicle;
         private final List<JSONPlayerAnimation> definitions;
+        private final boolean hasExteriorEntries;
+        /** Farthest exterior target from the vehicle origin, in unscaled model units. */
+        private double exteriorReach;
+        private double maxExteriorRange;
         private final Map<JSONPlayerAnimation, AnimationSwitchbox> entrySwitchboxes = new IdentityHashMap<>();
         private final Map<JSONPlayerGripOverride, AnimationSwitchbox> overrideSwitchboxes = new IdentityHashMap<>();
         private final Map<JSONPlayerAnimation, TriggerState> entryTriggers = new IdentityHashMap<>();
         private final Map<JSONPlayerGripOverride, TriggerState> overrideTriggers = new IdentityHashMap<>();
         private final Map<JSONPlayerAnimation, Boolean> selectedEntries = new IdentityHashMap<>();
         private final Map<JSONPlayerGripOverride, Boolean> selectedOverrides = new IdentityHashMap<>();
+        /** Keyed by entry or grip override. */
+        private final Map<Object, SelectedTarget> targets = new IdentityHashMap<>();
         private UUID recentPlayerID;
         private long recentInteractionTick = Long.MIN_VALUE;
 
         private VehicleAnimationState(EntityVehicleF_Physics vehicle, List<JSONPlayerAnimation> definitions) {
             this.vehicle = vehicle;
             this.definitions = definitions;
+            boolean exterior = false;
             for (JSONPlayerAnimation definition : definitions) {
+                boolean exteriorEntry = definition.seatSlot == null && definition.range != null && definition.range > 0;
+                exterior |= exteriorEntry;
+                if (exteriorEntry) {
+                    maxExteriorRange = Math.max(maxExteriorRange, definition.range);
+                    if (definition.pos != null) {
+                        exteriorReach = Math.max(exteriorReach, definition.pos.length());
+                    }
+                    if (definition.gripOverrides != null) {
+                        for (JSONPlayerGripOverride override : definition.gripOverrides) {
+                            if (override.pos != null) {
+                                exteriorReach = Math.max(exteriorReach, override.pos.length());
+                            }
+                        }
+                    }
+                }
                 entryTriggers.put(definition, new TriggerState());
+                addTarget(definition, definition, definition.applyAfter, definition.pos, definition.limbScale, definition.duration);
                 if (definition.activeAnimations != null) {
                     entrySwitchboxes.put(definition, new AnimationSwitchbox(vehicle, definition.activeAnimations, null));
                 }
                 if (definition.gripOverrides != null) {
                     for (JSONPlayerGripOverride override : definition.gripOverrides) {
                         overrideTriggers.put(override, new TriggerState());
+                        addTarget(override, override, override.applyAfter != null ? override.applyAfter : definition.applyAfter, override.pos, override.limbScale != null ? override.limbScale : definition.limbScale, override.duration != null ? override.duration : definition.duration);
                         if (override.activeAnimations != null) {
                             overrideSwitchboxes.put(override, new AnimationSwitchbox(vehicle, override.activeAnimations, null));
                         }
                     }
                 }
             }
+            this.hasExteriorEntries = exterior;
         }
 
-        private void prepareFrame(float partialTicks, double renderTime) {
+        private void addTarget(Object key, Object selectionKey, String applyAfter, Point3D position, Point3D limbScale, Integer duration) {
+            if (applyAfter != null && position != null) {
+                targets.put(key, new SelectedTarget(selectionKey, applyAfter, position, limbScale != null ? limbScale : DEFAULT_LIMB_SCALE, getDuration(duration)));
+            }
+        }
+
+        /** Evaluates every entry and grip override for this vehicle tick. */
+        private void tick() {
+            double time = vehicle.ticksExisted;
             UUID recentActor = vehicle.ticksExisted - recentInteractionTick <= 2 ? recentPlayerID : null;
             for (JSONPlayerAnimation definition : definitions) {
                 AnimationSwitchbox switchbox = entrySwitchboxes.get(definition);
-                boolean active = switchbox == null || switchbox.runSwitchbox(partialTicks, false);
-                selectedEntries.put(definition, entryTriggers.get(definition).update(active, definition.oneShot, definition.triggerOnChange, getDuration(definition.duration), getLingerDuration(definition.lingerDuration), renderTime, definition.initiatingPlayerOnly ? recentActor : null));
+                boolean active = switchbox == null || switchbox.runSwitchbox(0, false);
+                selectedEntries.put(definition, entryTriggers.get(definition).update(active, definition.oneShot, definition.triggerOnChange, getDuration(definition.duration), getLingerDuration(definition.lingerDuration), time, definition.initiatingPlayerOnly ? recentActor : null));
 
                 if (definition.gripOverrides != null) {
                     for (JSONPlayerGripOverride override : definition.gripOverrides) {
@@ -668,12 +796,12 @@ public final class PlayerAnimationSystem {
                             continue;
                         }
                         AnimationSwitchbox overrideSwitchbox = overrideSwitchboxes.get(override);
-                        boolean overrideActive = overrideSwitchbox == null || overrideSwitchbox.runSwitchbox(partialTicks, false);
+                        boolean overrideActive = overrideSwitchbox == null || overrideSwitchbox.runSwitchbox(0, false);
                         int duration = getDuration(override.duration != null ? override.duration : definition.duration);
                         int linger = getLingerDuration(override.lingerDuration != null ? override.lingerDuration : definition.lingerDuration);
                         boolean oneShot = override.oneShot != null ? override.oneShot : definition.oneShot;
                         boolean triggerOnChange = override.triggerOnChange != null ? override.triggerOnChange : definition.triggerOnChange;
-                        selectedOverrides.put(override, overrideTriggers.get(override).update(overrideActive, oneShot, triggerOnChange, duration, linger, renderTime, null));
+                        selectedOverrides.put(override, overrideTriggers.get(override).update(overrideActive, oneShot, triggerOnChange, duration, linger, time, null));
                     }
                 }
             }
@@ -697,20 +825,31 @@ public final class PlayerAnimationSystem {
             return Boolean.TRUE.equals(selectedEntries.get(definition)) && (!definition.initiatingPlayerOnly || entryTriggers.get(definition).isSelectedFor(player));
         }
 
+        /**
+         * Returns the target of the entry, or of its first selected grip override, if the animated
+         * object it follows is currently visible. The object's switchbox is run for this frame, so
+         * its transform is current for the caller.
+         */
+        private SelectedTarget getSelectedTarget(JSONPlayerAnimation definition, float partialTicks) {
+            JSONPlayerGripOverride override = getSelectedOverride(definition);
+            SelectedTarget target = targets.get(override != null ? override : definition);
+            if (target == null) {
+                return null;
+            }
+            AnimationSwitchbox objectSwitchbox = vehicle.animatedObjectSwitchboxes.get(target.applyAfter);
+            return objectSwitchbox == null || objectSwitchbox.runSwitchbox(partialTicks, false) ? target : null;
+        }
+
         private JSONPlayerGripOverride getSelectedOverride(JSONPlayerAnimation definition) {
             if (definition.gripOverrides != null) {
-                for (JSONPlayerGripOverride override : definition.gripOverrides) {
+                for (int i = 0; i < definition.gripOverrides.size(); ++i) {
+                    JSONPlayerGripOverride override = definition.gripOverrides.get(i);
                     if (Boolean.TRUE.equals(selectedOverrides.get(override))) {
                         return override;
                     }
                 }
             }
             return null;
-        }
-
-        private boolean isModelObjectActive(String applyAfter, float partialTicks) {
-            AnimationSwitchbox switchbox = vehicle.animatedObjectSwitchboxes.get(applyAfter);
-            return switchbox == null || switchbox.runSwitchbox(partialTicks, false);
         }
 
         private static boolean referencesVariable(List<JSONAnimationDefinition> animations, String changedVariable) {

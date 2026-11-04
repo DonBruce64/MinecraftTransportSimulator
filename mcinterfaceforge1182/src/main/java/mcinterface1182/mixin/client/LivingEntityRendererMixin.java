@@ -3,12 +3,10 @@ package mcinterface1182.mixin.client;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import mcinterface1182.InterfaceEventsEntityRendering;
 import mcinterface1182.InterfaceRender;
 import mcinterface1182.WrapperEntity;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -20,8 +18,6 @@ import minecrafttransportsimulator.entities.instances.PartSeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
-import net.minecraft.client.renderer.entity.layers.RenderLayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -38,14 +34,6 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity> {
     private static final TransformationMatrix riderTotalTransformation = new TransformationMatrix();
     private static float lastRiderPitch;
     private static float lastRiderPrevPitch;
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/layers/RenderLayer;render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/world/entity/Entity;FFFFFF)V"))
-    private void redirect_renderLayer(RenderLayer layer, PoseStack poseStack, MultiBufferSource buffer, int packedLight, Entity entity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-        if (!InterfaceEventsEntityRendering.renderingFirstPersonBody) {
-            layer.render(poseStack, buffer, packedLight, entity, limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch);
-        }
-    }
 
     /**
      * Need this method to modify the player's body position while riding a seat.

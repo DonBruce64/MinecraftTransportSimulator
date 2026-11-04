@@ -1,11 +1,14 @@
 package mcinterface1165;
 
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
+import mcinterface1165.mixin.client.LivingRendererAccessor;
 import mcinterface1165.mixin.client.RenderInfoInvokerMixin;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -17,7 +20,6 @@ import minecrafttransportsimulator.jsondefs.JSONPlayerAnimation.PlayerLimb;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.PlayerAnimationSystem;
-import minecrafttransportsimulator.rendering.PlayerAnimationSystem.PlayerLimbPose;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.systems.CameraSystem;
@@ -25,14 +27,8 @@ import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.MainWindow;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.PlayerRenderer;
-import net.minecraft.client.renderer.entity.model.PlayerModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -80,7 +76,6 @@ public class InterfaceEventsEntityRendering {
 
     private static int lastScreenWidth;
     private static int lastScreenHeight;
-    private static final PlayerLimbPose firstPersonLimbPose = new PlayerLimbPose();
 
     public static boolean shouldRenderFirstPersonLimb(PlayerLimb limb) {
         return firstPersonRenderedLimbs.contains(limb);
@@ -320,7 +315,7 @@ public class InterfaceEventsEntityRendering {
         float partialTicks = Minecraft.getInstance().getFrameTime();
         boolean rightArm = event.getHand() == net.minecraft.util.Hand.MAIN_HAND ? playerWrapper.isRightHanded() : !playerWrapper.isRightHanded();
         PlayerLimb handLimb = rightArm ? PlayerLimb.armRight : PlayerLimb.armLeft;
-        if ((entity != null && entity.activeGun != null) || CameraSystem.activeCamera != null || PlayerAnimationSystem.hasAnimationsForSeat(playerWrapper) || PlayerAnimationSystem.getExteriorLimbs(playerWrapper, partialTicks).contains(handLimb)) {
+        if ((entity != null && entity.activeGun != null) || CameraSystem.activeCamera != null || PlayerAnimationSystem.getActiveLimbs(playerWrapper, partialTicks).contains(handLimb)) {
             event.setCanceled(true);
         }
     }
@@ -332,35 +327,30 @@ public class InterfaceEventsEntityRendering {
             event.setCanceled(true);
             return;
         }
-        WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(event.getPlayer());
-        if (PlayerAnimationSystem.hasAnimationsForSeat(playerWrapper)) {
+        PlayerLimb limb = event.getArm() == HandSide.LEFT ? PlayerLimb.armLeft : PlayerLimb.armRight;
+        if (PlayerAnimationSystem.getActiveLimbs(WrapperPlayer.getWrapperFor(event.getPlayer()), Minecraft.getInstance().getFrameTime()).contains(limb)) {
             event.setCanceled(true);
-            return;
-        }
-        if (ConfigSystem.client.renderingSettings.playerTweaks.value) {
-            PlayerLimb limb = event.getArm() == HandSide.LEFT ? PlayerLimb.armLeft : PlayerLimb.armRight;
-            float partialTicks = Minecraft.getInstance().getFrameTime();
-            if (PlayerAnimationSystem.getExteriorLimbs(playerWrapper, partialTicks).contains(limb)) {
-                event.setCanceled(true);
-            }
         }
     }
 
+    /**
+     * Renders the local player through the normal world renderer while in first person, showing only the
+     * limbs that vehicle animations control.  This keeps them in vehicle/world space rather than attaching
+     * an arm to the camera HUD.  Held items, armor, and capes are left out by emptying the renderer's layer list.
+     */
     @SubscribeEvent
     public static void onIVRenderFirstPersonBody(RenderWorldLastEvent event) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null || minecraft.level == null || !minecraft.options.getCameraType().isFirstPerson()) {
+        if (minecraft.player == null || minecraft.level == null || !minecraft.options.getCameraType().isFirstPerson() || minecraft.getCameraEntity() != minecraft.player) {
             return;
         }
-        WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(minecraft.player);
         float partialTicks = event.getPartialTicks();
-        boolean seatedAnimation = PlayerAnimationSystem.hasAnimationsForSeat(playerWrapper);
-        EnumSet<PlayerLimb> exteriorLimbs = seatedAnimation ? EnumSet.noneOf(PlayerLimb.class) : PlayerAnimationSystem.getExteriorLimbs(playerWrapper, partialTicks);
-        if (!seatedAnimation && exteriorLimbs.isEmpty()) {
+        EnumSet<PlayerLimb> activeLimbs = PlayerAnimationSystem.getActiveLimbs(WrapperPlayer.getWrapperFor(minecraft.player), partialTicks);
+        if (activeLimbs.isEmpty()) {
             return;
         }
 
-        firstPersonRenderedLimbs = seatedAnimation ? EnumSet.allOf(PlayerLimb.class) : exteriorLimbs;
+        firstPersonRenderedLimbs = activeLimbs;
         ActiveRenderInfo camera = minecraft.gameRenderer.getMainCamera();
         Vector3d cameraPosition = camera.getPosition();
         double playerX = MathHelper.lerp(partialTicks, minecraft.player.xo, minecraft.player.getX());
@@ -369,13 +359,17 @@ public class InterfaceEventsEntityRendering {
         float playerYaw = MathHelper.rotLerp(partialTicks, minecraft.player.yRotO, minecraft.player.yRot);
         IRenderTypeBuffer.Impl buffer = minecraft.renderBuffers().bufferSource();
         MatrixStack matrixStack = event.getMatrixStack();
+        LivingRendererAccessor layerAccessor = (LivingRendererAccessor) (Object) minecraft.getEntityRenderDispatcher().getRenderer(minecraft.player);
+        List<?> renderedLayers = layerAccessor.get_layers();
 
         renderingFirstPersonBody = true;
+        layerAccessor.set_layers(Collections.emptyList());
         minecraft.getEntityRenderDispatcher().setRenderShadow(false);
         try {
             minecraft.getEntityRenderDispatcher().render(minecraft.player, playerX - cameraPosition.x, playerY - cameraPosition.y, playerZ - cameraPosition.z, playerYaw, partialTicks, matrixStack, buffer, minecraft.getEntityRenderDispatcher().getPackedLightCoords(minecraft.player, partialTicks));
             buffer.endBatch();
         } finally {
+            layerAccessor.set_layers(renderedLayers);
             minecraft.getEntityRenderDispatcher().setRenderShadow(true);
             renderingFirstPersonBody = false;
             firstPersonRenderedLimbs = EnumSet.noneOf(PlayerLimb.class);

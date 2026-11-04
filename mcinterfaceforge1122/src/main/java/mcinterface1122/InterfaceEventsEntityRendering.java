@@ -2,11 +2,12 @@ package mcinterface1122;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -61,9 +62,13 @@ public class InterfaceEventsEntityRendering {
     public static boolean renderCurrentRiderSitting;
     public static boolean renderCurrentRiderStanding;
     private static boolean needPlayerTweaks = false;
+    /**True if the rendered player has vehicle limb poses to apply, whether riding or standing.**/
+    private static boolean needLimbPoses = false;
     private static boolean needToPopMatrix = false;
     private static ItemStack heldStackHolder = null;
-    private static final Set<EntityPlayer> playersOverwritten = new HashSet<>();
+    /** Players currently needing the custom model.  Weak, so players that leave without a revert don't leak. */
+    private static final Set<EntityPlayer> playersOverwritten = Collections.newSetFromMap(new WeakHashMap<>());
+    private static boolean customModelInstalled;
     private static final Point3D leftArmAngles = new Point3D();
     private static final Point3D rightArmAngles = new Point3D();
     private static final Point3D entityScale = new Point3D();
@@ -81,7 +86,7 @@ public class InterfaceEventsEntityRendering {
      * These are captured BEFORE the in-place transpose/subtraction that the GL pipeline requires.**/
     public static boolean adjustedCamera;
     public static boolean cameraShakeActive;
-    public static boolean renderingFirstPersonBody;
+    private static boolean renderingFirstPersonBody;
     private static EnumSet<PlayerLimb> firstPersonRenderedLimbs = EnumSet.noneOf(PlayerLimb.class);
     public static final Point3D projectionCameraPosition = new Point3D();
     public static final RotationMatrix projectionCameraOrientation = new RotationMatrix();
@@ -90,15 +95,9 @@ public class InterfaceEventsEntityRendering {
     private static float lastRiderYawHead;
     private static float lastRiderPrevYawHead;
     private static float lastRiderPitch;
-
-    public static boolean shouldRenderFirstPersonLimb(PlayerLimb limb) {
-        return firstPersonRenderedLimbs.contains(limb);
-    }
     private static float lastRiderPrevPitch;
-    private static PlayerLimb firstPersonLimb;
-    private static int firstPersonLimbRenderPasses;
-    private static final PlayerLimbPose firstPersonLimbPose = new PlayerLimbPose();
-
+    /**RenderLivingBase's layer list field, looked up once.  Null if it could not be found.**/
+    private static final Field layerRenderersField = findLayerRenderersField();
 
     /**
      * Changes camera rotation to match custom rotation, and also gets custom position for custom cameras.
@@ -230,8 +229,8 @@ public class InterfaceEventsEntityRendering {
      */
     @SubscribeEvent
     public static void onIVRenderLivingPre(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event) {
-        firstPersonLimbRenderPasses = 0;
         needPlayerTweaks = false;
+        needLimbPoses = false;
         needToPopMatrix = false;
         renderCurrentRiderSitting = false;
         renderCurrentRiderStanding = false;
@@ -317,6 +316,8 @@ public class InterfaceEventsEntityRendering {
             //we apply player tweaks besides riding in a vehicle.
             if (ConfigSystem.client.renderingSettings.playerTweaks.value) {
                 EntityPlayer player = (EntityPlayer) entity;
+                //Vehicle animations can pose a player that is standing next to a vehicle, not just a rider.
+                needLimbPoses = !PlayerAnimationSystem.getActiveLimbs(WrapperPlayer.getWrapperFor(player), event.getPartialRenderTick()).isEmpty();
                 EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(entity.getUniqueID());
                 if (gunEntity != null && gunEntity.activeGun != null) {
 
@@ -359,10 +360,19 @@ public class InterfaceEventsEntityRendering {
                 }
 
                 //Check if we modified the player model to allow us to change angles.
+                //The custom model replaces the shared per-skin-type model, so it is installed once while any
+                //player needs it and only reverted when the last of them no longer does.
                 boolean overwrotePlayerModel = playersOverwritten.contains(player);
-                boolean setModelToCustom = ConfigSystem.client.renderingSettings.playerTweaks.value && needPlayerTweaks && !overwrotePlayerModel;
-                boolean setModelToDefault = (!ConfigSystem.client.renderingSettings.playerTweaks.value || !needPlayerTweaks) && overwrotePlayerModel;
+                boolean needCustomModel = ConfigSystem.client.renderingSettings.playerTweaks.value && (needPlayerTweaks || needLimbPoses);
+                if (needCustomModel && !overwrotePlayerModel) {
+                    playersOverwritten.add(player);
+                } else if (!needCustomModel && overwrotePlayerModel) {
+                    playersOverwritten.remove(player);
+                }
+                boolean setModelToCustom = !playersOverwritten.isEmpty() && !customModelInstalled;
+                boolean setModelToDefault = playersOverwritten.isEmpty() && customModelInstalled;
                 if (setModelToCustom || setModelToDefault) {
+                    customModelInstalled = setModelToCustom;
                     for (Field renderManagerField : RenderManager.class.getDeclaredFields()) {
                         if (renderManagerField.getName().equals("skinMap") || renderManagerField.getName().equals("field_178636_l")) {
                             try {
@@ -383,12 +393,11 @@ public class InterfaceEventsEntityRendering {
                                                     field.setAccessible(true);
                                                 }
 
-                                                if (setModelToCustom) {
-                                                    playersOverwritten.add(player);
-                                                    field.set(render, new ModelPlayerCustom((ModelPlayer) field.get(render), skinType.equals("slim")));
-                                                } else {
-                                                    playersOverwritten.remove(player);
-                                                    field.set(render, ((ModelPlayerCustom) field.get(render)).base);
+                                                Object currentModel = field.get(render);
+                                                if (setModelToCustom && !(currentModel instanceof ModelPlayerCustom)) {
+                                                    field.set(render, new ModelPlayerCustom((ModelPlayer) currentModel, skinType.equals("slim")));
+                                                } else if (setModelToDefault && currentModel instanceof ModelPlayerCustom) {
+                                                    field.set(render, ((ModelPlayerCustom) currentModel).base);
                                                 }
                                             } catch (Exception e) {
                                                 ConfigSystem.client.renderingSettings.playerTweaks.value = false;
@@ -448,18 +457,27 @@ public class InterfaceEventsEntityRendering {
         @Override
         public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scaleFactor, Entity entityIn) {
             super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scaleFactor, entityIn);
+            //This model is shared by every player, so clear the previous player's limb scaling.
+            ((ScaledModelRenderer) this.bipedLeftArm).resetScale();
+            ((ScaledModelRenderer) this.bipedRightArm).resetScale();
+            ((ScaledModelRenderer) this.bipedLeftLeg).resetScale();
+            ((ScaledModelRenderer) this.bipedRightLeg).resetScale();
+            ((ScaledModelRenderer) this.bipedLeftArmwear).resetScale();
+            ((ScaledModelRenderer) this.bipedRightArmwear).resetScale();
+            ((ScaledModelRenderer) this.bipedLeftLegwear).resetScale();
+            ((ScaledModelRenderer) this.bipedRightLegwear).resetScale();
             if (renderingFirstPersonBody) {
                 this.bipedHead.showModel = false;
                 this.bipedHeadwear.showModel = false;
                 this.bipedBody.showModel = false;
                 this.bipedBodyWear.showModel = false;
-                this.bipedLeftArm.showModel = shouldRenderFirstPersonLimb(PlayerLimb.armLeft);
+                this.bipedLeftArm.showModel = firstPersonRenderedLimbs.contains(PlayerLimb.armLeft);
                 this.bipedLeftArmwear.showModel = this.bipedLeftArm.showModel;
-                this.bipedRightArm.showModel = shouldRenderFirstPersonLimb(PlayerLimb.armRight);
+                this.bipedRightArm.showModel = firstPersonRenderedLimbs.contains(PlayerLimb.armRight);
                 this.bipedRightArmwear.showModel = this.bipedRightArm.showModel;
-                this.bipedLeftLeg.showModel = shouldRenderFirstPersonLimb(PlayerLimb.legLeft);
+                this.bipedLeftLeg.showModel = firstPersonRenderedLimbs.contains(PlayerLimb.legLeft);
                 this.bipedLeftLegwear.showModel = this.bipedLeftLeg.showModel;
-                this.bipedRightLeg.showModel = shouldRenderFirstPersonLimb(PlayerLimb.legRight);
+                this.bipedRightLeg.showModel = firstPersonRenderedLimbs.contains(PlayerLimb.legRight);
                 this.bipedRightLegwear.showModel = this.bipedRightLeg.showModel;
             }
             if (needPlayerTweaks) {
@@ -491,26 +509,22 @@ public class InterfaceEventsEntityRendering {
                 this.bipedRightArm.rotateAngleY = (float) rightArmAngles.y;
                 this.bipedRightArm.rotateAngleZ = (float) rightArmAngles.z;
                 copyModelAngles(this.bipedRightArm, this.bipedRightArmwear);
+            }
 
-                WrapperEntity entityWrapper = WrapperEntity.getWrapperFor((EntityLivingBase) entityIn);
-                float partialTicks = (float) (ageInTicks - Math.floor(ageInTicks));
-                applyVehiclePose(this.bipedLeftArm, entityWrapper, PlayerLimb.armLeft, partialTicks);
-                applyVehiclePose(this.bipedRightArm, entityWrapper, PlayerLimb.armRight, partialTicks);
-                applyVehiclePose(this.bipedLeftLeg, entityWrapper, PlayerLimb.legLeft, partialTicks);
-                applyVehiclePose(this.bipedRightLeg, entityWrapper, PlayerLimb.legRight, partialTicks);
-                copyModelAngles(this.bipedLeftArm, this.bipedLeftArmwear);
-                copyModelAngles(this.bipedRightArm, this.bipedRightArmwear);
-                copyModelAngles(this.bipedLeftLeg, this.bipedLeftLegwear);
-                copyModelAngles(this.bipedRightLeg, this.bipedRightLegwear);
-                ((ScaledModelRenderer) this.bipedLeftArmwear).lengthScale = ((ScaledModelRenderer) this.bipedLeftArm).lengthScale;
-                ((ScaledModelRenderer) this.bipedRightArmwear).lengthScale = ((ScaledModelRenderer) this.bipedRightArm).lengthScale;
-                ((ScaledModelRenderer) this.bipedLeftLegwear).lengthScale = ((ScaledModelRenderer) this.bipedLeftLeg).lengthScale;
-                ((ScaledModelRenderer) this.bipedRightLegwear).lengthScale = ((ScaledModelRenderer) this.bipedRightLeg).lengthScale;
-                ((ScaledModelRenderer) this.bipedLeftArmwear).copyLimbScaleFrom((ScaledModelRenderer) this.bipedLeftArm);
-                ((ScaledModelRenderer) this.bipedRightArmwear).copyLimbScaleFrom((ScaledModelRenderer) this.bipedRightArm);
-                ((ScaledModelRenderer) this.bipedLeftLegwear).copyLimbScaleFrom((ScaledModelRenderer) this.bipedLeftLeg);
-                ((ScaledModelRenderer) this.bipedRightLegwear).copyLimbScaleFrom((ScaledModelRenderer) this.bipedRightLeg);
+            if (needLimbPoses && entityIn instanceof EntityPlayer) {
+                WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor((EntityPlayer) entityIn);
+                float partialTicks = Minecraft.getMinecraft().getRenderPartialTicks();
+                applyVehiclePose(this.bipedLeftArm, playerWrapper, PlayerLimb.armLeft, partialTicks);
+                applyVehiclePose(this.bipedRightArm, playerWrapper, PlayerLimb.armRight, partialTicks);
+                applyVehiclePose(this.bipedLeftLeg, playerWrapper, PlayerLimb.legLeft, partialTicks);
+                applyVehiclePose(this.bipedRightLeg, playerWrapper, PlayerLimb.legRight, partialTicks);
+                copyPoseToWear((ScaledModelRenderer) this.bipedLeftArm, (ScaledModelRenderer) this.bipedLeftArmwear);
+                copyPoseToWear((ScaledModelRenderer) this.bipedRightArm, (ScaledModelRenderer) this.bipedRightArmwear);
+                copyPoseToWear((ScaledModelRenderer) this.bipedLeftLeg, (ScaledModelRenderer) this.bipedLeftLegwear);
+                copyPoseToWear((ScaledModelRenderer) this.bipedRightLeg, (ScaledModelRenderer) this.bipedRightLegwear);
+            }
 
+            if (needPlayerTweaks || needLimbPoses) {
                 //Copy model information to the core model in case other mods are referencing it.
                 copyModelAngles(this.bipedLeftLeg, base.bipedLeftLeg);
                 copyModelAngles(this.bipedLeftLeg, base.bipedLeftLegwear);
@@ -527,12 +541,13 @@ public class InterfaceEventsEntityRendering {
             }
         }
 
-        private void applyVehiclePose(ModelRenderer modelPart, WrapperEntity rider, PlayerLimb limb, float partialTicks) {
+        private static void copyPoseToWear(ScaledModelRenderer limb, ScaledModelRenderer wear) {
+            copyModelAngles(limb, wear);
+            wear.copyScaleFrom(limb);
+        }
+
+        private void applyVehiclePose(ModelRenderer modelPart, WrapperPlayer rider, PlayerLimb limb, float partialTicks) {
             ScaledModelRenderer scalablePart = (ScaledModelRenderer) modelPart;
-            scalablePart.lengthScale = 1;
-            scalablePart.scaleX = 1;
-            scalablePart.scaleY = 1;
-            scalablePart.scaleZ = 1;
             if (PlayerAnimationSystem.getPose(rider, limb, partialTicks, vehicleLimbPose)) {
                 float blend = (float) vehicleLimbPose.blend;
                 modelPart.rotateAngleX += ((float) vehicleLimbPose.rotationX - modelPart.rotateAngleX) * blend;
@@ -575,7 +590,15 @@ public class InterfaceEventsEntityRendering {
             offsetZ = source.offsetZ;
         }
 
-        private void copyLimbScaleFrom(ScaledModelRenderer source) {
+        private void resetScale() {
+            lengthScale = 1;
+            scaleX = 1;
+            scaleY = 1;
+            scaleZ = 1;
+        }
+
+        private void copyScaleFrom(ScaledModelRenderer source) {
+            lengthScale = source.lengthScale;
             scaleX = source.scaleX;
             scaleY = source.scaleY;
             scaleZ = source.scaleZ;
@@ -583,20 +606,6 @@ public class InterfaceEventsEntityRendering {
 
         @Override
         public void render(float scaleFactor) {
-            if (firstPersonLimbRenderPasses > 0 && limb == firstPersonLimb && Minecraft.getMinecraft().player != null) {
-                WrapperPlayer player = WrapperPlayer.getWrapperFor(Minecraft.getMinecraft().player);
-                if (PlayerAnimationSystem.getPose(player, limb, Minecraft.getMinecraft().getRenderPartialTicks(), firstPersonLimbPose)) {
-                    float blend = (float) firstPersonLimbPose.blend;
-                    rotateAngleX += ((float) firstPersonLimbPose.rotationX - rotateAngleX) * blend;
-                    rotateAngleY += ((float) firstPersonLimbPose.rotationY - rotateAngleY) * blend;
-                    rotateAngleZ += ((float) firstPersonLimbPose.rotationZ - rotateAngleZ) * blend;
-                    lengthScale = 1 + ((float) firstPersonLimbPose.lengthScale - 1) * blend;
-                    scaleX = 1 + ((float) firstPersonLimbPose.scaleX - 1) * blend;
-                    scaleY = 1 + ((float) firstPersonLimbPose.scaleY - 1) * blend;
-                    scaleZ = 1 + ((float) firstPersonLimbPose.scaleZ - 1) * blend;
-                }
-                --firstPersonLimbRenderPasses;
-            }
             if (lengthScale == 1 && scaleX == 1 && scaleY == 1 && scaleZ == 1) {
                 super.render(scaleFactor);
                 return;
@@ -644,9 +653,10 @@ public class InterfaceEventsEntityRendering {
      */
     @SubscribeEvent
     public static void onIVRenderHand(RenderHandEvent event) {
+        //This event covers both hands.  Arms that vehicle animations pose are cancelled per hand in
+        //onIVrenderSpecificHand, so the other arm keeps its vanilla first-person render.
         EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID());
-        WrapperPlayer player = WrapperPlayer.getWrapperFor(Minecraft.getMinecraft().player);
-        if ((entity != null && entity.activeGun != null) || CameraSystem.activeCamera != null || PlayerAnimationSystem.hasAnimationsForSeat(player)) {
+        if ((entity != null && entity.activeGun != null) || CameraSystem.activeCamera != null) {
             event.setCanceled(true);
         }
     }
@@ -654,76 +664,75 @@ public class InterfaceEventsEntityRendering {
     @SubscribeEvent
     public static void onIVrenderSpecificHand(RenderSpecificHandEvent event) {
         EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID());
-        WrapperPlayer player = WrapperPlayer.getWrapperFor(Minecraft.getMinecraft().player);
-        if ((entity != null && entity.activeGun != null) || CameraSystem.activeCamera != null || PlayerAnimationSystem.hasAnimationsForSeat(player)) {
+        if ((entity != null && entity.activeGun != null) || CameraSystem.activeCamera != null) {
             event.setCanceled(true);
-        } else if (ConfigSystem.client.renderingSettings.playerTweaks.value) {
-            boolean rightArm = event.getHand() == EnumHand.MAIN_HAND ? player.isRightHanded() : !player.isRightHanded();
-            PlayerLimb limb = rightArm ? PlayerLimb.armRight : PlayerLimb.armLeft;
-            if (PlayerAnimationSystem.getExteriorLimbs(player, event.getPartialTicks()).contains(limb)) {
-                //Exterior limbs are rendered in world space during WORLD_LAST.
-                event.setCanceled(true);
-            }
+            return;
+        }
+        WrapperPlayer player = WrapperPlayer.getWrapperFor(Minecraft.getMinecraft().player);
+        boolean rightArm = event.getHand() == EnumHand.MAIN_HAND ? player.isRightHanded() : !player.isRightHanded();
+        PlayerLimb limb = rightArm ? PlayerLimb.armRight : PlayerLimb.armLeft;
+        //Animated arms are rendered in world space during onIVRenderFirstPersonBody.
+        if (PlayerAnimationSystem.getActiveLimbs(player, event.getPartialTicks()).contains(limb)) {
+            event.setCanceled(true);
         }
     }
 
-    /** Renders the local rider model in world space instead of as camera-space hands. */
+    /**
+     * Renders the local player in world space while in first person, showing only the limbs that vehicle
+     * animations control.  Held items, armor, and capes are left out by swapping the renderer's layer list
+     * for an empty one.
+     */
     @SubscribeEvent
     public static void onIVRenderFirstPersonBody(RenderWorldLastEvent event) {
         Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft.player == null || minecraft.world == null || minecraft.gameSettings.thirdPersonView != 0) {
+        if (layerRenderersField == null || minecraft.player == null || minecraft.world == null || minecraft.gameSettings.thirdPersonView != 0 || minecraft.getRenderViewEntity() != minecraft.player) {
             return;
         }
-        WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(minecraft.player);
         float partialTicks = event.getPartialTicks();
-        boolean seatedAnimation = PlayerAnimationSystem.hasAnimationsForSeat(playerWrapper);
-        EnumSet<PlayerLimb> exteriorLimbs = seatedAnimation ? EnumSet.noneOf(PlayerLimb.class) : PlayerAnimationSystem.getExteriorLimbs(playerWrapper, partialTicks);
-        if (!seatedAnimation && exteriorLimbs.isEmpty()) {
+        EnumSet<PlayerLimb> activeLimbs = PlayerAnimationSystem.getActiveLimbs(WrapperPlayer.getWrapperFor(minecraft.player), partialTicks);
+        if (activeLimbs.isEmpty()) {
             return;
         }
-        firstPersonRenderedLimbs = seatedAnimation ? EnumSet.allOf(PlayerLimb.class) : exteriorLimbs;
 
         RenderManager renderManager = minecraft.getRenderManager();
         RenderPlayer playerRenderer = (RenderPlayer) (Object) renderManager.getEntityRenderObject(minecraft.player);
-        List<?> savedLayers = null;
-        Field layersField = null;
+        Object renderedLayers = swapLayerRenderers(playerRenderer, new ArrayList<>());
+        if (renderedLayers == null) {
+            return;
+        }
+        boolean renderShadow = renderManager.isRenderShadow();
         try {
-            //The clothing parts are in ModelPlayer itself.  Suppress only auxiliary layers such as armor,
-            //held items, capes, and head equipment so they cannot clip through the first-person camera.
-            for (Field field : RenderLivingBase.class.getDeclaredFields()) {
-                if (field.getName().equals("layerRenderers") || field.getName().equals("field_177097_h")) {
-                    field.setAccessible(true);
-                    @SuppressWarnings("unchecked")
-                    List<Object> layers = (List<Object>) field.get(playerRenderer);
-                    savedLayers = new ArrayList<>(layers);
-                    layers.clear();
-                    layersField = field;
-                    break;
-                }
-            }
-
+            firstPersonRenderedLimbs = activeLimbs;
             renderingFirstPersonBody = true;
-            boolean renderShadow = renderManager.isRenderShadow();
             renderManager.setRenderShadow(false);
-            try {
-                renderManager.renderEntityStatic(minecraft.player, partialTicks, false);
-            } finally {
-                renderManager.setRenderShadow(renderShadow);
-                renderingFirstPersonBody = false;
-                firstPersonRenderedLimbs = EnumSet.noneOf(PlayerLimb.class);
+            renderManager.renderEntityStatic(minecraft.player, partialTicks, false);
+        } finally {
+            swapLayerRenderers(playerRenderer, renderedLayers);
+            renderManager.setRenderShadow(renderShadow);
+            renderingFirstPersonBody = false;
+            firstPersonRenderedLimbs = EnumSet.noneOf(PlayerLimb.class);
+        }
+    }
+
+    private static Field findLayerRenderersField() {
+        for (Field field : RenderLivingBase.class.getDeclaredFields()) {
+            if (field.getName().equals("layerRenderers") || field.getName().equals("field_177097_h")) {
+                field.setAccessible(true);
+                return field;
             }
+        }
+        return null;
+    }
+
+    /**Sets the renderer's layer list and returns the previous one, or null if the field is not accessible.**/
+    private static Object swapLayerRenderers(RenderPlayer renderer, Object layers) {
+        try {
+            Object previous = layerRenderersField.get(renderer);
+            layerRenderersField.set(renderer, layers);
+            return previous;
         } catch (IllegalAccessException exception) {
             exception.printStackTrace();
-        } finally {
-            if (layersField != null && savedLayers != null) {
-                try {
-                    @SuppressWarnings("unchecked")
-                    List<Object> layers = (List<Object>) layersField.get(playerRenderer);
-                    layers.addAll(savedLayers);
-                } catch (IllegalAccessException exception) {
-                    exception.printStackTrace();
-                }
-            }
+            return null;
         }
     }
 }
