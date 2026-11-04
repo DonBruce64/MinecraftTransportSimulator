@@ -5,6 +5,7 @@ import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
+import minecrafttransportsimulator.rendering.PlayerAnimationSystem;
 
 /**
  * Packet used to tell entity a player has started interacting with a GUI on them.  Sent by clients when a player
@@ -38,6 +39,7 @@ public class PacketEntityInteractGUI extends APacketEntityInteract<AEntityD_Defi
         } else {
             entity.playersInteracting.remove(player);
         }
+        PlayerAnimationSystem.recordPlayerInteraction(entity, player.getID());
         return true;
     }
 }

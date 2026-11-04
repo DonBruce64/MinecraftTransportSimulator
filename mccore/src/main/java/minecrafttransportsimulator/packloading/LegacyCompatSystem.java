@@ -253,6 +253,30 @@ public final class LegacyCompatSystem {
 
         //Do JSON-specific compats.
         if (definition instanceof JSONVehicle) {
+            JSONVehicle vehicle = (JSONVehicle) definition;
+            //Player animations originally lived at the vehicle root and used
+            //modelObject. Keep old packs loading while exporting/documenting
+            //the rendering.playerAnimations/applyAfter form going forward.
+            if (vehicle.playerAnimations != null && vehicle.rendering.playerAnimations == null) {
+                vehicle.rendering.playerAnimations = vehicle.playerAnimations;
+                vehicle.playerAnimations = null;
+            }
+            if (vehicle.rendering.playerAnimations != null) {
+                for (minecrafttransportsimulator.jsondefs.JSONPlayerAnimation animation : vehicle.rendering.playerAnimations) {
+                    if (animation.applyAfter == null) {
+                        animation.applyAfter = animation.modelObject;
+                    }
+                    animation.modelObject = null;
+                    if (animation.gripOverrides != null) {
+                        for (minecrafttransportsimulator.jsondefs.JSONPlayerAnimation.JSONPlayerGripOverride override : animation.gripOverrides) {
+                            if (override.applyAfter == null) {
+                                override.applyAfter = override.modelObject;
+                            }
+                            override.modelObject = null;
+                        }
+                    }
+                }
+            }
             performVehicleLegacyCompats((JSONVehicle) definition);
         } else if (definition instanceof JSONPart) {
             performPartLegacyCompats((JSONPart) definition);

@@ -11,14 +11,21 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
+import minecrafttransportsimulator.jsondefs.JSONPlayerAnimation.PlayerLimb;
+import minecrafttransportsimulator.rendering.IPlayerLimbModelPart;
+import minecrafttransportsimulator.rendering.PlayerAnimationSystem;
+import minecrafttransportsimulator.rendering.PlayerAnimationSystem.PlayerLimbPose;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 
 @Mixin(HumanoidModel.class)
 public abstract class HumanoidModelMixin<T extends LivingEntity> {
     private static final float yArmAngleRad = (float) Math.toRadians(10);
+    private static final float armProximalOffset = 2F / 16F;
+    private static final PlayerLimbPose vehicleLimbPose = new PlayerLimbPose();
 
     /**
      * Need this method to adjust model legs and arms for sitting players.
@@ -111,6 +118,29 @@ public abstract class HumanoidModelMixin<T extends LivingEntity> {
                     }
                 }
             }
+
+            float partialTicks = (float) (ageInTicks - Math.floor(ageInTicks));
+            applyVehiclePose(model.leftArm, entityWrapper, PlayerLimb.armLeft, partialTicks);
+            applyVehiclePose(model.rightArm, entityWrapper, PlayerLimb.armRight, partialTicks);
+            applyVehiclePose(model.leftLeg, entityWrapper, PlayerLimb.legLeft, partialTicks);
+            applyVehiclePose(model.rightLeg, entityWrapper, PlayerLimb.legRight, partialTicks);
+        }
+    }
+
+    private static void applyVehiclePose(ModelPart modelPart, WrapperEntity rider, PlayerLimb limb, float partialTicks) {
+        IPlayerLimbModelPart scalablePart = (IPlayerLimbModelPart) (Object) modelPart;
+        boolean arm = limb == PlayerLimb.armLeft || limb == PlayerLimb.armRight;
+        scalablePart.setPlayerLimbLengthScale(1);
+        scalablePart.setPlayerLimbScale(1, 1, 1);
+        scalablePart.setPlayerLimbProximalOffset(arm ? armProximalOffset : 0);
+        scalablePart.setPlayerLimbScaleAnchor(arm ? (limb == PlayerLimb.armLeft ? 1F : -1F) / 16F : 0, arm ? 10F / 16F : 12F / 16F);
+        if (PlayerAnimationSystem.getPose(rider, limb, partialTicks, vehicleLimbPose)) {
+            float blend = (float) vehicleLimbPose.blend;
+            modelPart.xRot += ((float) vehicleLimbPose.rotationX - modelPart.xRot) * blend;
+            modelPart.yRot += ((float) vehicleLimbPose.rotationY - modelPart.yRot) * blend;
+            modelPart.zRot += ((float) vehicleLimbPose.rotationZ - modelPart.zRot) * blend;
+            scalablePart.setPlayerLimbLengthScale(1 + ((float) vehicleLimbPose.lengthScale - 1) * blend);
+            scalablePart.setPlayerLimbScale(1 + ((float) vehicleLimbPose.scaleX - 1) * blend, 1 + ((float) vehicleLimbPose.scaleY - 1) * blend, 1 + ((float) vehicleLimbPose.scaleZ - 1) * blend);
         }
     }
 }

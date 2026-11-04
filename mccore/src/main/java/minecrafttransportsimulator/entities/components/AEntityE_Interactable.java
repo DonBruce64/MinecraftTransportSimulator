@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
@@ -386,10 +387,15 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      * Handles the custom keypress for this entity.
      */
     public final void handleCustomKeypress(byte keyIndex, boolean keyPressed) {
+        handleCustomKeypress(keyIndex, keyPressed, null);
+    }
+
+    /** Handles a custom keypress while retaining visual actor attribution. */
+    public final void handleCustomKeypress(byte keyIndex, boolean keyPressed, UUID initiatingPlayerID) {
         if (definition.customKeybinds != null) {
             definition.customKeybinds.forEach(customKeybind -> {
                 if (customKeybind.keyIndex == keyIndex) {
-                    performAction(customKeybind.action, keyPressed);
+                    performAction(customKeybind.action, keyPressed, initiatingPlayerID);
                     return;
                 }
             });

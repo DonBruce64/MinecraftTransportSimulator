@@ -46,6 +46,7 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
     private final boolean leftClick;
     private final boolean rightClick;
     private final boolean partOperationComplete;
+    private UUID authenticatedPlayerID;
 
     public PacketEntityInteract(AEntityE_Interactable<?> entity, IWrapperPlayer player, BoundingBox hitBox, boolean leftClick, boolean rightClick) {
         this(entity, player, hitBox, leftClick, rightClick, false);
@@ -233,7 +234,7 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
                 }
             } else {
                 if (hitBox.definition.action != null) {
-                    entity.performAction(hitBox.definition.action, rightClick);
+                    entity.performAction(hitBox.definition.action, rightClick, authenticatedPlayerID != null ? authenticatedPlayerID : player.getID());
                 }
             }
             return false;
@@ -253,6 +254,12 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
             entity.attack(new Damage(1.0F, entity.boundingBox, null, player, null).setHand());
         }
         return false;
+    }
+
+    @Override
+    public void handleFromClient(AWrapperWorld world, IWrapperPlayer sendingPlayer) {
+        authenticatedPlayerID = sendingPlayer.getID();
+        super.handleFromClient(world, sendingPlayer);
     }
 
     private static boolean isPartInstallationValid(AEntityF_Multipart<?> multipart, EntityVehicleF_Physics vehicle, IWrapperPlayer player, AItemPart heldPart, JSONPartDefinition slotDefinition, int slotIndex) {

@@ -11,12 +11,14 @@
 				"client.EmptyTextureStateShardMixin",
 				"client.EntityRendererMixin",
 				"client.HumanoidModelMixin",
+				"client.ModelPartMixin",
 				"client.LevelRendererMixin",
 				"client.ListenerMixin",
 				"client.LivingEntityRendererMixin",
 				"client.MinecraftMixin",
 				"client.MultiPackResourceManagerMixin",
 				"client.OptionInstanceMixin",
+				"client.PlayerRendererMixin",
 				"client.VillagerModelMixin"
     ],
 		"mixins": [

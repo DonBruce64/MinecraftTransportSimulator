@@ -22,7 +22,7 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 class InterfacePacket implements IInterfacePacket {
-    private static final String PROTOCOL_VERSION = "3";
+    private static final String PROTOCOL_VERSION = "4";
     private static final SimpleChannel network = NetworkRegistry.newSimpleChannel(new ResourceLocation(InterfaceLoader.MODID, "main"), () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
     private static final BiMap<Byte, Class<? extends APacketBase>> packetMappings = HashBiMap.create();
 

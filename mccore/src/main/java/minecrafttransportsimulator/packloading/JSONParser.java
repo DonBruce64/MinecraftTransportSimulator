@@ -289,11 +289,16 @@ public class JSONParser {
                 return null;
             } else {
                 List<Integer> value = new ArrayList<>();
-                reader.beginArray();
-                while (reader.hasNext()) {
+                if (reader.peek() == JsonToken.BEGIN_ARRAY) {
+                    reader.beginArray();
+                    while (reader.hasNext()) {
+                        value.add(reader.nextInt());
+                    }
+                    reader.endArray();
+                } else {
+                    //Allow list-valued fields to retain compatibility with legacy single-number values.
                     value.add(reader.nextInt());
                 }
-                reader.endArray();
                 return value;
             }
         }
@@ -382,7 +387,7 @@ public class JSONParser {
                             reader.nextNull();
                             return null;
                         } else {
-                            return lowercaseToEnum.get(reader.nextString());
+                            return lowercaseToEnum.get(reader.nextString().toLowerCase(Locale.ROOT));
                         }
                     }
                 };

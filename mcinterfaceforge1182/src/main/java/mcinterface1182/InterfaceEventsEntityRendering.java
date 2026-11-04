@@ -1,5 +1,7 @@
 package mcinterface1182;
 
+import java.util.EnumSet;
+
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.platform.Window;
@@ -10,8 +12,11 @@ import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
+import minecrafttransportsimulator.jsondefs.JSONPlayerAnimation.PlayerLimb;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.rendering.PlayerAnimationSystem;
+import minecrafttransportsimulator.rendering.PlayerAnimationSystem.PlayerLimbPose;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.systems.CameraSystem;
@@ -19,7 +24,17 @@ import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.player.PlayerRenderer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 import net.minecraftforge.client.event.RenderArmEvent;
@@ -27,6 +42,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.PreLayer;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderNameplateEvent;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.client.gui.ForgeIngameGui;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.eventbus.api.Event;
@@ -48,10 +64,17 @@ public class InterfaceEventsEntityRendering {
     public static final RotationMatrix cameraShakeProjectionRotation = new RotationMatrix();
     public static boolean adjustedCamera;
     public static boolean cameraShakeActive;
+    public static boolean renderingFirstPersonBody;
+    private static EnumSet<PlayerLimb> firstPersonRenderedLimbs = EnumSet.noneOf(PlayerLimb.class);
     private static Player mcPlayer;
 
     private static int lastScreenWidth;
     private static int lastScreenHeight;
+    private static final PlayerLimbPose firstPersonLimbPose = new PlayerLimbPose();
+
+    public static boolean shouldRenderFirstPersonLimb(PlayerLimb limb) {
+        return firstPersonRenderedLimbs.contains(limb);
+    }
 
     /**
      * Changes camera rotation to match custom rotation, and also gets custom position for custom cameras.
@@ -184,7 +207,11 @@ public class InterfaceEventsEntityRendering {
     @SubscribeEvent
     public static void onIVRenderHand(RenderHandEvent event) {
         EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getInstance().player.getUUID());
-        if ((entity != null && entity.activeGun != null) || CameraSystem.activeCamera != null) {
+        WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(Minecraft.getInstance().player);
+        float partialTicks = Minecraft.getInstance().getFrameTime();
+        boolean rightArm = event.getHand() == net.minecraft.world.InteractionHand.MAIN_HAND ? playerWrapper.isRightHanded() : !playerWrapper.isRightHanded();
+        PlayerLimb handLimb = rightArm ? PlayerLimb.armRight : PlayerLimb.armLeft;
+        if ((entity != null && entity.activeGun != null) || CameraSystem.activeCamera != null || PlayerAnimationSystem.hasAnimationsForSeat(playerWrapper) || PlayerAnimationSystem.getExteriorLimbs(playerWrapper, partialTicks).contains(handLimb)) {
             event.setCanceled(true);
         }
     }
@@ -194,6 +221,52 @@ public class InterfaceEventsEntityRendering {
         EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getInstance().player.getUUID());
         if ((entity != null && entity.activeGun != null) || CameraSystem.activeCamera != null) {
             event.setCanceled(true);
+            return;
+        }
+        WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(event.getPlayer());
+        if (PlayerAnimationSystem.hasAnimationsForSeat(playerWrapper)) {
+            event.setCanceled(true);
+            return;
+        }
+        if (ConfigSystem.client.renderingSettings.playerTweaks.value) {
+            PlayerLimb limb = event.getArm() == HumanoidArm.LEFT ? PlayerLimb.armLeft : PlayerLimb.armRight;
+            float partialTicks = Minecraft.getInstance().getFrameTime();
+            if (PlayerAnimationSystem.getExteriorLimbs(playerWrapper, partialTicks).contains(limb)) {
+                event.setCanceled(true);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVRenderFirstPersonBody(RenderLevelStageEvent event) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES || minecraft.player == null || minecraft.level == null || minecraft.options.getCameraType() != net.minecraft.client.CameraType.FIRST_PERSON) {
+            return;
+        }
+        WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(minecraft.player);
+        float partialTicks = event.getPartialTick();
+        boolean seatedAnimation = PlayerAnimationSystem.hasAnimationsForSeat(playerWrapper);
+        EnumSet<PlayerLimb> exteriorLimbs = seatedAnimation ? EnumSet.noneOf(PlayerLimb.class) : PlayerAnimationSystem.getExteriorLimbs(playerWrapper, partialTicks);
+        if (!seatedAnimation && exteriorLimbs.isEmpty()) {
+            return;
+        }
+
+        firstPersonRenderedLimbs = seatedAnimation ? EnumSet.allOf(PlayerLimb.class) : exteriorLimbs;
+        Vec3 cameraPosition = event.getCamera().getPosition();
+        double playerX = Mth.lerp(partialTicks, minecraft.player.xOld, minecraft.player.getX());
+        double playerY = Mth.lerp(partialTicks, minecraft.player.yOld, minecraft.player.getY());
+        double playerZ = Mth.lerp(partialTicks, minecraft.player.zOld, minecraft.player.getZ());
+        float playerYaw = Mth.rotLerp(partialTicks, minecraft.player.yRotO, minecraft.player.getYRot());
+        MultiBufferSource.BufferSource buffer = minecraft.renderBuffers().bufferSource();
+        renderingFirstPersonBody = true;
+        minecraft.getEntityRenderDispatcher().setRenderShadow(false);
+        try {
+            minecraft.getEntityRenderDispatcher().render(minecraft.player, playerX - cameraPosition.x, playerY - cameraPosition.y, playerZ - cameraPosition.z, playerYaw, partialTicks, event.getPoseStack(), buffer, minecraft.getEntityRenderDispatcher().getPackedLightCoords(minecraft.player, partialTicks));
+            buffer.endBatch();
+        } finally {
+            minecraft.getEntityRenderDispatcher().setRenderShadow(true);
+            renderingFirstPersonBody = false;
+            firstPersonRenderedLimbs = EnumSet.noneOf(PlayerLimb.class);
         }
     }
 }
