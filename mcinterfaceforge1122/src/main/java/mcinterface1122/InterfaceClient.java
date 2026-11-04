@@ -10,13 +10,16 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.rendering.RenderableModelObject;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
@@ -24,6 +27,7 @@ import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.ActiveRenderInfo;
+import net.minecraft.client.resources.IReloadableResourceManager;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -48,6 +52,21 @@ public class InterfaceClient implements IInterfaceClient {
     private static int ticksToCullingWarning = 200;
     private static BuilderEntityRenderForwarder activeFollower;
     private static int ticksSincePlayerJoin;
+
+    public static void registerResourceReloadListener() {
+        //Rebuild overlay renderables after F3+T so changed PNG dimensions and UV caches
+        //cannot survive a resource reload.  The implementation belongs in this client-only
+        //class so dedicated servers never load Minecraft client classes from the common loader.
+        ((IReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(resourceManager -> {
+            RenderableModelObject.clearTextureOverlayCaches();
+            AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
+            if (world != null) {
+                for (AEntityD_Definable<?> entity : world.getEntitiesExtendingType(AEntityD_Definable.class)) {
+                    entity.resetModelsAndAnimations();
+                }
+            }
+        });
+    }
 
     @Override
     public boolean isGamePaused() {
