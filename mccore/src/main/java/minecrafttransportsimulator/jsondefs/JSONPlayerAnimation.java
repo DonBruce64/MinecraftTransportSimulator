@@ -22,10 +22,6 @@ public class JSONPlayerAnimation {
     @JSONDescription("The rendering.animatedObjects entry whose animation matrix is applied before this target. The hand or foot follows that object exactly.")
     public String applyAfter;
 
-    /** @deprecated Renamed to applyAfter for consistency with other IV animation definitions. */
-    @Deprecated
-    public String modelObject;
-
     @JSONRequired
     @JSONDescription("The attachment coordinate in vehicle model space. For arms, this point is reached by the exact center of the hand's end face. The applyAfter object's animations are applied to this coordinate.")
     public Point3D pos;
@@ -65,10 +61,6 @@ public class JSONPlayerAnimation {
     public static class JSONPlayerGripOverride {
         @JSONDescription("An optional replacement rendering.animatedObjects entry. If omitted, the parent player-animation applyAfter is used.")
         public String applyAfter;
-
-        /** @deprecated Renamed to applyAfter. */
-        @Deprecated
-        public String modelObject;
 
         @JSONRequired
         @JSONDescription("The replacement attachment coordinate in vehicle model space.")

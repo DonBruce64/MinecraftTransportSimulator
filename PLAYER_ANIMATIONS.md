@@ -95,9 +95,9 @@ release retains that actor for its configured `lingerDuration`.
 | `oneShot` | No | Parent value | Enables one-shot behavior for this grip. |
 | `triggerOnChange` | No | Parent value | Makes this one-shot grip trigger on either state change. |
 
-The deprecated root-level `playerAnimations` location and `modelObject` name
-are migrated at load time for older pack definitions. New definitions should
-use `rendering.playerAnimations` and `applyAfter`.
+The deprecated root-level `playerAnimations` location is migrated at load time
+for older pack definitions. New definitions should use
+`rendering.playerAnimations`.
 
 The limb rotates from its vanilla shoulder or hip and stretches along its local
 length to reach the target. Clothing parts inherit the transform. In first
