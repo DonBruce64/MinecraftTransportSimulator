@@ -28,6 +28,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.CameraSystem;
+import minecrafttransportsimulator.systems.summoning.VehicleSummonManager;
 
 /**
  * Class that manages entities in a world.
@@ -216,9 +217,10 @@ public abstract class EntityManager {
                 }
             });
 
-            //Tick lingering explosion effects on the server.
+            //Tick lingering explosion effects and vehicle summons on the server.
             if (!world.isClient()) {
                 Explosion.tickLingeringExplosions(world);
+                VehicleSummonManager.tickWorld(world);
             }
 
             //Do hotload operations.
@@ -489,6 +491,9 @@ public abstract class EntityManager {
     }
 
     public void onUnload() {
+        if (!getWorld().isClient()) {
+            VehicleSummonManager.onWorldUnload(getWorld());
+        }
         allEntities.forEach(entity -> entity.remove());
         if (getWorld().isClient()) {
             CameraSystem.resetCameraProperties();

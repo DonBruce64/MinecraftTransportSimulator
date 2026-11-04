@@ -2,6 +2,7 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
@@ -26,6 +27,9 @@ public class JSONItem extends AJSONItem {
     @JSONRequired(dependentField = "type", dependentValues = { "repair" }, subField = "item")
     @JSONDescription("Repair-specific item section.")
     public JSONRepair repair;
+
+    @JSONDescription("Phone-specific item section.  Optional, as all phone properties have defaults.")
+    public JSONPhone phone;
 
     public static class JSONItemGeneric {
         @JSONDescription("The functionality to give this item.")
@@ -99,6 +103,41 @@ public class JSONItem extends AJSONItem {
         public List<String> repairableParts;
     }
 
+    public static class JSONPhone {
+        @JSONDescription("The texture for the phone menu.  Laid out like the standard GUI texture (mts:textures/guis/standard.png): the background is drawn from 0,0 at width by height, and the buttons use the standard 100x20 button sprites at 0,196.  Must be the next power of 2 up from the menu size.  Defaults to the standard GUI texture.")
+        public String texture;
+
+        @JSONDescription("Width of the phone menu, in px.  Defaults to 256.")
+        public int width;
+
+        @JSONDescription("Height of the phone menu, in px.  Defaults to 192.")
+        public int height;
+
+        @JSONDescription("X position of the vehicle list, from the menu's top-left corner.  Defaults to 12.")
+        public int listX;
+
+        @JSONDescription("Y position of the vehicle list, from the menu's top-left corner.  Defaults to 34.")
+        public int listY;
+
+        @JSONDescription("Width of the vehicle list.  Each row has the Call, Stop and X buttons on the right, with the distance just before them, so leave at least 140px for a readable name.  Defaults to the menu width minus twice listX.")
+        public int listWidth;
+
+        @JSONDescription("The title shown at the top of the menu.  Defaults to the item name.")
+        public String title;
+
+        @JSONDescription("Color of the title.  Defaults to black.")
+        public ColorRGB titleColor;
+
+        @JSONDescription("Color of the vehicle names.  Defaults to black.")
+        public ColorRGB textColor;
+
+        @JSONDescription("Color of the distances and the hint at the bottom.  Defaults to dark gray.")
+        public ColorRGB hintColor;
+
+        @JSONDescription("Color of the button text.  Defaults to dark gray.")
+        public ColorRGB buttonTextColor;
+    }
+
     public enum ItemComponentType {
         @JSONDescription("Creates an item with no functionality.")
         NONE,
@@ -129,6 +168,8 @@ public class JSONItem extends AJSONItem {
         @JSONDescription("Creates an item that works as a repair pack.")
         REPAIR_PACK,
         @JSONDescription("Creates an item that works as a Y2K button.")
-        Y2K_BUTTON
+        Y2K_BUTTON,
+        @JSONDescription("Creates an item that works as a vehicle phone, which can call registered vehicles to the player.")
+        PHONE
     }
 }

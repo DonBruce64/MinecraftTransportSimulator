@@ -37,6 +37,8 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
+import minecrafttransportsimulator.systems.summoning.VehicleLocationTracker;
+import minecrafttransportsimulator.systems.summoning.VehiclePhone;
 
 public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteractable, IItemFood {
     /**Current page of this item, if it's a booklet.  Kept here locally as only one item class is constructed for each booklet definition.**/
@@ -119,6 +121,10 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
             }
             case Y2K_BUTTON: {
                 tooltipLines.add(LanguageSystem.ITEMINFO_Y2KBUTTON.getCurrentValue());
+                break;
+            }
+            case PHONE: {
+                tooltipLines.add(LanguageSystem.ITEMINFO_PHONE.getCurrentValue());
                 break;
             }
             default: //Do nothing.
@@ -453,6 +459,16 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                 }
                 return CallbackType.NONE;
             }
+            case PHONE: {
+                //Sneak-clicking registers the vehicle.  Anything else goes through to normal clicking.
+                if (!rightClick || !player.isSneaking()) {
+                    return CallbackType.SKIP;
+                }
+                if (vehicle != null && !entity.world.isClient()) {
+                    VehiclePhone.registerVehicle(vehicle, player);
+                }
+                return CallbackType.NONE;
+            }
             default:
                 return CallbackType.SKIP;
         }
@@ -461,6 +477,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
     public static void packVehicle(EntityVehicleF_Physics vehicle, Point3D itemSpawnPosition) {
         vehicle.disconnectAllConnections();
         vehicle.world.spawnItemStack(vehicle.getStack(), itemSpawnPosition, null);
+        VehicleLocationTracker.forget(vehicle);
         vehicle.remove();
     }
 
@@ -520,6 +537,11 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                     }
                     player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.SYSTEM_DEBUG, "Stopped all vehicles."));
                 }
+            }
+        } else if (definition.item.type.equals(ItemComponentType.PHONE)) {
+            //Clicks on a vehicle are handled by doEntityInteraction, so don't open the screen over them.
+            if (!world.isClient() && !VehiclePhone.isAimingAtVehicle(player)) {
+                player.sendPacket(new PacketGUIRequest(player, PacketGUIRequest.GUIType.PHONE, this));
             }
         }
         return true;
