@@ -32,6 +32,7 @@ import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -40,15 +41,19 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTab.DisplayItemsGenerator;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.common.extensions.IForgeMenuType;
 
 /**
  * Loader interface for the mod.  This class is not actually an interface, unlike everything else.
@@ -74,6 +79,7 @@ public class InterfaceLoader {
     private static List<BuilderBlock> inventoryBlocks = new ArrayList<>();
     private static List<BuilderBlock> chargerBlocks = new ArrayList<>();
     protected static final DeferredRegister<CreativeModeTab> CREATIVE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, InterfaceLoader.MODID);
+    protected static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(ForgeRegistries.MENU_TYPES, InterfaceLoader.MODID);
 
     public InterfaceLoader() {
         this.context = FMLJavaModLoadingContext.get();
@@ -95,6 +101,7 @@ public class InterfaceLoader {
         BuilderTileEntity.TILE_ENTITIES.register(context.getModEventBus());
         ABuilderEntityBase.ENTITIES.register(context.getModEventBus());
         CREATIVE_TABS.register(context.getModEventBus());
+        MENUS.register(context.getModEventBus());
 
         //Need to do pack parsing first, since that generates items which have to be registered prior to any other events.
         boolean isClient = FMLEnvironment.dist.isClient();
@@ -105,6 +112,7 @@ public class InterfaceLoader {
             context.getModEventBus().addListener(InterfaceInput::onIVRegisterKeyMappingsEvent);
             context.getModEventBus().addListener(InterfaceRender::onIVRegisterShadersEvent);
             context.getModEventBus().addListener(InterfaceRender::onIVRegisterRenderersEvent);
+            context.getModEventBus().addListener(InterfaceLoader::onClientSetup);
         } else {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }
@@ -238,6 +246,7 @@ public class InterfaceLoader {
         BuilderTileEntityFluidTank.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_fluidtank", () -> BlockEntityType.Builder.of(BuilderTileEntityFluidTank::new, fluidBlocks.toArray(new BuilderBlock[0])).build(null));
         BuilderTileEntityInventoryContainer.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_inventory", () -> BlockEntityType.Builder.of(BuilderTileEntityInventoryContainer::new, inventoryBlocks.toArray(new BuilderBlock[0])).build(null));
         BuilderTileEntityEnergyCharger.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_charger", () -> BlockEntityType.Builder.of(BuilderTileEntityEnergyCharger::new, chargerBlocks.toArray(new BuilderBlock[0])).build(null));
+        BuilderInventoryContainerMenu.TYPE = MENUS.register("inventory", () -> IForgeMenuType.create(BuilderInventoryContainerMenu::new));
 
         //Init entities.
         BuilderEntityExisting.E_TYPE2 = ABuilderEntityBase.ENTITIES.register("builder_existing", () -> EntityType.Builder.<BuilderEntityExisting>of(BuilderEntityExisting::new, MobCategory.MISC).sized(0.05F, 0.05F).clientTrackingRange(32 * 16).updateInterval(5).build("builder_existing"));
@@ -272,5 +281,9 @@ public class InterfaceLoader {
             //Save modified config.
             ConfigSystem.saveToDisk();
         }
+    }
+
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        event.enqueueWork(() -> MenuScreens.register(BuilderInventoryContainerMenu.TYPE.get(), BuilderInventoryContainerScreen::new));
     }
 }
