@@ -60,6 +60,7 @@ public class PartGroundDevice extends APart {
     private final Point3D zeroReferencePosition;
     private final Point3D prevLocalOffset;
     public PartGroundDeviceFake fakePart;
+    private boolean prevSpareState;
 
     public PartGroundDevice(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartGroundDevice item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
@@ -91,13 +92,14 @@ public class PartGroundDevice extends APart {
         //have a better contact area.  We don't need to check if we are a fake part since
         //we block this method call from fake parts and just add the fake part directly.
         //Also set some parameters manually as fake parts have a few special properties.
-        if (!isFake() && getLongPartOffset() != 0 && !isSpare) {
+        if (!isFake() && getLongPartOffset() != 0 && !isSpare && !isSpareVar.isActive) {
             //Need to swap placement for fake part so it uses the offset.
             JSONPartDefinition fakePlacementDef = JSONParser.duplicateJSON(placementDefinition);
             fakePlacementDef.pos.z += getLongPartOffset();
             fakePart = new PartGroundDeviceFake(this, placingPlayer, fakePlacementDef, (ItemPartGroundDevice) getStack().getItem(), null);
             entityOn.addPart(fakePart, false);
         }
+        prevSpareState = isSpare || isSpareVar.isActive;
     }
 
     @Override
@@ -110,7 +112,26 @@ public class PartGroundDevice extends APart {
 
     @Override
     public void update() {
-        if (vehicleOn != null && !isSpare) {
+        if (vehicleOn != null) {
+            boolean isSpareNow = isSpare || isSpareVar.isActive;
+            if (isSpareNow != prevSpareState) {
+                prevSpareState = isSpareNow;
+                vehicleOn.groundDeviceCollective.updateMembers();
+                vehicleOn.groundDeviceCollective.updateBounds();
+                if (isSpareNow) {
+                    if (fakePart != null && fakePart.isValid) {
+                        entityOn.removePart(fakePart, false, false);
+                    }
+                    fakePart = null;
+                } else if (!isFake() && getLongPartOffset() != 0 && fakePart == null) {
+                    JSONPartDefinition fakePlacementDef = JSONParser.duplicateJSON(placementDefinition);
+                    fakePlacementDef.pos.z += getLongPartOffset();
+                    fakePart = new PartGroundDeviceFake(this, null, fakePlacementDef, (ItemPartGroundDevice) getStack().getItem(), null);
+                    entityOn.addPart(fakePart, false);
+                }
+            }
+        }
+        if (vehicleOn != null && !isSpare && !isSpareVar.isActive) {
             //Change ground device collective if we changed active state or offset or height.
             if (isActiveVar.hasChanged()) {
                 vehicleOn.groundDeviceCollective.updateMembers();

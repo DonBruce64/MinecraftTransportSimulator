@@ -107,7 +107,7 @@ public class VehicleGroundDeviceBox {
         for (APart part : vehicle.allParts) {
             if (part instanceof PartGroundDevice) {
                 //Inactive ground devices still support the vehicle; only engine drive requires them to be active.
-                if (!part.isSpare) {
+                if (!part.isSpare && !part.isSpareVar.isActive) {
                     PartGroundDevice ground = (PartGroundDevice) part;
                     APart currentPart = part;
 

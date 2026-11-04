@@ -156,7 +156,7 @@ public class RenderableModelObject {
         }
 
         //If we are a tread, create tread points.
-        if (entity instanceof PartGroundDevice && ((PartGroundDevice) entity).definition.ground.isTread && !((PartGroundDevice) entity).isSpare) {
+        if (entity instanceof PartGroundDevice && ((PartGroundDevice) entity).definition.ground.isTread && !((PartGroundDevice) entity).isSpare && !((PartGroundDevice) entity).isSpareVar.isActive) {
             this.treadPoints = generateTreads((PartGroundDevice) entity);
         } else {
             this.treadPoints = null;
