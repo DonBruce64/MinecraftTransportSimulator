@@ -1,0 +1,19 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "abc",
+        "ddd",
+        "e e"
+    ],
+    "key": {
+        "a": "minecraft:lantern",
+        "b": "#c:ingots/iron",
+        "c": "minecraft:clock",
+        "d": "#minecraft:planks",
+        "e": "#c:fences/wooden"
+    },
+    "result": {
+        "id": "mts:mts.instrumentbench"
+    }
+}
+

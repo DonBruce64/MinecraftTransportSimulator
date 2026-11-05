@@ -1,0 +1,19 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "aaa",
+        "bea",
+        "dcd"
+    ],
+    "key": {
+        "a": "#c:ingots/iron",
+        "b": "mts:mts.jumpercable",
+        "c": "minecraft:yellow_dye",
+        "d": "minecraft:redstone",
+        "e": "#c:storage_blocks/copper"
+    },
+    "result": {
+        "id": "mts:mts.jumperpack"
+    }
+}
+

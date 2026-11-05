@@ -1,0 +1,30 @@
+{
+    "display": {
+        "icon": {
+        	"item": "mts:mts.wrench"
+        },
+        
+        "title": {
+        	"translate": "advancements.mts.root.title"
+        },
+        "description": {
+        	"translate": "advancements.mts.root.description"
+        },
+        "frame": "task",
+    	"show_toast": false,
+    	"announce_to_chat": false,
+    	"hidden": false,
+        "background": "minecraft:textures/gui/advancements/backgrounds/stone.png"
+    },
+    "criteria": {
+        "crafting": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {}
+        }
+    },
+    "requirements": [
+    [
+      "crafting"
+    ]
+  ]
+}

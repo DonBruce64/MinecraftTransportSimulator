@@ -1,0 +1,19 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "  b",
+        " b ",
+        "a  "
+    ],
+    "key": {
+        "a": {
+            "tag": "c:ingots/iron"
+        },
+        "b": {
+            "tag": "c:nuggets/iron"
+        }
+    },
+    "result": {
+        "id": "mts:mts.screwdriver"
+    }
+}
