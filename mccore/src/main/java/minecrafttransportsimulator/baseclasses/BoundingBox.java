@@ -34,8 +34,10 @@ import minecrafttransportsimulator.rendering.RenderableVertices;
  */
 public class BoundingBox {
     private static final double HITBOX_CLAMP = 0.015625;
+    private static final double OBB_EPSILON = 1.0E-7D;
     public final Point3D localCenter;
     public final Point3D globalCenter;
+    public final RotationMatrix orientation;
     public final Point3D currentCollisionDepth;
     public final List<Point3D> collidingBlockPositions = new ArrayList<>();
     private RenderableData wireframeRenderable;
@@ -84,7 +86,7 @@ public class BoundingBox {
      * JSON constructor.  Used for boxes that are created from JSON and need extended properties.
      **/
     public BoundingBox(JSONCollisionBox definition, JSONCollisionGroup groupDef) {
-        this(definition.pos, definition.pos.copy(), definition.width / 2D, definition.height / 2D, definition.width / 2D, definition.collidesWithLiquids, definition, groupDef, groupDef.collisionTypes);
+        this(definition.pos, definition.pos.copy(), definition.width / 2D, definition.height / 2D, (definition.length != 0 ? definition.length : definition.width) / 2D, definition.collidesWithLiquids, definition, groupDef, groupDef.collisionTypes);
     }
 
     /**
@@ -105,6 +107,7 @@ public class BoundingBox {
     private BoundingBox(Point3D localCenter, Point3D globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, JSONCollisionBox definition, JSONCollisionGroup groupDef, Set<CollisionType> collisionTypes) {
         this.localCenter = localCenter;
         this.globalCenter = globalCenter;
+        this.orientation = new RotationMatrix();
         this.tempGlobalCenter = globalCenter.copy();
         this.currentCollisionDepth = new Point3D();
         this.widthRadius = widthRadius;
@@ -141,12 +144,23 @@ public class BoundingBox {
      * Point3d rotation to allow for better interaction while standing on entities.
      */
     public void updateToEntity(AEntityD_Definable<?> entity, Point3D optionalOffset) {
+        updateToEntity(entity, optionalOffset, null);
+    }
+
+    public void updateToEntity(AEntityD_Definable<?> entity, Point3D optionalOffset, RotationMatrix optionalRotation) {
         if (optionalOffset != null) {
             globalCenter.set(optionalOffset);
         } else {
             globalCenter.set(localCenter);
         }
         globalCenter.multiply(entity.scale).rotate(entity.orientation).add(entity.position);
+        orientation.set(entity.orientation);
+        if (optionalRotation != null) {
+            orientation.multiply(optionalRotation);
+        }
+        if (definition != null && definition.rot != null) {
+            orientation.multiply(definition.rot);
+        }
         if (groupDef != null && (groupDef.collisionTypes.contains(CollisionType.ENTITY) || groupDef.collisionTypes.contains(CollisionType.VEHICLE))) {
             //Need to round box to prevent floating-point errors for player and entity collision.
             globalCenter.x = ((int) (globalCenter.x / HITBOX_CLAMP)) * HITBOX_CLAMP;
@@ -156,8 +170,72 @@ public class BoundingBox {
         if (definition != null) {
             widthRadius = entity.scale.x * definition.width / 2D;
             heightRadius = entity.scale.y * definition.height / 2D;
-            depthRadius = entity.scale.z * definition.width / 2D;
+            depthRadius = entity.scale.z * (definition.length != 0 ? definition.length : definition.width) / 2D;
         }
+    }
+
+    /**
+     * Returns true if this box should use OBB logic.  OBBs are only enabled for
+     * collision groups whose types are all supported by the OBB implementation.
+     */
+    public boolean isOBB() {
+        if (groupDef != null && groupDef.isOBB) {
+            for (CollisionType type : groupDef.collisionTypes) {
+                if (type != CollisionType.BULLET && type != CollisionType.ATTACK && type != CollisionType.VEHICLE && type != CollisionType.CLICK) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns the world-axis X radius of this box.  For AABBs this is the raw
+     * width radius; for OBBs it is the projection of the oriented box onto X.
+     */
+    public double getXRadius() {
+        return isOBB() ? Math.abs(orientation.m00) * widthRadius + Math.abs(orientation.m01) * heightRadius + Math.abs(orientation.m02) * depthRadius : widthRadius;
+    }
+
+    /**
+     * Returns the world-axis Y radius of this box.  For AABBs this is the raw
+     * height radius; for OBBs it is the projection of the oriented box onto Y.
+     */
+    public double getYRadius() {
+        return isOBB() ? Math.abs(orientation.m10) * widthRadius + Math.abs(orientation.m11) * heightRadius + Math.abs(orientation.m12) * depthRadius : heightRadius;
+    }
+
+    /**
+     * Returns the world-axis Z radius of this box.  For AABBs this is the raw
+     * depth radius; for OBBs it is the projection of the oriented box onto Z.
+     */
+    public double getZRadius() {
+        return isOBB() ? Math.abs(orientation.m20) * widthRadius + Math.abs(orientation.m21) * heightRadius + Math.abs(orientation.m22) * depthRadius : depthRadius;
+    }
+
+    public double getMinX() {
+        return globalCenter.x - getXRadius();
+    }
+
+    public double getMaxX() {
+        return globalCenter.x + getXRadius();
+    }
+
+    public double getMinY() {
+        return globalCenter.y - getYRadius();
+    }
+
+    public double getMaxY() {
+        return globalCenter.y + getYRadius();
+    }
+
+    public double getMinZ() {
+        return globalCenter.z - getZRadius();
+    }
+
+    public double getMaxZ() {
+        return globalCenter.z + getZRadius();
     }
 
     /**
@@ -166,6 +244,13 @@ public class BoundingBox {
      * in conjunction with hit-scanning code to find out which box got hit-scanned.
      */
     public boolean isPointInside(Point3D point, Point3D growthOffset) {
+        if (isOBB()) {
+            Point3D localPoint = point.copy().subtract(globalCenter).reOrigin(orientation);
+            double growthX = growthOffset != null ? growthOffset.x : 0;
+            double growthY = growthOffset != null ? growthOffset.y : 0;
+            double growthZ = growthOffset != null ? growthOffset.z : 0;
+            return localPoint.x >= -widthRadius - growthX && localPoint.x <= widthRadius + growthX && localPoint.y >= -heightRadius - growthY && localPoint.y <= heightRadius + growthY && localPoint.z >= -depthRadius - growthZ && localPoint.z <= depthRadius + growthZ;
+        }
         if (growthOffset != null) {
             return globalCenter.x - widthRadius - growthOffset.x <= point.x && globalCenter.x + widthRadius + growthOffset.x >= point.x && globalCenter.y - heightRadius - growthOffset.y <= point.y && globalCenter.y + heightRadius + growthOffset.y >= point.y && globalCenter.z - depthRadius - growthOffset.z <= point.z && globalCenter.z + depthRadius + growthOffset.z >= point.z;
         } else {
@@ -177,6 +262,10 @@ public class BoundingBox {
      * Returns true if the passed-in point is inside this box in the XZ plane, and is below this box.
      */
     public boolean isPointInsideAndBelow(Point3D point) {
+        if (isOBB()) {
+            Point3D localPoint = point.copy().subtract(globalCenter).reOrigin(orientation);
+            return localPoint.x >= -widthRadius && localPoint.x <= widthRadius && localPoint.y <= heightRadius && localPoint.z >= -depthRadius && localPoint.z <= depthRadius;
+        }
         return globalCenter.x - widthRadius <= point.x && globalCenter.x + widthRadius >= point.x && globalCenter.y + heightRadius > point.y && globalCenter.z - depthRadius <= point.z && globalCenter.z + depthRadius >= point.z;
     }
 
@@ -184,7 +273,95 @@ public class BoundingBox {
      * Returns true if the passed-in box intersects this box.
      */
     public boolean intersects(BoundingBox box) {
+        if (isOBB() || box.isOBB()) {
+            return intersectsOBB(box);
+        }
         return globalCenter.x - widthRadius < box.globalCenter.x + box.widthRadius && globalCenter.x + widthRadius > box.globalCenter.x - box.widthRadius && globalCenter.y - heightRadius < box.globalCenter.y + box.heightRadius && globalCenter.y + heightRadius > box.globalCenter.y - box.heightRadius && globalCenter.z - depthRadius < box.globalCenter.z + box.depthRadius && globalCenter.z + depthRadius > box.globalCenter.z - box.depthRadius;
+    }
+
+    /**
+     * Returns true if this box intersects the passed-in world-axis bounds.
+     */
+    public boolean intersects(double otherMinX, double otherMinY, double otherMinZ, double otherMaxX, double otherMaxY, double otherMaxZ) {
+        if (isOBB()) {
+            return intersects(new BoundingBox(new Point3D((otherMinX + otherMaxX) / 2D, (otherMinY + otherMaxY) / 2D, (otherMinZ + otherMaxZ) / 2D), (otherMaxX - otherMinX) / 2D, (otherMaxY - otherMinY) / 2D, (otherMaxZ - otherMinZ) / 2D));
+        }
+        return otherMaxX > globalCenter.x - widthRadius && otherMinX < globalCenter.x + widthRadius && otherMaxY > globalCenter.y - heightRadius && otherMinY < globalCenter.y + heightRadius && otherMaxZ > globalCenter.z - depthRadius && otherMinZ < globalCenter.z + depthRadius;
+    }
+
+    private boolean intersectsOBB(BoundingBox box) {
+        double[] thisRadii = { widthRadius, heightRadius, depthRadius };
+        double[] otherRadii = { box.widthRadius, box.heightRadius, box.depthRadius };
+        double[][] rotation = new double[3][3];
+        double[][] absRotation = new double[3][3];
+        boolean thisOBB = isOBB();
+        boolean otherOBB = box.isOBB();
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                rotation[i][j] = getAxisDot(this, i, thisOBB, box, j, otherOBB);
+                absRotation[i][j] = Math.abs(rotation[i][j]) + OBB_EPSILON;
+            }
+        }
+
+        Point3D centerDelta = box.globalCenter.copy().subtract(globalCenter);
+        double[] translation = {
+            getAxisDot(centerDelta, this, 0, thisOBB),
+            getAxisDot(centerDelta, this, 1, thisOBB),
+            getAxisDot(centerDelta, this, 2, thisOBB)
+        };
+
+        for (int i = 0; i < 3; ++i) {
+            double otherRadius = otherRadii[0] * absRotation[i][0] + otherRadii[1] * absRotation[i][1] + otherRadii[2] * absRotation[i][2];
+            if (Math.abs(translation[i]) > thisRadii[i] + otherRadius) {
+                return false;
+            }
+        }
+
+        for (int j = 0; j < 3; ++j) {
+            double thisRadius = thisRadii[0] * absRotation[0][j] + thisRadii[1] * absRotation[1][j] + thisRadii[2] * absRotation[2][j];
+            double distance = Math.abs(translation[0] * rotation[0][j] + translation[1] * rotation[1][j] + translation[2] * rotation[2][j]);
+            if (distance > thisRadius + otherRadii[j]) {
+                return false;
+            }
+        }
+
+        for (int i = 0; i < 3; ++i) {
+            int i1 = (i + 1) % 3;
+            int i2 = (i + 2) % 3;
+            for (int j = 0; j < 3; ++j) {
+                int j1 = (j + 1) % 3;
+                int j2 = (j + 2) % 3;
+                double thisRadius = thisRadii[i1] * absRotation[i2][j] + thisRadii[i2] * absRotation[i1][j];
+                double otherRadius = otherRadii[j1] * absRotation[i][j2] + otherRadii[j2] * absRotation[i][j1];
+                double distance = Math.abs(translation[i2] * rotation[i1][j] - translation[i1] * rotation[i2][j]);
+                if (distance > thisRadius + otherRadius) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private static double getAxisDot(BoundingBox firstBox, int firstAxis, boolean firstOBB, BoundingBox secondBox, int secondAxis, boolean secondOBB) {
+        return getAxisComponent(firstBox, firstAxis, firstOBB, 0) * getAxisComponent(secondBox, secondAxis, secondOBB, 0) + getAxisComponent(firstBox, firstAxis, firstOBB, 1) * getAxisComponent(secondBox, secondAxis, secondOBB, 1) + getAxisComponent(firstBox, firstAxis, firstOBB, 2) * getAxisComponent(secondBox, secondAxis, secondOBB, 2);
+    }
+
+    private static double getAxisDot(Point3D point, BoundingBox box, int axis, boolean boxOBB) {
+        return point.x * getAxisComponent(box, axis, boxOBB, 0) + point.y * getAxisComponent(box, axis, boxOBB, 1) + point.z * getAxisComponent(box, axis, boxOBB, 2);
+    }
+
+    private static double getAxisComponent(BoundingBox box, int axis, boolean boxOBB, int component) {
+        if (!boxOBB) {
+            return axis == component ? 1D : 0D;
+        }
+        switch (axis) {
+            case 0:
+                return component == 0 ? box.orientation.m00 : component == 1 ? box.orientation.m10 : box.orientation.m20;
+            case 1:
+                return component == 0 ? box.orientation.m01 : component == 1 ? box.orientation.m11 : box.orientation.m21;
+            default:
+                return component == 0 ? box.orientation.m02 : component == 1 ? box.orientation.m12 : box.orientation.m22;
+        }
     }
 
     /**
@@ -241,6 +418,10 @@ public class BoundingBox {
      * line created by the two points does not intersect this box, null is returned.
      */
     public BoundingBoxHitResult getIntersection(Point3D start, Point3D end) {
+        if (isOBB()) {
+            return getOBBIntersection(start, end);
+        }
+
         //First check minX.
         Point3D intersection = getXPlaneCollision(start, end, globalCenter.x - widthRadius);
         Axis hitSide = Axis.WEST;
@@ -283,6 +464,80 @@ public class BoundingBox {
         return intersection != null ? new BoundingBoxHitResult(this, intersection, hitSide) : null;
     }
 
+    private BoundingBoxHitResult getOBBIntersection(Point3D start, Point3D end) {
+        Point3D localStart = start.copy().subtract(globalCenter).reOrigin(orientation);
+        Point3D localEnd = end.copy().subtract(globalCenter).reOrigin(orientation);
+        Point3D localDelta = localEnd.copy().subtract(localStart);
+        double[] startValues = { localStart.x, localStart.y, localStart.z };
+        double[] deltaValues = { localDelta.x, localDelta.y, localDelta.z };
+        double[] radii = { widthRadius, heightRadius, depthRadius };
+        double minFactor = Double.NEGATIVE_INFINITY;
+        double maxFactor = Double.POSITIVE_INFINITY;
+        Axis minSide = Axis.NONE;
+        Axis maxSide = Axis.NONE;
+        Point3D minNormal = new Point3D();
+        Point3D maxNormal = new Point3D();
+
+        for (int axis = 0; axis < 3; ++axis) {
+            if (Math.abs(deltaValues[axis]) < OBB_EPSILON) {
+                if (startValues[axis] < -radii[axis] || startValues[axis] > radii[axis]) {
+                    return null;
+                }
+            } else {
+                double firstFactor = (-radii[axis] - startValues[axis]) / deltaValues[axis];
+                double secondFactor = (radii[axis] - startValues[axis]) / deltaValues[axis];
+                Axis firstSide = getOBBSide(axis, false);
+                Axis secondSide = getOBBSide(axis, true);
+                Point3D firstNormal = getOBBNormal(axis, false);
+                Point3D secondNormal = getOBBNormal(axis, true);
+                if (firstFactor > secondFactor) {
+                    double priorFactor = firstFactor;
+                    Axis priorSide = firstSide;
+                    Point3D priorNormal = firstNormal;
+                    firstFactor = secondFactor;
+                    firstSide = secondSide;
+                    firstNormal = secondNormal;
+                    secondFactor = priorFactor;
+                    secondSide = priorSide;
+                    secondNormal = priorNormal;
+                }
+                if (firstFactor > minFactor) {
+                    minFactor = firstFactor;
+                    minSide = firstSide;
+                    minNormal.set(firstNormal);
+                }
+                if (secondFactor < maxFactor) {
+                    maxFactor = secondFactor;
+                    maxSide = secondSide;
+                    maxNormal.set(secondNormal);
+                }
+                if (minFactor > maxFactor) {
+                    return null;
+                }
+            }
+        }
+
+        if (maxFactor < 0 || minFactor > 1) {
+            return null;
+        }
+        double hitFactor = minFactor >= 0 ? minFactor : maxFactor;
+        if (hitFactor < 0 || hitFactor > 1) {
+            return null;
+        }
+        Point3D intersection = end.copy().subtract(start).scale(hitFactor).add(start);
+        Axis hitSide = minFactor >= 0 ? minSide : maxSide;
+        Point3D hitNormal = minFactor >= 0 ? minNormal : maxNormal;
+        return new BoundingBoxHitResult(this, intersection, hitNormal, hitSide);
+    }
+
+    private Axis getOBBSide(int axis, boolean positive) {
+        return Axis.getFromVector(getOBBNormal(axis, positive));
+    }
+
+    private Point3D getOBBNormal(int axis, boolean positive) {
+        return new Point3D(axis == 0 ? (positive ? 1 : -1) : 0, axis == 1 ? (positive ? 1 : -1) : 0, axis == 2 ? (positive ? 1 : -1) : 0).rotate(orientation);
+    }
+
     /**
      * Renders this bounding box as a wireframe model.
      * Automatically applies appropriate transforms to go from entity center to itself, or uses
@@ -318,6 +573,9 @@ public class BoundingBox {
             helperPoint.subtract(entity.position);
         }
         wireframeRenderable.transform.applyTranslation(helperPoint);
+        if (isOBB()) {
+            wireframeRenderable.transform.applyRotation(orientation);
+        }
         if (color != null) {
             //Override default color with set color.
             wireframeRenderable.setColor(color);

@@ -14,6 +14,12 @@ public class JSONCollisionGroup {
     @JSONDescription("Like normal armor thickness, but used only if a bullet is a HEAT bullet.")
     public float heatArmorThickness;
 
+    @JSONDescription("If true, armor thickness is calculated from the actual path length through the collision box volume instead of armorThickness.  If false, armorThickness is applied to the face that was hit and adjusted for the impact angle, with the box dimensions only limiting grazing impacts.")
+    public boolean volumetricArmor;
+
+    @JSONDescription("How much blast damage this group absorbs from explosions.  This value reduces blastDamage before distance falloff is applied, and multiple groups between the explosion and target will stack.")
+    public float explosionResistance;
+
     @JSONDescription("How much to multiply the damage for bullets that hit this group by.  Is 1.0 if not specified.")
     public float damageMultiplier;
 
@@ -31,6 +37,9 @@ public class JSONCollisionGroup {
 
     @JSONDescription("If this is set, then this collision group will first use the animations for this object from the rendering section instead of the animations in this one.  If the specified object has applyAfter on it itself, then the animations will be gotten recursively until an applyAfter is not found.")
     public String applyAfter;
+
+    @JSONDescription("If true, this collision group will use oriented bounding box logic. This allows to specify rotations and dimensions along all three axes.")
+    public boolean isOBB;
 
     @JSONRequired
     @JSONDescription("The types of collision for this group.")
