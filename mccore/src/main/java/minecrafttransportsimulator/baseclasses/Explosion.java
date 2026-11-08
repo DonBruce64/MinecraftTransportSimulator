@@ -1,9 +1,11 @@
 package minecrafttransportsimulator.baseclasses;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -202,16 +204,15 @@ public class Explosion {
         List<IWrapperEntity> entities = world.getEntitiesWithin(blastBounds);
         for (IWrapperEntity entity : entities) {
             Point3D entityPos = entity.getPosition();
-            Point3D entityBlastPoint = entityPos.copy().add(0, entity.getEyeHeight(), 0);
-            if (!isBlastPathClear(entityBlastPoint)) {
-                continue;
-            }
-
             double dx = entityPos.x - position.x;
             double dy = entityPos.y - position.y;
             double dz = entityPos.z - position.z;
 
             double damageFalloff = getEllipticalFalloff(dx, dy, dz, blastRadiusXZ, blastRadiusY, maxDamageRadius);
+            if (damageFalloff <= 0) {
+                continue;
+            }
+            damageFalloff *= getBlastExposure(entity.getBounds());
             if (damageFalloff <= 0) {
                 continue;
             }
@@ -254,8 +255,8 @@ public class Explosion {
     }
 
     /**
-     * Destroys blocks using an irregular ellipsoid.  Entity occlusion still uses raycasts,
-     * but block damage is volume-based so high-power blasts do not leave ray-shaped scars.
+     * Destroys blocks using an irregular ellipsoid, excluding blocks shielded by surviving terrain.
+     * Block selection stays volume-based so high-power blasts do not leave ray-shaped scars.
      */
     private void doBlockDamage() {
         Set<Long> blocksToDestroy = new HashSet<>();
@@ -317,6 +318,7 @@ public class Explosion {
             }
         }
         smoothDestroyedBlocks(blocksToDestroy);
+        removeShieldedBlocks(blocksToDestroy);
 
         //Destroy collected blocks with chance-based drops like vanilla MC.
         double dropChance = 1.0D / Math.max(blastStrength, MIN_DROP_STRENGTH);
@@ -415,6 +417,85 @@ public class Explosion {
         return world.isAir(blockPos);
     }
 
+    /**
+     * Filters the finished crater so smoothing cannot add blocks behind a surviving barrier.
+     * Keep the candidate set unchanged during checks: destructible layers must not shield each other.
+     */
+    private void removeShieldedBlocks(Set<Long> blocksToDestroy) {
+        Set<Long> shieldedBlocks = new HashSet<>();
+        Map<Long, Boolean> blockingBlocks = new HashMap<>();
+        Point3D checkPosition = new Point3D();
+        for (long packedPos : blocksToDestroy) {
+            if (isBlockShielded(unpackX(packedPos), unpackY(packedPos), unpackZ(packedPos), blocksToDestroy, blockingBlocks, checkPosition)) {
+                shieldedBlocks.add(packedPos);
+            }
+        }
+        blocksToDestroy.removeAll(shieldedBlocks);
+    }
+
+    /**
+     * Walks every voxel from the explosion to a candidate block's center, checking only surviving
+     * terrain.  Unlike sparse blast rays, this preserves the crater shape wherever no barrier exists.
+     */
+    private boolean isBlockShielded(int targetX, int targetY, int targetZ, Set<Long> blocksToDestroy, Map<Long, Boolean> blockingBlocks, Point3D checkPosition) {
+        int blockX = (int) Math.floor(position.x);
+        int blockY = (int) Math.floor(position.y);
+        int blockZ = (int) Math.floor(position.z);
+        //On a block face, start in the voxel entered by the blast rather than the one behind it.
+        if (position.x == blockX && targetX < blockX) {
+            --blockX;
+        }
+        if (position.y == blockY && targetY < blockY) {
+            --blockY;
+        }
+        if (position.z == blockZ && targetZ < blockZ) {
+            --blockZ;
+        }
+        double dx = targetX + 0.5D - position.x;
+        double dy = targetY + 0.5D - position.y;
+        double dz = targetZ + 0.5D - position.z;
+        int stepX = Integer.compare(targetX, blockX);
+        int stepY = Integer.compare(targetY, blockY);
+        int stepZ = Integer.compare(targetZ, blockZ);
+        double deltaX = stepX == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0D / dx);
+        double deltaY = stepY == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0D / dy);
+        double deltaZ = stepZ == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0D / dz);
+        double nextX = stepX == 0 ? Double.POSITIVE_INFINITY : (blockX + (stepX > 0 ? 1.0D : 0.0D) - position.x) / dx;
+        double nextY = stepY == 0 ? Double.POSITIVE_INFINITY : (blockY + (stepY > 0 ? 1.0D : 0.0D) - position.y) / dy;
+        double nextZ = stepZ == 0 ? Double.POSITIVE_INFINITY : (blockZ + (stepZ > 0 ? 1.0D : 0.0D) - position.z) / dz;
+
+        while (blockX != targetX || blockY != targetY || blockZ != targetZ) {
+            long packedPos = packBlockPos(blockX, blockY, blockZ);
+            if (!blocksToDestroy.contains(packedPos)) {
+                Boolean blocksBlast = blockingBlocks.get(packedPos);
+                if (blocksBlast == null) {
+                    checkPosition.set(blockX, blockY, blockZ);
+                    blocksBlast = !world.isAir(checkPosition) && world.getBlockHardness(checkPosition) > 0;
+                    blockingBlocks.put(packedPos, blocksBlast);
+                }
+                if (blocksBlast) {
+                    return true;
+                }
+            }
+
+            double next = Math.min(nextX, Math.min(nextY, nextZ));
+            //Advance tied axes together so merely touching an edge or corner does not block the blast.
+            if (nextX == next) {
+                blockX += stepX;
+                nextX += deltaX;
+            }
+            if (nextY == next) {
+                blockY += stepY;
+                nextY += deltaY;
+            }
+            if (nextZ == next) {
+                blockZ += stepZ;
+                nextZ += deltaZ;
+            }
+        }
+        return false;
+    }
+
     private boolean isExplosionSubmerged() {
         int blockX = (int) Math.floor(position.x);
         int blockY = (int) Math.floor(position.y);
@@ -509,17 +590,12 @@ public class Explosion {
         List<IWrapperEntity> entities = world.getEntitiesWithin(blastBounds);
         for (IWrapperEntity entity : entities) {
             Point3D entityPos = entity.getPosition();
-            Point3D entityBlastPoint = entityPos.copy().add(0, entity.getEyeHeight(), 0);
-            if (!isBlastPathClear(entityBlastPoint)) {
-                continue;
-            }
-
             double dx = entityPos.x - position.x;
             double dy = entityPos.y - position.y;
             double dz = entityPos.z - position.z;
 
             double falloff = getEllipticalFalloff(dx, dy, dz, blastRadiusXZ, blastRadiusY, maxDamageRadius);
-            if (falloff > 0) {
+            if (falloff > 0 && getBlastExposure(entity.getBounds()) > 0) {
                 Damage effectDamage = new Damage(0, blastBounds, gun, entityResponsible, deathLanguage).setExplosive().ignoreCooldown();
                 effectDamage.effects = effects;
                 entity.attack(effectDamage);
@@ -575,7 +651,11 @@ public class Explosion {
                 double dy = testPoint.y - position.y;
                 double dz = testPoint.z - position.z;
                 double falloff = getEllipticalFalloff(dx, dy, dz, blastRadiusXZ, blastRadiusY, maxDamageRadius);
-                if (falloff > 0 && (bestHit == null || falloff > bestHit.falloff) && isBlastPathClear(testPoint)) {
+                if (falloff > 0 && (bestHit == null || falloff > bestHit.falloff)) {
+                    falloff *= getBlastExposure(box);
+                    if (falloff <= 0 || (bestHit != null && falloff <= bestHit.falloff)) {
+                        continue;
+                    }
                     if (bestHit == null) {
                         bestHit = new BlastHit();
                     }
@@ -599,11 +679,35 @@ public class Explosion {
     }
 
     /**
-     * Checks if terrain blocks the blast from reaching the target point.
+     * Returns the exposed fraction of a target's bounding box using vanilla MC's sample spacing.
+     * Partial cover reduces damage and knockback rather than blocking the entire blast.
      */
-    private boolean isBlastPathClear(Point3D targetPosition) {
-        Point3D delta = targetPosition.copy().subtract(position);
-        return delta.length() < MIN_PATH_LENGTH || world.getBlockHit(position, delta) == null;
+    private double getBlastExposure(BoundingBox box) {
+        double stepX = 1.0D / (box.widthRadius * 4.0D + 1.0D);
+        double stepY = 1.0D / (box.heightRadius * 4.0D + 1.0D);
+        double stepZ = 1.0D / (box.depthRadius * 4.0D + 1.0D);
+        double offsetX = (1.0D - Math.floor(1.0D / stepX) * stepX) / 2.0D;
+        double offsetZ = (1.0D - Math.floor(1.0D / stepZ) * stepZ) / 2.0D;
+        Point3D samplePosition = new Point3D();
+        Point3D delta = new Point3D();
+        int clearPaths = 0;
+        int totalPaths = 0;
+
+        for (double x = 0.0D; x <= 1.0D; x += stepX) {
+            for (double y = 0.0D; y <= 1.0D; y += stepY) {
+                for (double z = 0.0D; z <= 1.0D; z += stepZ) {
+                    samplePosition.set(box.globalCenter.x - box.widthRadius + x * box.widthRadius * 2.0D + offsetX,
+                                       box.globalCenter.y - box.heightRadius + y * box.heightRadius * 2.0D,
+                                       box.globalCenter.z - box.depthRadius + z * box.depthRadius * 2.0D + offsetZ);
+                    delta.set(position).subtract(samplePosition);
+                    if (delta.length() < MIN_PATH_LENGTH || world.getBlockHit(samplePosition, delta) == null) {
+                        ++clearPaths;
+                    }
+                    ++totalPaths;
+                }
+            }
+        }
+        return (double) clearPaths / totalPaths;
     }
 
     private static class BlastHit {

@@ -755,6 +755,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             return null;
         }
         return definition.packID + ":" + definition.systemName + (isArcadeFlightDefault() ? "|arcade" : "|standard");
+    }
+
+     /**
      * Returns how many degrees to rotate back towards level this tick for the passed-in tilt.
      * Removes the passed-in fraction of the tilt, capped by blimpLevelMaxRate if set.
      * Tilts under {@link #BLIMP_LEVEL_SNAP_ANGLE} are removed entirely so we stop at exactly level.
