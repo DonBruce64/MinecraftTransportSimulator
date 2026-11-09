@@ -93,7 +93,8 @@ public abstract class LevelRendererMixin {
         if (ConfigSystem.settings.general.forceRenderLastSolid.value) {
             InterfaceRender.doRenderCall(false, pPartialTicks);
         }
-        //Dynamic lights go over the finished world and IV's solid pass, under IV's blended pass.
+        //Dynamic lights go over the finished world and IV's solid pass, under IV's blended pass.  Under an Iris or
+        //Oculus pack this only saves the frame: GameRendererMixin draws it after the pack's final pass.
         InterfaceRender.renderDynamicLightFrame(pModelViewMatrix, pProjection, cullingFrustum, pCamera, pPartialTicks);
         InterfaceRender.doRenderCall(true, pPartialTicks);
         //Need to end batch after drawing translucents, otherwise they'll get other matrices applied.

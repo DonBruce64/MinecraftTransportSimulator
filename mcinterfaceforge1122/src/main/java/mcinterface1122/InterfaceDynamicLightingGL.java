@@ -699,6 +699,12 @@ final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
      * into camera-relative positions) with a viewport as large as the context allows for precision.  Their texture
      * coordinates come back too, and every texture the renderer binds through MC's texture manager is marked in the
      * stream ({@link MarkingTextures}), so each polygon shadows only where its texture shows.
+     * <p>
+     * Contained (the {@link IInterfaceDynamicLightingGL#captureLiving} contract): the renderer is any mod's.  Feedback
+     * mode rasterizes nothing, so what it draws reaches no framebuffer; a zero-size scissor also discards a clear it
+     * issues of its own, and the framebuffer, scissor box, masks, depth, blend, buffers and active texture unit it may
+     * leave changed are given back in {@code finally}.  The pose is built here (an orthographic view and the entity's
+     * offset), not read from a world render, so no pose has to be passed on.
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -731,7 +737,25 @@ final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
         GL11.glGetInteger(GL11.GL_VIEWPORT, ints);
         int vx = ints.get(0), vy = ints.get(1), vw = ints.get(2), vh = ints.get(3);
         boolean cull = GL11.glIsEnabled(GL11.GL_CULL_FACE);
+        int activeUnit = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
+        int framebuffer = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
+        int vertexArray = legacy ? 0 : GL11.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING);
+        int arrayBuffer = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
+        ints.clear();
+        GL11.glGetInteger(GL11.GL_SCISSOR_BOX, ints);
+        int sx = ints.get(0), sy = ints.get(1), sw = ints.get(2), sh = ints.get(3);
+        boolean scissor = GL11.glIsEnabled(GL11.GL_SCISSOR_TEST);
+        bytes.clear();
+        GL11.glGetBoolean(GL11.GL_COLOR_WRITEMASK, bytes);
+        boolean colorR = bytes.get(0) != 0, colorG = bytes.get(1) != 0, colorB = bytes.get(2) != 0, colorA = bytes.get(3) != 0;
+        boolean depthTest = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
+        boolean depthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
+        int depthFunc = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
+        boolean blend = GL11.glIsEnabled(GL11.GL_BLEND);
         OpenGlHelper.glUseProgram(0);
+        //A clear the renderer issues itself lands nowhere.
+        GL11.glEnable(GL11.GL_SCISSOR_TEST);
+        GL11.glScissor(0, 0, 0, 0);
         //The renderer draws through the Tessellator's client-side arrays, which read from the bound array buffer when one
         //is (a body drawn just before leaves its own, and its vertex array): the driver then reads past that buffer and
         //crashes.  restore() puts both back at the end of the pass.
@@ -800,7 +824,30 @@ final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
                 readPolygons(body, written, centreX, centreY, centreZ, half);
             }
         } finally {
+            glBindFramebuffer(GL30.GL_FRAMEBUFFER, framebuffer);
             GlStateManager.viewport(vx, vy, vw, vh);
+            GL11.glScissor(sx, sy, sw, sh);
+            if (!scissor) {
+                GL11.glDisable(GL11.GL_SCISSOR_TEST);
+            }
+            GlStateManager.colorMask(colorR, colorG, colorB, colorA);
+            GlStateManager.depthMask(depthMask);
+            GlStateManager.depthFunc(depthFunc);
+            if (depthTest) {
+                GlStateManager.enableDepth();
+            } else {
+                GlStateManager.disableDepth();
+            }
+            if (blend) {
+                GlStateManager.enableBlend();
+            } else {
+                GlStateManager.disableBlend();
+            }
+            GlStateManager.setActiveTexture(activeUnit);
+            if (!legacy) {
+                GL30.glBindVertexArray(vertexArray);
+            }
+            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, arrayBuffer);
             GlStateManager.matrixMode(GL11.GL_PROJECTION);
             GlStateManager.popMatrix();
             GlStateManager.matrixMode(GL11.GL_MODELVIEW);

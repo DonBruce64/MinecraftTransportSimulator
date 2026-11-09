@@ -600,6 +600,10 @@ public class EntityParticle extends AEntityC_Renderable {
 
     @Override
     protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
+        //Particles face the player and cast no shadow into a shader pack's shadow map.
+        if (DynamicLightSystem.isDrawingShadowPass()) {
+            return;
+        }
         //First set alpha, then check translucent.
         //We could change it this update cycle.
         if (definition.toTransparency != 0) {

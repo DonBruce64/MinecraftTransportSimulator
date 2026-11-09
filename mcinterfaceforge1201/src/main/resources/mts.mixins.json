@@ -10,6 +10,7 @@
 				"client.CompositeStateMixin",
 				"client.EmptyTextureStateShardMixin",
 				"client.EntityRendererMixin",
+				"client.GameRendererMixin",
 				"client.HumanoidModelMixin",
 				"client.LevelRendererMixin",
 				"client.ListenerMixin",

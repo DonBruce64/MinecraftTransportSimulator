@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * Turns a frame's lit lamps into the small ranked list the light pass can afford: frustum-culled by
- * their reach, nearby point lights merged into one, then the N strongest by {@code intensity / distance^2}.
+ * their reach, nearby particle point lights merged into one, then the N strongest by {@code intensity / distance^2}.
  * The emission budget.  Pure logic, render thread only.
  */
 public final class DynamicLightBudget {
@@ -21,7 +21,7 @@ public final class DynamicLightBudget {
      * Fills {@code out} (cleared first) with at most {@code maxCount} of {@code submitted}, strongest first.
      * The returned emitters belong to this budget and are valid until the next call.
      *
-     * @param mergeDistance point lights within this many blocks of each other combine into one; {@code <= 0} disables merging
+     * @param mergeDistance particle point lights within this many blocks of each other combine into one (model lamps never do); {@code <= 0} disables merging
      */
     public void select(List<DynamicLightEmitter> submitted, double viewerX, double viewerY, double viewerZ, DynamicLightFrustum frustum, int maxCount, float mergeDistance, List<DynamicLightEmitter> out) {
         out.clear();
@@ -50,9 +50,10 @@ public final class DynamicLightBudget {
     }
 
     /**
-     * Greedy clustering: each still-unmerged point light absorbs every later one within {@code mergeDistance}.
-     * Light combines additively, color blended by intensity share, radius grows to cover the cluster.
-     * A spot never merges: each keeps its own shadow tile and beam.
+     * Greedy clustering of particle point lights (an MCS rule for particle bursts): each still-unmerged one absorbs
+     * every later one within {@code mergeDistance}.  Light combines additively, color blended by intensity share,
+     * radius grows to cover the cluster.  A spot never merges, and neither does a model lamp, whatever its distance
+     * to another: each keeps its own shadow tile, beam and corona.
      */
     private void merge(float mergeDistance) {
         merged.clear();
@@ -63,7 +64,7 @@ public final class DynamicLightBudget {
                 continue;
             }
             DynamicLightEmitter seed = visible.get(i);
-            if (seed.spot || mergeDistance <= 0) {
+            if (seed.spot || !seed.isParticle() || mergeDistance <= 0) {
                 merged.add(seed);
                 continue;
             }
@@ -71,7 +72,7 @@ public final class DynamicLightBudget {
             float extraRadius = 0;
             for (int j = i + 1; j < n; j++) {
                 DynamicLightEmitter other = visible.get(j);
-                if (absorbed[j] || other.spot) {
+                if (absorbed[j] || other.spot || !other.isParticle()) {
                     continue;
                 }
                 float d = (float) seed.distanceTo(other.x, other.y, other.z);
