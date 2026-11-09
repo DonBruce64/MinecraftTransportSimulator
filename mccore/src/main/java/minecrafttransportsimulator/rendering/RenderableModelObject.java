@@ -284,7 +284,7 @@ public class RenderableModelObject {
                 }
 
                 //Dynamic light components hand their pose and brightness to the dynamic light system on the solid pass.
-                if (!blendingEnabled && dynamicComponents != null && DynamicLightSystem.getMode() != DynamicLightSystem.Mode.OFF) {
+                if (!blendingEnabled && dynamicComponents != null && DynamicLightSystem.getMode() != DynamicLightSystem.Mode.OFF && !DynamicLightSystem.isDrawingShadowPass()) {
                     if (dynamicLightOwner == null) {
                         dynamicLightOwner = DynamicLightSystem.getOwner(this, entity, lightDef, dynamicComponents);
                     }
@@ -319,17 +319,17 @@ public class RenderableModelObject {
                 }
             }
 
-            //Render text on this object.  Only do this on the solid pass.
+            //Render text on this object.  Only do this on the solid pass, and not in a shader pack's shadow pass.
             for (Entry<JSONText, String> textEntry : entity.text.entrySet()) {
                 JSONText textDef = textEntry.getKey();
-                if (renderable.vertexObject.name.equals(textDef.attachedTo)) {
+                if (!DynamicLightSystem.isDrawingShadowPass() && renderable.vertexObject.name.equals(textDef.attachedTo)) {
                     boolean isLitTexture = textDef.lightsUp && entity.renderTextLit();
                     if (isLitTexture ? (ConfigSystem.client.renderingSettings.lightsTransp.value == blendingEnabled) : (renderable.isTranslucent == blendingEnabled)) {
                         RenderText.draw3DText(textEntry.getValue(), entity, renderable.transform, textDef, false, isLitTexture);
                     }
                 }
             }
-        } else if (!blendingEnabled && dynamicLightOwner != null) {
+        } else if (!blendingEnabled && dynamicLightOwner != null && !DynamicLightSystem.isDrawingShadowPass()) {
             //Hidden by its visibility animations: its lamps go dark with it.
             dynamicLightOwner.hide();
         }

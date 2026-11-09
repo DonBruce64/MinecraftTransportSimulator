@@ -60,6 +60,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.TickRateManager;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -179,6 +180,11 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public boolean isClient() {
         return world.isClientSide;
+    }
+
+    @Override
+    public boolean isReplayPlayback() {
+        return world.isClientSide && ReplaySupport.isReplayClient();
     }
 
     @Override
@@ -1079,6 +1085,11 @@ public class WrapperWorld extends AWrapperWorld {
         if (!event.getLevel().isClientSide() && event.getLevel().equals(world)) {
             tickAll(true);
 
+            //A replay server only plays recorded entities back, so it gets no gun or follower for its viewer.
+            if (ReplaySupport.isReplayServer(world.getServer())) {
+                return;
+            }
+
             for (Player mcPlayer : event.getLevel().players()) {
                 UUID playerUUID = mcPlayer.getUUID();
 
@@ -1137,6 +1148,22 @@ public class WrapperWorld extends AWrapperWorld {
                     }
                 }
             }
+        }
+    }
+
+    @Override
+    public void tickAll(boolean beforePlayer) {
+        //Same rule as vanilla's TickRateManager.isEntityFrozen: a frozen level (/tick freeze, a paused replay) still ticks
+        //its players, which is the later pass, but nothing else.  This is the one place for both sides.  The manager's
+        //runsNormally() is not used because the client's is updated after ClientTickEvent.Pre, so it would be a tick late;
+        //this is the condition its tick() will compute.
+        TickRateManager tickRate = world.tickRateManager();
+        if (beforePlayer) {
+            //Also while frozen: packets that beat their entity are delivered as soon as it exists, and a paused replay never ticks it.
+            handleDeferredPackets();
+        }
+        if (!beforePlayer || !tickRate.isFrozen() || tickRate.isSteppingForward()) {
+            super.tickAll(beforePlayer);
         }
     }
 

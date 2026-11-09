@@ -22,7 +22,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
 
 class InterfacePacket implements IInterfacePacket {
-    private static final String PROTOCOL_VERSION = "3";
+    private static final String PROTOCOL_VERSION = "4";
     private static final SimpleChannel network = NetworkRegistry.newSimpleChannel(new ResourceLocation(InterfaceLoader.MODID, "main"), () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
     private static final BiMap<Byte, Class<? extends APacketBase>> packetMappings = HashBiMap.create();
 
@@ -34,11 +34,8 @@ class InterfacePacket implements IInterfacePacket {
         //Register the main wrapper packet.
         network.registerMessage(0, WrapperPacket.class, WrapperPacket::toBytes, WrapperPacket::fromBytes, WrapperPacket::handle);
 
-        //Register internal packets, then external.
-        byte packetIndex = 0;
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCSHandshakeClient.class);
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCSHandshakeServer.class);
-        APacketBase.initPackets(packetIndex);
+        //All packets come from mccore.  Builders get their state from MC's own entity and tile entity syncing.
+        APacketBase.initPackets((byte) 0);
     }
 
     @Override

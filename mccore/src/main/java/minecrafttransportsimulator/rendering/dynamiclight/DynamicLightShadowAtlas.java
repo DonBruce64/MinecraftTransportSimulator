@@ -528,7 +528,12 @@ public final class DynamicLightShadowAtlas {
         return angle - Math.asin(r / distance) <= Math.acos(cos);
     }
 
-    /** Living candidate {@code i}, its corners drawn by its renderer the first time a tile needs them. */
+    /**
+     * Living candidate {@code i}, its corners drawn by its renderer the first time a tile needs them.  Each capture
+     * contains itself ({@link IInterfaceDynamicLightingGL#captureLiving}: a renderer that draws on its own reaches no
+     * framebuffer and leaves no GL state), so it does not matter which target or program a tile has bound when it
+     * calls this.
+     */
     private static DynamicLightBody living(int i) {
         DynamicLightBody body = LIVING.get(i);
         if (!livingDrawn[i]) {
@@ -538,7 +543,7 @@ public final class DynamicLightShadowAtlas {
             try {
                 gl.captureLiving(body, frame.cameraX, frame.cameraY, frame.cameraZ, partialTick);
             } catch (Exception e) {
-                //A renderer that cannot draw outside its normal pass simply casts no shadow.
+                //A renderer that throws casts no shadow.
                 body.clearLiving();
             } finally {
                 rendering = was;

@@ -49,6 +49,7 @@ import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightBlockShapes;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightFrustum;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
+import minecrafttransportsimulator.rendering.ScenePass;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightVoxelWindow;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -56,6 +57,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
@@ -74,6 +76,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Blocks;
@@ -126,8 +130,11 @@ public class InterfaceRender implements IInterfaceRender {
 
     private static ShaderInstance entityLightsShader;
     private static ShaderInstance entityCutoutNoshadowsShader;
-    private static final RenderStateShard.ShaderStateShard MTS_ENTITY_LIGHTS_SHADER = new RenderStateShard.ShaderStateShard(() -> entityLightsShader);
-    private static final RenderStateShard.ShaderStateShard MTS_ENTITY_CUTOUT_NOSHADOWS_SHADER = new RenderStateShard.ShaderStateShard(() -> entityCutoutNoshadowsShader);
+    //In an Iris shadow pass these two are not replaced by the pack and would write colour into its shadow target: use
+    //the vanilla entity cutout shader there, which the pack swaps for its shadow program.  Both discard texels under
+    //alpha 0.1, as the lit bodies' textures need.
+    private static final RenderStateShard.ShaderStateShard MTS_ENTITY_LIGHTS_SHADER = new RenderStateShard.ShaderStateShard(() -> DynamicLightSystem.isShaderShadowPass() ? GameRenderer.getRendertypeEntityCutoutShader() : entityLightsShader);
+    private static final RenderStateShard.ShaderStateShard MTS_ENTITY_CUTOUT_NOSHADOWS_SHADER = new RenderStateShard.ShaderStateShard(() -> DynamicLightSystem.isShaderShadowPass() ? GameRenderer.getRendertypeEntityCutoutShader() : entityCutoutNoshadowsShader);
 
     public static void onIVRegisterShadersEvent(RegisterShadersEvent event) {
         try {
@@ -159,7 +166,11 @@ public class InterfaceRender implements IInterfaceRender {
 
             @Override
             public void render(BuilderEntityRenderForwarder builder, float entityYaw, float partialTicks, PoseStack stack, MultiBufferSource buffer, int packedLight) {
-                if (builder.playerFollowing == Minecraft.getInstance().player && !ConfigSystem.settings.general.forceRenderLastSolid.value) {
+                //Draws the scene for the viewer (the camera when it is a player, else the local player), unless ScenePass says
+                //the world renderer mixin does.
+                Entity cameraEntity = Minecraft.getInstance().getCameraEntity();
+                Entity viewer = cameraEntity instanceof Player ? cameraEntity : Minecraft.getInstance().player;
+                if (ScenePass.forwarderDraws(viewer != null && builder.playerFollowing == viewer)) {
                     //Set camera offset point for later.
                     renderCameraOffset.set(Mth.lerp(partialTicks, builder.xOld, builder.getX()), Mth.lerp(partialTicks, builder.yOld, builder.getY()), Mth.lerp(partialTicks, builder.zOld, builder.getZ()));
 
@@ -334,11 +345,24 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     public static void doRenderCall(boolean blendingEnabled, float partialTicks) {
+        //An Iris/Oculus shadow pass draws the scene a second time in the frame: geometry only, see DynamicLightSystem.isDrawingShadowPass.
+        boolean shadowPass = DynamicLightSystem.isShaderShadowPass();
+        DynamicLightSystem.setShadowPass(shadowPass);
+        try {
+            drawScene(blendingEnabled, partialTicks);
+        } finally {
+            DynamicLightSystem.setShadowPass(false);
+        }
+    }
+
+    private static void drawScene(boolean blendingEnabled, float partialTicks) {
         AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
         ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
         if (allEntities != null) {
             world.beginProfiling("MTSRendering_Setup", true);
-            boolean captureBodies = !blendingEnabled && DynamicLightSystem.getMode() == DynamicLightSystem.Mode.DEFERRED && ConfigSystem.client.renderingSettings.DynL_shadows.value;
+            boolean captureBodies = !blendingEnabled && DynamicLightSystem.getMode() == DynamicLightSystem.Mode.DEFERRED && ConfigSystem.client.renderingSettings.DynL_shadows.value
+                    //An Iris shadow pass draws the scene again from the sun: those buffers are not shadow casters for the light pass.
+                    && !DynamicLightSystem.isShaderShadowPass();
 
             //NOTE: this operation occurs on a ConcurrentLinkedQueue.  Therefore, updates will
             //not occur one after another.  Sanitize your inputs!
@@ -369,6 +393,11 @@ public class InterfaceRender implements IInterfaceRender {
      */
     private static void renderBuffers(float partialTicks, boolean closeRemoved) {
         //Call order is CRITICAL and will lead to random JME faults with no stacktrace if modified!
+        //The world's projection, or in an Iris shadow pass the sun's, which the pack has put on the render system.  The
+        //model-view needs no such switch: the pack's shadow view is in the pose stack, and RenderSystem's model-view stack
+        //is still the identity there (the pack draws its shadows before the world render pushes the camera view).
+        boolean shadowPass = DynamicLightSystem.isDrawingShadowPass();
+        Matrix4f projection = shadowPass ? RenderSystem.getProjectionMatrix() : projectionMatrix;
         for (Entry<RenderType, List<RenderData>> renderEntry : queuedRenders.entrySet()) {
             RenderType renderType = renderEntry.getKey();
             List<RenderData> datas = renderEntry.getValue();
@@ -385,7 +414,7 @@ public class InterfaceRender implements IInterfaceRender {
                     shaderInstance.setSampler("Sampler" + k, i);
                 }
                 if (shaderInstance.PROJECTION_MATRIX != null) {
-                    shaderInstance.PROJECTION_MATRIX.set(projectionMatrix);
+                    shaderInstance.PROJECTION_MATRIX.set(projection);
                 }
                 if (shaderInstance.COLOR_MODULATOR != null) {
                     shaderInstance.COLOR_MODULATOR.set(RenderSystem.getShaderColor());
@@ -433,7 +462,7 @@ public class InterfaceRender implements IInterfaceRender {
                     //We must combine them, just like mode 0 does.
                     Matrix4f combinedMatrix = new Matrix4f(RenderSystem.getModelViewMatrix()).mul(data.matrix);
                     data.bufferData.buffer.bind();
-                    data.bufferData.buffer.drawWithShader(combinedMatrix, projectionMatrix, RenderSystem.getShader());
+                    data.bufferData.buffer.drawWithShader(combinedMatrix, projection, RenderSystem.getShader());
                     if (shadowTexture >= 0) {
                         DynamicLightShadowAtlas.captureBody(data.bufferData.buffer, combinedMatrix.get(dynamicLightPose), data.bufferData.radius, shadowTexture);
                     }
@@ -444,7 +473,14 @@ public class InterfaceRender implements IInterfaceRender {
             }
         }
 
-        if (closeRemoved && !removedRenders.isEmpty()) {
+        //A light frame saved for after the shader pack still draws the solid pass's buffers as shadow bodies.
+        if (closeRemoved && !DynamicLightSystem.hasPendingFrame()) {
+            closeRemovedRenders();
+        }
+    }
+
+    private static void closeRemovedRenders() {
+        if (!removedRenders.isEmpty()) {
             removedRenders.forEach(render -> render.close());
             removedRenders.clear();
         }
@@ -543,15 +579,21 @@ public class InterfaceRender implements IInterfaceRender {
 
     /**
      * Called at the start of the world render: forgets the last frame's shadow body captures, which a frame without
-     * a light pass never consumed.
+     * a light pass never consumed, and a light frame saved last time that never reached its after-the-pack hook (a
+     * nested world render, a thrown frame).
      */
     public static void startDynamicLightFrame() {
+        if (DynamicLightSystem.dropPendingFrame()) {
+            closeRemovedRenders();
+        }
         DynamicLightShadowAtlas.frameEnd();
     }
 
     /**
      * Builds and draws this frame's dynamic lights; call after the solid passes and before IV's blended pass.
-     * {@code view} is the world render's camera rotation (the {@code frustumMatrix}), {@code projection} its projection.
+     * {@code view} is the world render's camera rotation (the {@code frustumMatrix}), {@code projection} its projection.  The camera and the
+     * matrices are converted to plain values here; under an Iris or Oculus pack ({@link DynamicLightSystem#drawsAfterShaderPack})
+     * the core only saves them, and {@link #renderPendingDynamicLightFrame} draws the frame once the pack's final pass is done.
      */
     public static void renderDynamicLightFrame(Matrix4f view, Matrix4f projection, Frustum frustum, Camera camera, float partialTicks) {
         DynamicLightFrustum test = frustum == null ? DynamicLightFrustum.ACCEPT_ALL : (minX, minY, minZ, maxX, maxY, maxZ) -> frustum.isVisible(new AABB(minX, minY, minZ, maxX, maxY, maxZ));
@@ -567,6 +609,36 @@ public class InterfaceRender implements IInterfaceRender {
         DynamicLightSystem.renderFrame(partialTicks, test, position.x, position.y, position.z, dynamicLightLeft, dynamicLightUp, view.get(dynamicLightView), projection.get(dynamicLightProjection));
     }
 
+    /**
+     * Draws the light frame the core saved, if there is one: called by {@code GameRendererMixin} right after the world
+     * render returns, so the shader pack's final pass has finished, and before the hand clears the depth.  Frees the
+     * buffers removed during the frame afterwards.
+     */
+    public static void renderPendingDynamicLightFrame() {
+        if (!DynamicLightSystem.hasPendingFrame()) {
+            return;
+        }
+        //The world render has popped the camera view off RenderSystem's model-view stack by now; put it back as at TAIL,
+        //so a foreign entity renderer the shadow capture runs sees the pose of the entity pass.
+        Matrix4fStack modelView = RenderSystem.getModelViewStack();
+        modelView.pushMatrix();
+        modelView.mul(deferredView.set(dynamicLightView));
+        RenderSystem.applyModelViewMatrix();
+        try {
+            DynamicLightSystem.renderPendingFrame();
+        } finally {
+            modelView.popMatrix();
+            RenderSystem.applyModelViewMatrix();
+            closeRemovedRenders();
+        }
+    }
+
+    static {
+        //GameRendererMixin draws the saved frame after an Iris or Oculus pack's final pass.
+        DynamicLightSystem.enableShaderPackLightPass();
+    }
+    /** The saved frame's camera rotation, rebuilt from {@code dynamicLightView} to restore the model-view stack. */
+    private static final Matrix4f deferredView = new Matrix4f();
     private static final float[] dynamicLightLeft = new float[3];
     private static final float[] dynamicLightUp = new float[3];
     private static final float[] dynamicLightView = new float[16];

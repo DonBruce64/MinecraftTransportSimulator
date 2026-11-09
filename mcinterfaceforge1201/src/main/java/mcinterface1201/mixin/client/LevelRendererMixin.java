@@ -13,6 +13,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 
 import mcinterface1201.InterfaceRender;
 import mcinterface1201.WrapperWorld;
+import minecrafttransportsimulator.rendering.ScenePass;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -44,6 +45,7 @@ public abstract class LevelRendererMixin {
     @Inject(method = "renderLevel", at = @At(value = "HEAD"))
     public void inject_renderLevelDataGetter(PoseStack pMatrixStack, float pPartialTicks, long pFinishTimeNano, boolean pDrawBlockOutline, Camera pCamera, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pProjection, CallbackInfo ci) {
         InterfaceRender.projectionMatrix = pProjection;
+        ScenePass.startFrame();
         InterfaceRender.startDynamicLightFrame();
     }
 
@@ -75,10 +77,13 @@ public abstract class LevelRendererMixin {
         InterfaceRender.renderCameraOffset.set(position.x, position.y, position.z);
         InterfaceRender.matrixStack = pMatrixStack;
         InterfaceRender.renderBuffer = irendertypebuffer$impl;
-        if (ConfigSystem.settings.general.forceRenderLastSolid.value) {
+        //The forwarder of the viewer draws the solid pass among the entities.  If none did (the forceRenderLastSolid config,
+        //or the viewer has no forwarder: a replay), draw it here, the last thing before the translucent pass.
+        if (ScenePass.needsLateSolid()) {
             InterfaceRender.doRenderCall(false, pPartialTicks);
         }
-        //Dynamic lights go over the finished world and IV's solid pass, under IV's blended pass.
+        //Dynamic lights go over the finished world and IV's solid pass, under IV's blended pass.  Under an Iris or
+        //Oculus pack this only saves the frame: GameRendererMixin draws it after the pack's final pass.
         InterfaceRender.renderDynamicLightFrame(pMatrixStack.last().pose(), pProjection, cullingFrustum, pCamera, pPartialTicks);
         InterfaceRender.doRenderCall(true, pPartialTicks);
         //Need to end batch after drawing translucents, otherwise they'll get other matrices applied.

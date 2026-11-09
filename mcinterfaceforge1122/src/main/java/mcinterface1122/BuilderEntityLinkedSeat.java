@@ -151,6 +151,9 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
         if (entity != null) {
             //Entity is valid, save UUID and return the modified tag.
             tag.setUniqueId("entityUUID", entity.uniqueUUID);
+        } else if (entityUUID != null) {
+            //Loaded from disk and not linked yet.  The state sent to clients must still say what we are a seat on.
+            tag.setUniqueId("entityUUID", entityUUID);
         }
         return tag;
     }
