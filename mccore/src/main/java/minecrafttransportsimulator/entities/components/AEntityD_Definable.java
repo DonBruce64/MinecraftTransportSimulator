@@ -53,6 +53,7 @@ import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.DurationDelayClock;
 import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderableModelObject;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
@@ -1096,6 +1097,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 return new ComputedVariable(this, variable, partialTicks -> ConfigSystem.client.controlSettings.showHoverTxt.value ? 1 : 0, false);
             case ("config_innerwindows"):
                 return new ComputedVariable(this, variable, partialTicks -> ConfigSystem.client.renderingSettings.innerWindows.value ? 1 : 0, false);
+            case ("config_dynamiclights"):
+                //1 exactly when hideWhenDynLightActive components are hidden (dynamic lights draw, or a shader pack is active), for fill lights that dynamic lights replace.
+                return new ComputedVariable(this, variable, partialTicks -> world.isClient() && DynamicLightSystem.hidesStandIns() ? 1 : 0, false);
             default: {
                 if (variable.startsWith("tick_sin_")) {
                     final double frequencyMultiplier = Double.parseDouble(variable.substring("tick_sin_".length()));
@@ -1503,6 +1507,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
         //Render model object individually.
         objectList.forEach(modelObject -> modelObject.render(this, transform, blendingEnabled, partialTicks));
+
+        //A shader pack's shadow pass draws the model only (see DynamicLightSystem.isDrawingShadowPass).
+        if (DynamicLightSystem.isDrawingShadowPass()) {
+            world.endProfiling();
+            return;
+        }
 
         //Render any static text.
         world.beginProfiling("MainText", false);

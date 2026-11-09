@@ -14,6 +14,7 @@ import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL33;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
@@ -40,6 +41,8 @@ import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.Vector4f;
 
 /**
  * 1.16.5's GL calls for the shared dynamic light renderer (mccore {@code DynamicLightRenderer}): LWJGL 3 raw GL,
@@ -62,6 +65,9 @@ final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
     private static boolean legacy;
 
     private int emptyArray;
+    /** The 1x1 target a body capture draws into ({@link #captureLiving}), made on first use. */
+    private Framebuffer scratch;
+    private final int[] savedViewport = new int[4];
     private ByteBuffer byteStaging;
     private FloatBuffer floatStaging;
     /** The one vertex array captured IV bodies are drawn through: attributes 0 and 2 over whichever buffer is bound. */
@@ -402,6 +408,16 @@ final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
         }
     }
 
+    /**
+     * Draws the entity with its own renderer into {@code body}'s corners, contained: the renderer may be any mod's, and
+     * some (a held gun drawn from its own vertex buffer) draw straight into the bound framebuffer and ignore the
+     * consumers handed to them.  So the capture binds a 1x1 scratch target and turns on a zero-size scissor, which
+     * discards every fragment and clear that is not through our consumers (and what a renderer does to the target it
+     * finds is done to the scratch), and gives back the framebuffer, viewport and state it found.  The pose is the entity
+     * pass's (the world render's view, then the offset from the camera), so a mod that keeps what it draws keeps the
+     * right thing; the corners are turned back to camera-relative world space.  Not contained: a renderer that
+     * writes into {@code renderBuffers().bufferSource()}, flushed at the end of the frame.
+     */
     @Override
     @SuppressWarnings("unchecked")
     public void captureLiving(DynamicLightBody body, double cameraX, double cameraY, double cameraZ, float partialTicks) {
@@ -410,23 +426,68 @@ final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
         double y = MathHelper.lerp(partialTicks, entity.yOld, entity.getY());
         double z = MathHelper.lerp(partialTicks, entity.zOld, entity.getZ());
         EntityRenderer<Entity> renderer = (EntityRenderer<Entity>) Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entity);
+        Matrix4f view = InterfaceRender.frameView();
         MatrixStack poses = new MatrixStack();
+        poses.last().pose().set(view);
         poses.translate(x - cameraX, y - cameraY, z - cameraZ);
+        Matrix4f unview = view.copy();
+        unview.invert();
         Map<RenderType, IVertexBuilder> views = new IdentityHashMap<>();
-        renderer.render(entity, MathHelper.lerp(partialTicks, entity.yRotO, entity.yRot), partialTicks, poses, type -> views.computeIfAbsent(type, t -> {
-            int texture = shadowTexture(t);
-            if (texture < 0) {
-                return new Ignore();
-            }
-            switch (t.mode()) {
-                case GL11.GL_QUADS:
-                    return new View(body, true, texture, shadowCut(t));
-                case GL11.GL_TRIANGLES:
-                    return new View(body, false, texture, shadowCut(t));
-                default:
+        int framebuffer = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
+        GL11.glGetIntegerv(GL11.GL_VIEWPORT, savedViewport);
+        if (scratch == null) {
+            //Made after the state is read: creating a target binds it and sets the viewport.
+            scratch = new Framebuffer(1, 1, true, Minecraft.ON_OSX);
+        }
+        scratch.bindWrite(true);
+        GlStateManager._glUseProgram(0);
+        RenderSystem.enableScissor(0, 0, 0, 0);
+        try {
+            renderer.render(entity, MathHelper.lerp(partialTicks, entity.yRotO, entity.yRot), partialTicks, poses, type -> views.computeIfAbsent(type, t -> {
+                int texture = shadowTexture(t);
+                if (texture < 0) {
                     return new Ignore();
-            }
-        }), LightTexture.pack(15, 15));
+                }
+                switch (t.mode()) {
+                    case GL11.GL_QUADS:
+                        return new View(body, true, texture, shadowCut(t), unview);
+                    case GL11.GL_TRIANGLES:
+                        return new View(body, false, texture, shadowCut(t), unview);
+                    default:
+                        return new Ignore();
+                }
+            }), LightTexture.pack(15, 15));
+        } finally {
+            resetBinds();
+            resetState();
+            GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, framebuffer);
+            RenderSystem.viewport(savedViewport[0], savedViewport[1], savedViewport[2], savedViewport[3]);
+        }
+    }
+
+    /**
+     * MC's state between its draws: no program, back to vertex array 0 (where its client-side vertex state lives), no
+     * buffer, unit 0 active.
+     */
+    private void resetBinds() {
+        GlStateManager._glUseProgram(0);
+        if (!legacy) {
+            GL30.glBindVertexArray(0);
+        }
+        GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        GlStateManager._activeTexture(GL13.GL_TEXTURE0);
+    }
+
+    /** The raster state MC expects between its draws (the one our passes also end in). */
+    private static void resetState() {
+        RenderSystem.disableScissor();
+        RenderSystem.colorMask(true, true, true, true);
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableBlend();
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthFunc(GL11.GL_LEQUAL);
+        RenderSystem.depthMask(true);
+        RenderSystem.enableCull();
     }
 
     /**
@@ -629,24 +690,18 @@ final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
 
     @Override
     public void restore() {
-        GlStateManager._glUseProgram(0);
         //Back to vertex array 0, where MC's client-side vertex state lives, and no buffer bound.
-        if (!legacy) {
-            GL30.glBindVertexArray(0);
-        }
-        GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-        //Units 0 to 4: DynamicLightRenderer's samplers.
+        resetBinds();
+        //Units 0 to 4: DynamicLightRenderer's samplers.  Oculus leaves sampler objects bound on its units, and a bound
+        //sampler object overrides the filtering and wrapping of the texture on that unit.
+        boolean samplers = GL.getCapabilities().OpenGL33;
         for (int unit = 4; unit >= 0; unit--) {
+            if (samplers) {
+                GL33.glBindSampler(unit, 0);
+            }
             bindTexture(unit, 0);
         }
-        RenderSystem.disableScissor();
-        RenderSystem.colorMask(true, true, true, true);
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableBlend();
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthFunc(GL11.GL_LEQUAL);
-        RenderSystem.depthMask(true);
-        RenderSystem.enableCull();
+        resetState();
         Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
     }
 
@@ -721,13 +776,17 @@ final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
         private final boolean quads;
         private final int texture;
         private final float cut;
+        /** From the space the renderer drew in (the world render's view) back to camera-relative world space. */
+        private final Matrix4f unview;
+        private final Vector4f point = new Vector4f();
         private float x;
         private float y;
         private float z;
         private float u;
         private float v;
 
-        View(DynamicLightBody body, boolean quads, int texture, float cut) {
+        View(DynamicLightBody body, boolean quads, int texture, float cut, Matrix4f unview) {
+            this.unview = unview;
             this.body = body;
             this.quads = quads;
             this.texture = texture;
@@ -736,9 +795,11 @@ final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
 
         @Override
         public IVertexBuilder vertex(double x, double y, double z) {
-            this.x = (float) x;
-            this.y = (float) y;
-            this.z = (float) z;
+            point.set((float) x, (float) y, (float) z, 1.0F);
+            point.transform(unview);
+            this.x = point.x();
+            this.y = point.y();
+            this.z = point.z();
             return this;
         }
 
@@ -756,7 +817,9 @@ final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
 
         @Override
         public void vertex(float x, float y, float z, float r, float g, float b, float a, float u, float v, int overlay, int light, float nx, float ny, float nz) {
-            add(x, y, z, u, v);
+            point.set(x, y, z, 1.0F);
+            point.transform(unview);
+            add(point.x(), point.y(), point.z(), u, v);
         }
 
         private void add(float x, float y, float z, float u, float v) {

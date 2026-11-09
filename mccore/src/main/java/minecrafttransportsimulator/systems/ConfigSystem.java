@@ -69,6 +69,8 @@ public final class ConfigSystem {
         if (onClient) {
             clientFile = new File(configDirectory, "mtsconfigclient.json");
             client = loadConfig(clientFile, JSONConfigClient.class, new JSONConfigClient(), true);
+            //Loaded entries are built without their field initializers, so the ranges must be attached again.
+            client.bindRanges();
             //Check to make sure we have the right keyset.  If not, reset the binds.
             if (client.controls == null || client.controls.keysetID != InterfaceManager.inputInterface.getKeysetID()) {
                 client.controls = new JSONConfigClient.JSONControls();

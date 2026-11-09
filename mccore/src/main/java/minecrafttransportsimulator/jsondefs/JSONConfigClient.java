@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightFrame;
 
 /**
  * Config class for client settings.  This is only loaded on the client.  This allows the
@@ -15,6 +16,15 @@ public class JSONConfigClient {
     public JSONRenderingSettings renderingSettings = new JSONRenderingSettings();
     public JSONControlSettings controlSettings = new JSONControlSettings();
     public JSONControls controls = new JSONControls();
+
+    /**
+     * Gives every {@link JSONConfigEntry.IntRange} entry of the loaded config its bounds.  Call after each load:
+     * entries read from disk are built by Gson without the field initializers and carry no bounds.
+     */
+    public void bindRanges() {
+        JSONConfigEntry.bindRanges(renderingSettings);
+        JSONConfigEntry.bindRanges(controlSettings);
+    }
 
     public static class JSONRenderingSettings {
         public JSONConfigEntry<Boolean> renderHUD_1P = new JSONConfigEntry<>(true, "If false, the HUD in vehicles will not render in 1st-person mode.");
@@ -35,8 +45,9 @@ public class JSONConfigClient {
 
         public JSONConfigEntry<Boolean> dynamicLights = new JSONConfigEntry<>(true, "If true, light components marked isDynamicLight light up the world around them, cast shadows and draw a volumetric beam and corona.  If false, they render as regular beams and flares.");
         public JSONConfigEntry<Boolean> DynL_shadows = new JSONConfigEntry<>(true, "If true, dynamic lights cast shadows from blocks, vehicles and mobs.  Turn off to save GPU time.");
+        @JSONConfigEntry.IntRange(min = 0, max = DynamicLightFrame.CAPACITY)
         public JSONConfigEntry<Integer> DynL_MaxLights = new JSONConfigEntry<>(48, "How many dynamic lights may light the world at once, 0 to 256, and how many beams and coronas are drawn.  The strongest and closest are kept.  Fewer lights cost less GPU time; raise it on a powerful machine.");
-        public JSONConfigEntry<Boolean> DynL_ShaderFB = new JSONConfigEntry<>(false, "If true, dynamic lights still light the world under a shader pack (Iris, Oculus, OptiFine) by raising block light and drawing a simple beam cone and flare.  If false, they render as regular beams and flares while a shader pack is active.");
+        public JSONConfigEntry<Boolean> DynL_ShaderFB = new JSONConfigEntry<>(false, "If true, a shader pack (Iris, Oculus, OptiFine) gets the simple fallback instead of the light pass: dynamic lights raise block light and draw a simple beam cone and flare.  If false, an Iris or Oculus pack gets the full light pass (shadows, beams, coronas) drawn after the pack's final pass, and an OptiFine pack gets regular beams and flares.");
 
         public JSONConfigEntry<Boolean> brightLights = new JSONConfigEntry<>(true, "If false, lights from vehicles and blocks will not make themselves bright and instead will render as if they were part of the model at that same brightness.  Useful if you have shaders and this is causing troubles.");
         public JSONConfigEntry<Boolean> blendedLights = new JSONConfigEntry<>(true, "If false, beam-based lights from vehicles and blocks will not do brightness blending.  This is different from the general brightness setting as this will do OpenGL blending on the world to make it brighter, not just the beams themselves.");
@@ -63,8 +74,10 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> mouseYoke = new JSONConfigEntry<>(false, "If true, aircraft pitch and roll are controlled by an invisible on-screen mouse yoke.  Cursor center is neutral; window edges are full input.");
         public JSONConfigEntry<Boolean> arcadeMode = new JSONConfigEntry<>(false, "If true, arcade-style flight and mouse aiming will be enabled. This allows the mouse cursor to control aircraft/helicopter steering systems.");
         public JSONConfigEntry<Boolean> showTutorial = new JSONConfigEntry<>(true, "If true, tutorial and onboarding overlays may be shown.  Set this to false to hide those prompts.");
-        public JSONConfigEntry<Boolean> showDefaultAircraftControlsMessageEveryTime = new JSONConfigEntry<>(true, "If true, the message telling you which controls an aircraft defaults to will show every time you get into the pilot seat of an aircraft that sets its own default.  If false, it only shows the first time you fly each aircraft in each mode.");
+        public JSONConfigEntry<Boolean> ShowDfCtrl = new JSONConfigEntry<>(true, "If true, the message telling you which controls an aircraft defaults to will show every time you get into the pilot seat of an aircraft that sets its own default.  If false, it only shows the first time you fly each aircraft in each mode.");
         public JSONConfigEntry<Boolean> showHoverTxt = new JSONConfigEntry<>(true, "If true, hover text helpers may be shown when looking at supported vehicle elements.  Set this to false to hide those prompts.");
+        @JSONConfigEntry.IntRange(min = 0, max = 32)
+        public JSONConfigEntry<Integer> IconRange = new JSONConfigEntry<>(4, "How far away, in blocks, the part slot icons are drawn while holding a part, scanner, wrench or screwdriver, 0 to 32.  They shrink and fade with distance, and a slot whose icon is not drawn cannot be targeted by the scanner.  0 hides the icons.  This only changes the icons: clicking a slot still follows its hitbox.");
         public JSONConfigEntry<Boolean> cullingWarn = new JSONConfigEntry<>(true, "If true, IV will show a one-time startup warning when Entity Culling is detected.");
 
         public JSONConfigEntry<Boolean> classicJystk = new JSONConfigEntry<>(false, "If true, the classic controller code will be used.  Note: THIS CODE MAY CRASH MOBILE DEVICES!  Also note that switching will probably mess up your keybinds.  Only do this if you are having issues with a joystick or controller not being recognized.  After changing this setting, reboot the game to make it take effect.");

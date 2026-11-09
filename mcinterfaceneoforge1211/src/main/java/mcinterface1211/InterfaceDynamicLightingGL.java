@@ -6,11 +6,13 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL33;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
@@ -52,6 +54,9 @@ final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
     static final InterfaceDynamicLightingGL INSTANCE = new InterfaceDynamicLightingGL();
 
     private int emptyArray;
+    /** The 1x1 target a body capture draws into ({@link #captureLiving}), made on first use. */
+    private RenderTarget scratch;
+    private final int[] savedViewport = new int[4];
     private ByteBuffer byteStaging;
     private FloatBuffer floatStaging;
 
@@ -348,6 +353,17 @@ final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
         }
     }
 
+    /**
+     * Draws the entity with its own renderer into {@code body}'s corners, contained: the renderer may be any mod's, and
+     * some (a held gun drawn from its own vertex buffer) draw straight into the bound framebuffer and ignore the
+     * consumers handed to them.  So the capture binds a 1x1 scratch target and turns on a zero-size scissor, which
+     * discards every fragment and clear that is not through our consumers (and what a renderer does to the target it
+     * finds is done to the scratch), and gives back the framebuffer, viewport and state it found.  The pose is the entity
+     * pass's: in 1.21 the world render's view lives in {@code RenderSystem}'s model-view stack (the callers keep it
+     * there) and the {@link PoseStack} starts at the offset from the camera, so the corners already arrive in
+     * camera-relative world space.  Not contained: a renderer that writes into {@code renderBuffers().bufferSource()},
+     * flushed at the end of the frame.
+     */
     @Override
     @SuppressWarnings("unchecked")
     public void captureLiving(DynamicLightBody body, double cameraX, double cameraY, double cameraZ, float partialTicks) {
@@ -359,20 +375,60 @@ final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
         PoseStack poses = new PoseStack();
         poses.translate(x - cameraX, y - cameraY, z - cameraZ);
         Map<RenderType, VertexConsumer> views = new IdentityHashMap<>();
-        renderer.render(entity, Mth.lerp(partialTicks, entity.yRotO, entity.getYRot()), partialTicks, poses, type -> views.computeIfAbsent(type, t -> {
-            int texture = shadowTexture(t);
-            if (texture < 0) {
-                return new Ignore();
-            }
-            switch (t.mode()) {
-                case QUADS:
-                    return new View(body, true, texture, shadowCut(t));
-                case TRIANGLES:
-                    return new View(body, false, texture, shadowCut(t));
-                default:
+        int framebuffer = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
+        GL11.glGetIntegerv(GL11.GL_VIEWPORT, savedViewport);
+        if (scratch == null) {
+            //Made after the state is read: creating a target binds it and sets the viewport.
+            scratch = new TextureTarget(1, 1, true, Minecraft.ON_OSX);
+        }
+        scratch.bindWrite(true);
+        clearProgram();
+        RenderSystem.enableScissor(0, 0, 0, 0);
+        try {
+            renderer.render(entity, Mth.lerp(partialTicks, entity.yRotO, entity.getYRot()), partialTicks, poses, type -> views.computeIfAbsent(type, t -> {
+                int texture = shadowTexture(t);
+                if (texture < 0) {
                     return new Ignore();
-            }
-        }), LightTexture.FULL_BRIGHT);
+                }
+                switch (t.mode()) {
+                    case QUADS:
+                        return new View(body, true, texture, shadowCut(t));
+                    case TRIANGLES:
+                        return new View(body, false, texture, shadowCut(t));
+                    default:
+                        return new Ignore();
+                }
+            }), LightTexture.FULL_BRIGHT);
+        } finally {
+            clearProgram();
+            VertexBuffer.unbind();
+            GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+            GlStateManager._activeTexture(GL13.GL_TEXTURE0);
+            resetState();
+            GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, framebuffer);
+            RenderSystem.viewport(savedViewport[0], savedViewport[1], savedViewport[2], savedViewport[3]);
+        }
+    }
+
+    /** MC's cached program reset along with GL's: {@code ShaderInstance.clear()} also forgets its last applied one. */
+    private static void clearProgram() {
+        if (GameRenderer.getPositionShader() != null) {
+            GameRenderer.getPositionShader().clear();
+        } else {
+            GlStateManager._glUseProgram(0);
+        }
+    }
+
+    /** The state MC expects between its draws (the one our passes also end in). */
+    private static void resetState() {
+        RenderSystem.disableScissor();
+        RenderSystem.colorMask(true, true, true, true);
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableBlend();
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthFunc(GL11.GL_LEQUAL);
+        RenderSystem.depthMask(true);
+        RenderSystem.enableCull();
     }
 
     /**
@@ -509,24 +565,20 @@ final class InterfaceDynamicLightingGL implements IInterfaceDynamicLightingGL {
     @Override
     public void restore() {
         //ShaderInstance caches the last program it used; clear() resets that cache along with the program.
-        if (GameRenderer.getPositionShader() != null) {
-            GameRenderer.getPositionShader().clear();
-        } else {
-            GlStateManager._glUseProgram(0);
-        }
+        clearProgram();
         VertexBuffer.unbind();
-        //Units 0 to 4: DynamicLightRenderer's samplers.
+        //Units 0 to 4: DynamicLightRenderer's samplers.  Iris leaves sampler objects bound on its units, and a bound
+        //sampler object overrides the filtering and wrapping of the texture on that unit.
+        boolean samplers = GL.getCapabilities().OpenGL33;
         for (int unit = 4; unit >= 0; unit--) {
+            if (samplers) {
+                GL33.glBindSampler(unit, 0);
+            }
             bindTexture(unit, 0);
         }
-        RenderSystem.disableScissor();
-        RenderSystem.colorMask(true, true, true, true);
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableBlend();
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthFunc(GL11.GL_LEQUAL);
-        RenderSystem.depthMask(true);
-        RenderSystem.enableCull();
+        //Leave unit 0 active for MC's cache, whatever a pack left.
+        RenderSystem.activeTexture(GL13.GL_TEXTURE0);
+        resetState();
         Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
     }
 

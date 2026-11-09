@@ -16,6 +16,7 @@
 				"client.BipedModelMixin",
 				"client.VillagerModelMixin",
 				"client.WorldRendererMixin",
+				"client.GameRendererMixin",
 				"client.ClientWorldMixin",
 				"client.EntityRendererMixin",
 				"client.MinecraftMixin",

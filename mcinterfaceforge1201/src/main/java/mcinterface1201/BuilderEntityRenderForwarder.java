@@ -1,6 +1,7 @@
 package mcinterface1201;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
@@ -83,7 +84,10 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
     @Override
     public boolean isSpectator() {
         //This entity only exists as a render anchor and should be ignored by entity scanners like Mekanism's teleporter.
-        return true;
+        //Iris and Oculus skip spectators when they draw their shadow map, and IV draws its whole scene from this
+        //entity's renderer: it must count as a normal entity there or vehicles cast no shadow under a shader pack.
+        boolean shadowPass = level().isClientSide && DynamicLightSystem.isShaderShadowPass();
+        return !shadowPass;
     }
 
     @Override
