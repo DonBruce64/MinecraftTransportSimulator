@@ -38,6 +38,7 @@ import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightBlockShapes;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightFrustum;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
+import minecrafttransportsimulator.rendering.ScenePass;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightVoxelWindow;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -69,6 +70,8 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexBuffer;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.PlayerContainer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.ResourceLocation;
@@ -738,9 +741,11 @@ public class InterfaceRender implements IInterfaceRender {
 
             @Override
             public void render(BuilderEntityRenderForwarder builder, float entityYaw, float partialTicks, MatrixStack stack, IRenderTypeBuffer buffer, int packedLight) {
-                //Draws the scene for the local player, during entity rendering; with forceRenderLastSolid WorldRendererMixin does that
-                //instead, except in an Oculus shadow pass, which only the entity loop reaches (the forwarder is not a spectator then).
-                if (builder.playerFollowing == Minecraft.getInstance().player && (!ConfigSystem.settings.general.forceRenderLastSolid.value || DynamicLightSystem.isShaderShadowPass())) {
+                //Draws the scene for the viewer (the camera when it is a player, else the local player), unless ScenePass says
+                //the world renderer mixin does.
+                Entity cameraEntity = Minecraft.getInstance().getCameraEntity();
+                Entity viewer = cameraEntity instanceof PlayerEntity ? cameraEntity : Minecraft.getInstance().player;
+                if (ScenePass.forwarderDraws(viewer != null && builder.playerFollowing == viewer)) {
                     //Set camera offset point for later.
                     renderCameraOffset.set(MathHelper.lerp(partialTicks, builder.xOld, builder.getX()), MathHelper.lerp(partialTicks, builder.yOld, builder.getY()), MathHelper.lerp(partialTicks, builder.zOld, builder.getZ()));
 

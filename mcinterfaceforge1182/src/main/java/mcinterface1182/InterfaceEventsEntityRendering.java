@@ -59,6 +59,9 @@ public class InterfaceEventsEntityRendering {
     @SubscribeEvent
     public static void onIVCameraSetup(CameraSetup event) {
         cameraShakeActive = false;
+        //Reset here, not in the player branch: the camera may move to another entity (spectating, a replay camera)
+        //and CameraMixin and ListenerMixin would keep applying the last adjusted position.
+        adjustedCamera = false;
         Camera camera = event.getCamera();
         if (camera.getEntity() instanceof Player) {
             mcPlayer = (Player) camera.getEntity();
@@ -66,7 +69,6 @@ public class InterfaceEventsEntityRendering {
             cameraAdjustedPosition.set(0, 0, 0);
             cameraAdjustedOrientation.setToZero();
             float partialTicks = (float) event.getPartialTicks();
-            adjustedCamera = false;
             if (CameraSystem.adjustCamera(player, cameraAdjustedPosition, cameraAdjustedOrientation, partialTicks)) {
                 //Camera adjustments occur backwards here.  Reverse order in the matrix.
                 //Also need to reverse sign of Y, since that's backwards in MC.

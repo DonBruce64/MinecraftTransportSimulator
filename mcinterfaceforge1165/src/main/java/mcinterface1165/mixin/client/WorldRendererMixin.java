@@ -12,9 +12,9 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 
 import mcinterface1165.InterfaceRender;
 import mcinterface1165.WrapperWorld;
+import minecrafttransportsimulator.rendering.ScenePass;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.GameRenderer;
@@ -41,6 +41,7 @@ public abstract class WorldRendererMixin {
     @Inject(method = "renderLevel", at = @At(value = "HEAD"))
     public void inject_renderLevelDataGetter(MatrixStack pMatrixStack, float pPartialTicks, long pFinishTimeNano, boolean pDrawBlockOutline, ActiveRenderInfo pActiveRenderInfo, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pProjection, CallbackInfo ci) {
         InterfaceRender.projectionMatrix = pProjection;
+        ScenePass.startFrame();
         InterfaceRender.startDynamicLightFrame();
     }
 
@@ -55,7 +56,9 @@ public abstract class WorldRendererMixin {
         //Set camera offset point for later.
         Vector3d position = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
         InterfaceRender.renderCameraOffset.set(position.x, position.y, position.z);
-        if (ConfigSystem.settings.general.forceRenderLastSolid.value) {
+        //The forwarder of the viewer draws the solid pass among the entities.  If none did (the forceRenderLastSolid config,
+        //or the viewer has no forwarder: a replay), draw it here, the last thing before the translucent pass.
+        if (ScenePass.needsLateSolid()) {
             InterfaceRender.doRenderCall(pMatrixStack, irendertypebuffer$impl, false, pPartialTicks);
         }
         //Dynamic lights go over the finished world and IV's solid pass, under IV's blended pass.  Under an Oculus pack

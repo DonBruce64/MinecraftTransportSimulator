@@ -13,6 +13,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 
 import mcinterface1211.InterfaceRender;
 import mcinterface1211.WrapperWorld;
+import minecrafttransportsimulator.rendering.ScenePass;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -48,6 +49,7 @@ public abstract class LevelRendererMixin {
     public void inject_renderLevelDataGetter(DeltaTracker pDeltaTracker, boolean pDrawBlockOutline, Camera pCamera, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pModelViewMatrix, Matrix4f pProjection, CallbackInfo ci) {
         InterfaceRender.projectionMatrix = pProjection;
         InterfaceRender.viewMatrix = new Matrix4f(pModelViewMatrix);
+        ScenePass.startFrame();
         InterfaceRender.startDynamicLightFrame();
     }
 
@@ -90,7 +92,9 @@ public abstract class LevelRendererMixin {
         matrix4fstack.mul(pModelViewMatrix);
         com.mojang.blaze3d.systems.RenderSystem.applyModelViewMatrix();
 
-        if (ConfigSystem.settings.general.forceRenderLastSolid.value) {
+        //The forwarder of the viewer draws the solid pass among the entities.  If none did (the forceRenderLastSolid config,
+        //or the viewer has no forwarder: a replay), draw it here, the last thing before the translucent pass.
+        if (ScenePass.needsLateSolid()) {
             InterfaceRender.doRenderCall(false, pPartialTicks);
         }
         //Dynamic lights go over the finished world and IV's solid pass, under IV's blended pass.  Under an Iris or

@@ -1,15 +1,13 @@
 package mcinterface1122;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
 
@@ -23,8 +21,9 @@ import net.minecraft.util.ITickable;
  * That's a good point, but MC doesn't work like that.  MC waits to assign the world and position
  * to TEs, so if we construct our TE right away, we'll end up with TONs of null checks.  To avoid this,
  * we only construct our TE after the world and position get assigned, and if we have NBT
- * At that point, we make the TE if we're on the server.  If we're on the client, we always way
- * for NBT, as we need to sync with the server's data.
+ * At that point, we make the TE if we're on the server.  If we're on the client, we always wait
+ * for NBT, as we need to sync with the server's data.  That arrives the way MC syncs any tile entity:
+ * in the chunk packet and in tile entity data packets, see {@link #getUpdateTag}.
  *
  * @author don_bruce
  */
@@ -32,32 +31,22 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
     protected TileEntityType tileEntity;
 
     /**
-     * This flag is true if we need to get server data for syncing.  Set on construction tick, but only used on clients.
-     **/
-    private boolean needDataFromServer = true;
-    /**
      * Data loaded on last NBT call.  Saved here to prevent loading of things until the update method.  This prevents
      * loading entity data when this entity isn't being ticked.  Some mods love to do this by making a lot of entities
      * to do their funky logic.  I'm looking at YOU The One Probe!  This should be either set by NBT loaded from disk
-     * on servers, or set by packet on clients.
+     * on servers, or set by the server's update tag on clients.
      */
     protected NBTTagCompound lastLoadedNBT;
     /**
-     * Set to true when NBT is loaded on servers from disk, or when NBT arrives from clients on servers.  This is set on the update loop when data is
-     * detected from server NBT loading, but for clients this is set when a data packet arrives.  This prevents loading client-based NBT before
-     * the packet arrives, which is possible if a partial NBT load is performed by the core game or a mod.
+     * Set to true when NBT is loaded on servers from disk.  This is set on the update loop when data is
+     * detected from server NBT loading, but for clients this is set when the server's tag arrives.  This prevents loading client-based NBT before
+     * it arrives, which is possible if a partial NBT load is performed by the core game or a mod.
      **/
     protected boolean loadFromSavedNBT;
     /**
      * Set to true when loaded NBT is parsed and loaded.  This is done to prevent re-parsing of NBT from triggering a second load command.
      **/
     protected boolean loadedFromSavedNBT;
-    /**
-     * Players requesting data for this builder.  This is populated by packets sent to the server.  Each tick players in this list are
-     * sent data about this builder, and the list cleared.  Done this way to prevent the server from trying to handle the packet before
-     * it has created the entity, as the entity is created on the update call, but the packet might get here due to construction.
-     **/
-    protected final List<IWrapperPlayer> playersRequestingData = new ArrayList<>();
 
     public BuilderTileEntity() {
         //Blank constructor for MC.
@@ -95,31 +84,10 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
                 }
             }
 
-            //Now that we have done update/NBT stuff, check for syncing.
-            if (world.isRemote) {
-                //No data.  Wait for NBT to be loaded.
-                //As we are on a client we need to send a packet to the server to request NBT data.
-                ///Although we could call this in the constructor, Minecraft changes the
-                //entity IDs after spawning and that fouls things up.
-                if (needDataFromServer) {
-                    InterfaceManager.packetInterface.sendToServer(new PacketEntityCSHandshakeClient(InterfaceManager.clientInterface.getClientPlayer(), this));
-                    needDataFromServer = false;
-                }
-            } else {
-                //Send any packets to clients that requested them.
-                if (!playersRequestingData.isEmpty()) {
-                    for (IWrapperPlayer player : playersRequestingData) {
-                        IWrapperNBT data = InterfaceManager.coreInterface.getNewNBTWrapper();
-                        writeToNBT(((WrapperNBT) data).tag);
-                        player.sendPacket(new PacketEntityCSHandshakeServer(this, data));
-                    }
-                    playersRequestingData.clear();
-                }
-                //Update changed state if needed.
-                if (tileEntity != null && tileEntity.hasChanged) {
-                    markDirty();
-                    tileEntity.hasChanged = false;
-                }
+            //Update changed state if needed.
+            if (!world.isRemote && tileEntity != null && tileEntity.hasChanged) {
+                markDirty();
+                tileEntity.hasChanged = false;
             }
         }
     }
@@ -149,6 +117,46 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
         //Don't directly load the TE here.  This causes issues because Minecraft loads TEs before blocks.
         //This is horridly stupid, because then you can't get the block for the TE, but whatever, Mojang be Mojang.
         lastLoadedNBT = tag;
+    }
+
+    /**
+     * MC sends this tag to a client in the chunk packet.  It is the same data as the save, which is the server's tile
+     * entity (or the NBT it was loaded from, if it hasn't ticked yet).  MC's default is only the type and position.
+     */
+    @Override
+    public NBTTagCompound getUpdateTag() {
+        return writeToNBT(new NBTTagCompound());
+    }
+
+    /**
+     * MC sends this when the block is changed (placed, or the block state changes), to the players watching the chunk.
+     */
+    @Override
+    public SPacketUpdateTileEntity getUpdatePacket() {
+        return new SPacketUpdateTileEntity(getPos(), 0, getUpdateTag());
+    }
+
+    @Override
+    public void handleUpdateTag(NBTTagCompound tag) {
+        takeServerTag(tag);
+    }
+
+    @Override
+    public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity packet) {
+        takeServerTag(packet.getNbtCompound());
+    }
+
+    /**
+     * Takes the server's tag on a client as the start of a tile entity that isn't built yet.  Once the mccore tile
+     * entity exists it is kept up to date by its own packets, so a later tag (every block update sends one) is ignored.
+     * A tag without the pack item (a server tile entity not built yet) is ignored too: loading it would fail and remove
+     * the block here.  The tag is never empty on 1.12.2, as MC needs the position in it to find the tile entity.
+     */
+    private void takeServerTag(NBTTagCompound tag) {
+        if (tileEntity == null && tag.hasKey("packID")) {
+            readFromNBT(tag);
+            loadFromSavedNBT = true;
+        }
     }
 
     @Override

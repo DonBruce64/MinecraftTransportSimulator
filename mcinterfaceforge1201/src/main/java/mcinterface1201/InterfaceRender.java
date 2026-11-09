@@ -47,6 +47,7 @@ import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightBlockShapes;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightFrustum;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
+import minecrafttransportsimulator.rendering.ScenePass;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightVoxelWindow;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -73,6 +74,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Blocks;
@@ -155,9 +158,11 @@ public class InterfaceRender implements IInterfaceRender {
 
             @Override
             public void render(BuilderEntityRenderForwarder builder, float entityYaw, float partialTicks, PoseStack stack, MultiBufferSource buffer, int packedLight) {
-                //Draws the scene for the local player, during entity rendering; with forceRenderLastSolid LevelRendererMixin does that
-                //instead, except in an Iris shadow pass, which only the entity loop reaches (the forwarder is not a spectator then).
-                if (builder.playerFollowing == Minecraft.getInstance().player && (!ConfigSystem.settings.general.forceRenderLastSolid.value || DynamicLightSystem.isShaderShadowPass())) {
+                //Draws the scene for the viewer (the camera when it is a player, else the local player), unless ScenePass says
+                //the world renderer mixin does.
+                Entity cameraEntity = Minecraft.getInstance().getCameraEntity();
+                Entity viewer = cameraEntity instanceof Player ? cameraEntity : Minecraft.getInstance().player;
+                if (ScenePass.forwarderDraws(viewer != null && builder.playerFollowing == viewer)) {
                     //Set camera offset point for later.
                     renderCameraOffset.set(Mth.lerp(partialTicks, builder.xOld, builder.getX()), Mth.lerp(partialTicks, builder.yOld, builder.getY()), Mth.lerp(partialTicks, builder.zOld, builder.getZ()));
 
