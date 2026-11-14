@@ -33,6 +33,12 @@ public abstract class AJSONItem extends AJSONBase {
         @JSONDescription("An optional description.  Will be rendered as an item tooltip.  Unlike the name parameter, descriptions on definitions are appended to this description, and do not overwrite it.  The idea behind this is that some variants need extra text to tell why they are different from one another, but shouldn't require re-writing the main description.")
         public String description;
 
+        @JSONDescription("Optional path to a PNG used for this item's tooltip border.  Relative paths are resolved in this item's pack; a packID:path/to/texture.png resource location may also be used.  Minecraft GUI scaling in a companion .png.mcmeta file is supported, including nine_slice and stretch_inner.  If omitted, Minecraft's default tooltip border is used.")
+        public String tooltipBorder;
+
+        @JSONDescription("Optional path to a PNG used for this item's tooltip background.  Relative paths are resolved in this item's pack; a packID:path/to/texture.png resource location may also be used.  Minecraft GUI scaling in a companion .png.mcmeta file is supported, including nine_slice and stretch_inner.  If omitted, Minecraft's default tooltip background is used.")
+        public String tooltipBackground;
+
         @JSONDescription("The optional stack size for this item.  Items with this set will stack to the size specified, up to the standard stack size of 64.  This of course won't work if the item has NBT on it, such as used engines.")
         public int stackSize;
 
