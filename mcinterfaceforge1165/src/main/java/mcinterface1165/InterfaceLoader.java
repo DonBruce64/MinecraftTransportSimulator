@@ -46,6 +46,7 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.common.extensions.IForgeContainerType;
+import net.minecraftforge.common.MinecraftForge;
 
 /**
  * Loader interface for the mod.  This class is not actually an interface, unlike everything else.
@@ -92,6 +93,7 @@ public class InterfaceLoader {
         //Init interfaces and send to the main game system.
         if (isClient) {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), new InterfaceClient(), new InterfaceInput(), new InterfaceSound(), new InterfaceRender());
+            MinecraftForge.EVENT_BUS.register(new TooltipRenderHandler());
             FMLJavaModLoadingContext.get().getModEventBus().addListener(InterfaceRender::registerRenderer);
             FMLJavaModLoadingContext.get().getModEventBus().addListener(InterfaceLoader::onClientSetup);
         } else {

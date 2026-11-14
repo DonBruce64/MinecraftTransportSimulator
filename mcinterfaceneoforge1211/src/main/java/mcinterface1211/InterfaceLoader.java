@@ -55,6 +55,7 @@ import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 /**
@@ -113,6 +114,7 @@ public class InterfaceLoader {
         //Init interfaces and send to the main game system.
         if (isClient) {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), new InterfaceClient(), new InterfaceInput(), new InterfaceSound(), new InterfaceRender());
+            NeoForge.EVENT_BUS.register(new TooltipRenderHandler());
             modBus.addListener(InterfaceInput::onIVRegisterKeyMappingsEvent);
             modBus.addListener(InterfaceRender::onIVRegisterShadersEvent);
             modBus.addListener(InterfaceRender::onIVRegisterRenderersEvent);
