@@ -133,8 +133,6 @@ public class PartGrapple extends APart {
     private static final double MAX_CAMERA_AIM_OFFSET = 64;
     private static final String HOOKED_MULTIPART_TAG = "grapple_hooked_multipart";
     private static final String HOOK_OFFSET_TAG = "grapple_hook_offset";
-    /**How often dev mode logs where the hook sits on a hooked vehicle, in ticks.  See logServerHookDrift.  Temporary.**/
-    private static final int HOOK_DRIFT_LOG_INTERVAL = 10;
     /**Converts kN to the kg*m/ticks^2 the vehicle physics uses, at 20 ticks a second.**/
     private static final double KN_TO_TICK_FORCE = 1000D / 400D;
     /**How many times the winch force the line snaps at when breakForce is left at 0.**/
@@ -151,8 +149,6 @@ public class PartGrapple extends APart {
     private static final double DEFAULT_WINCH_WEIGHTS = 2;
     /**Gravity in m/ticks^2, the same as {@link EntityVehicleF_Physics#getGravitationalForce()} uses.**/
     private static final double GRAVITY = 0.0245D;
-    /**How often dev mode logs a line between two vehicles, in ticks.  See logTowPull.  Temporary.**/
-    private static final int TOW_LOG_INTERVAL = 5;
     /**How often the server checks the anchor block still exists, in ticks.**/
     private static final int ANCHOR_CHECK_INTERVAL = 10;
     /**How long to wait after a climb path couldn't be built before trying again, in ticks.  Building one is costly.**/
@@ -428,26 +424,6 @@ public class PartGrapple extends APart {
         return lineOutVar.isActive;
     }
 
-    /**
-     * Returns this grapple's state for the vehicle's dev mode movement log: hook state, climb phase and
-     * progress, line length against the launcher's distance from the hook, and the reel and slack inputs.  Temporary.
-     */
-    public String getDebugState() {
-        return String.format("[grapple state %d mantle %d progress %.3f rope %.2f distance %.2f share %.2f reel %b slack %b winch %.0f stretch %.3f brake %.0f break %.0f overload %d | throttle %.2f brakeInput %.2f backwards %b engines%s]", getState(), getMantle(), mantleProgressVar.currentValue, ropeVar.currentValue, isAttached() ? position.distanceTo(getAnchor()) : 0, selfShareVar.currentValue, reelVar.isActive, slackVar.isActive, getWinchLimit(), reelVar.isActive ? getWinchStretch() : 0, getBrakeHold(vehicleOn), getBreakForce(), overloadTicks,
-                vehicleOn.throttleVar.currentValue, vehicleOn.brakeVar.currentValue, isDrivingBackwards(), getEngineDebugState());
-    }
-
-    /**
-     * Returns each engine's gear and RPM, for debug logging.  Temporary, for chasing the engine revving while driving back down from a mantle.
-     */
-    private String getEngineDebugState() {
-        StringBuilder engines = new StringBuilder();
-        for (PartEngine engine : vehicleOn.engines) {
-            engines.append(String.format(" (gear %.0f rpm %.0f)", engine.currentGearVar.currentValue, engine.rpm));
-        }
-        return engines.toString();
-    }
-
     @Override
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
@@ -536,7 +512,6 @@ public class PartGrapple extends APart {
             updateRenderAnchor();
             updateDangle();
             sendCameraAim();
-            logClientHookDrift();
 
             //Pull the hooked vehicle's share here too, the same as the server.  Clients only get its position from the
             //server, so without this our copy of it never moves by itself, falls blocks behind, and the line drags us back to it.
@@ -619,7 +594,6 @@ public class PartGrapple extends APart {
                     release();
                     return;
                 }
-                logServerHookDrift();
                 setAnchor(getHookPosition(hookedMultipart));
                 break;
             }
@@ -1168,62 +1142,7 @@ public class PartGrapple extends APart {
         if (!world.isClient()) {
             tickHoldTension = Math.max(tickHoldTension, pull.holdTension);
         }
-        logTowPull("towed", other, towards, distance - rope, share, lines, launcherMotion, pull);
         queueChainPull(other, anchor, pull.force, pull.motion, MAX_TOWED_PULL_TURN / lines.count, lines.swing, launcherMotion.copy());
-    }
-
-    /**
-     * In dev mode, logs how far the hook on a vehicle is off where it should be, every {@link #HOOK_DRIFT_LOG_INTERVAL}
-     * ticks on the server.  Called before the anchor is moved this tick, so the stored anchor is from last tick.
-     * Temporary, for chasing the hook drawing off the hooked vehicle.
-     * 
-     * offset: where the hook should be, in the hooked vehicle's own frame.  stale: how far the vehicle has carried the hook
-     * since last tick's anchor, in blocks.  If the vehicle updates after us in a tick, the hook we sync is this far behind its body.  Pair with the client's GrappleHookClient lines.
-     */
-    private void logServerHookDrift() {
-        if (!ConfigSystem.settings.general.devMode.value || vehicleOn.ticksExisted % HOOK_DRIFT_LOG_INTERVAL != 0) {
-            return;
-        }
-        Point3D shouldBe = getHookPosition(hookedMultipart);
-        Point3D motion = hookedMultipart instanceof AEntityVehicleD_Moving ? ((AEntityVehicleD_Moving) hookedMultipart).motion : new Point3D();
-        InterfaceManager.coreInterface.logError(String.format("GrappleHookServer tick %d on %s: offset (%.3f %.3f %.3f) stale %.3f | vehicle pos (%.2f %.2f %.2f) yaw %.2f motion (%.3f %.3f %.3f)",
-                vehicleOn.ticksExisted, hookedMultipart.definition.systemName, hookOffset.x, hookOffset.y, hookOffset.z, getAnchor().distanceTo(shouldBe),
-                hookedMultipart.position.x, hookedMultipart.position.y, hookedMultipart.position.z, hookedMultipart.orientation.angles.y, motion.x, motion.y, motion.z));
-    }
-
-    /**
-     * Client side, in dev mode: logs where the server's synced hook sits on our copy of the hooked vehicle, every
-     * {@link #HOOK_DRIFT_LOG_INTERVAL} ticks.  Takes the hooked vehicle the server told us about, or the nearest
-     * vehicle not in our tow chain if we weren't told.  Temporary, for chasing the hook drawing off the hooked vehicle.
-     * 
-     * offset: the server's hook in that vehicle's own frame.  It should match the server's offset if the server's hook
-     * is on our copy's body, so the difference is how far off it would be drawn without the client working it out.
-     * drawnOff: how far the server's hook is from where we now draw it.  known: whether we were told which vehicle it is.
-     * backlog: how far the server has moved that vehicle that our copy hasn't caught up to yet.
-     */
-    private void logClientHookDrift() {
-        if (!ConfigSystem.settings.general.devMode.value || getState() != STATE_VEHICLE || vehicleOn.ticksExisted % HOOK_DRIFT_LOG_INTERVAL != 0) {
-            return;
-        }
-        Point3D anchor = getAnchor();
-        AEntityF_Multipart<?> known = getHookedMultipart();
-        EntityVehicleF_Physics nearest = known instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) known : null;
-        double nearestDistance = nearest != null ? -1 : Double.MAX_VALUE;
-        for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
-            double distance = vehicle.position.distanceTo(anchor);
-            if (distance < nearestDistance && !isInOurTowChain(vehicle)) {
-                nearest = vehicle;
-                nearestDistance = distance;
-            }
-        }
-        if (nearest == null) {
-            return;
-        }
-        Point3D offset = toLocal(nearest, anchor);
-        Point3D backlog = nearest.getServerCorrectionBacklog();
-        InterfaceManager.coreInterface.logError(String.format("GrappleHookClient tick %d on %s known %b: offset (%.3f %.3f %.3f) drawnOff %.3f | backlog %.3f (%.3f %.3f %.3f) | vehicle pos (%.2f %.2f %.2f) yaw %.2f velocity %.3f",
-                vehicleOn.ticksExisted, nearest.definition.systemName, known != null, offset.x, offset.y, offset.z, anchor.distanceTo(getLineAnchor()), backlog.length(), backlog.x, backlog.y, backlog.z,
-                nearest.position.x, nearest.position.y, nearest.position.z, nearest.orientation.angles.y, nearest.velocity));
     }
 
     /**
@@ -1267,34 +1186,6 @@ public class PartGrapple extends APart {
      */
     private double getWinchStretch() {
         return Math.min(MAX_PULL / STIFFNESS, reelSpeedVar.currentValue / 20D / STIFFNESS);
-    }
-
-    /**
-     * In dev mode, logs how a line between two vehicles pulls on one end, every {@link #TOW_LOG_INTERVAL} ticks on the server.
-     * Both ends log on the same tick, so the "towing" and "towed" lines pair up.  Temporary, for chasing weak vehicle tows.
-     * 
-     * radial: the chain's speed towards the other end before the line, in blocks per tick.  closing: how fast the
-     * two ends close up, so negative is pulling apart.  stop: what the rigid line puts on it to stop the ends pulling apart.  spring: what the stretch pulls it in by.  along: what it actually gets towards
-     * the other end, after tyres and brakes.  impulse: along times mass.  The two ends' impulses match if the line
-     * passes all its momentum between them; a towing impulse bigger than the towed one is momentum the line loses.
-     * thrust: what the engines added along the heading this tick.  brake: total brake hold on the grounded wheels.
-     */
-    private void logTowPull(String end, EntityVehicleF_Physics hooked, Point3D towards, double stretch, double share, LineShare lines, Point3D otherMotion, ChainPull pull) {
-        if (!ConfigSystem.settings.general.devMode.value || world.isClient() || vehicleOn.ticksExisted % TOW_LOG_INTERVAL != 0) {
-            return;
-        }
-        EntityVehicleF_Physics lead = getTowChainLead(hooked);
-        double radial = lead.motion.dotProduct(towards, false);
-        double closing = radial - otherMotion.dotProduct(towards, false);
-        double stop = Math.max(0, -closing) * share / lines.stop;
-        double spring = Math.max(0, Math.min(stretch * STIFFNESS, MAX_PULL) * share / lead.speedFactor - Math.max(0, closing) * share) / lines.spring;
-        double along = pull.motion.dotProduct(towards, false);
-        double brake = getBrakeHold(lead);
-        InterfaceManager.coreInterface.logError(String.format("GrappleTow tick %d %s %s: mass %.0f share %.2f lines stop %.2f spring %.2f swing %.2f count %d stretch %.3f | radial %.4f closing %.4f stop %.4f spring %.4f along %.4f held %.4f | impulse %.1f tension %.1f winch %.1f | speed %.4f thrust %.5f brake %.1f grounded %d",
-                vehicleOn.ticksExisted, end, lead.definition.systemName, lead.currentMass, share, lines.stop, lines.spring, lines.swing, lines.count, stretch,
-                radial, closing, stop, spring, along, stop + spring - along,
-                along * lead.currentMass, pull.force.length(), getWinchLimit(),
-                lead.velocity, lead.getThrustSpeedGain(), brake, lead.groundDeviceCollective.groundedGroundDevices.size()));
     }
 
     /**
@@ -1956,9 +1847,6 @@ public class PartGrapple extends APart {
         if (!world.isClient()) {
             tickHoldTension = Math.max(tickHoldTension, pull.holdTension);
         }
-        if (otherMotion != null) {
-            logTowPull("towing", vehicleOn, lineNormal, distance - rope, share, lines, otherMotion, pull);
-        }
         if (vehicleOn.towedByConnection != null) {
             queueChainPull(vehicleOn, position, pull.force, pull.motion, MAX_PULL_TURN / lines.count, lines.swing, null);
             return;
@@ -2060,7 +1948,6 @@ public class PartGrapple extends APart {
         }
         if (face == null) {
             debugClimb("no wall too tall to drive up touching the wheels or collision boxes");
-            logWallProbes(wheels, ahead, stepHeight);
             return false;
         }
 
@@ -2156,46 +2043,6 @@ public class PartGrapple extends APart {
             }
         }
         return null;
-    }
-
-    /**
-     * Dev mode only, temporary: logs where the wheels and boxes at the end facing the hook are, and how far
-     * ahead of each the nearest solid block is, so a wall the climb misses can be found in the log.
-     */
-    private void logWallProbes(WheelSplit wheels, Point3D ahead, double stepHeight) {
-        if (!ConfigSystem.settings.general.devMode.value || vehicleOn.ticksExisted % 10 != 0) {
-            return;
-        }
-        StringBuilder log = new StringBuilder(String.format("GrappleWall tick %d: ahead (%.2f %.2f) stepHeight %.2f", vehicleOn.ticksExisted, ahead.x, ahead.z, stepHeight));
-        for (APart wheel : wheels.launcherEnd) {
-            double radius = wheel.getHeight() / 2D;
-            log.append(String.format(" | wheel local z %.2f y %.2f to %.2f reach %.2f wall %s", toVehicleLocal(wheel.position).z, wheel.position.y - radius, wheel.position.y + radius, radius, getWallDistances(wheel.position, radius, ahead)));
-        }
-        for (BoundingBox box : vehicleOn.allBlockCollisionBoxes) {
-            double localZ = toVehicleLocal(box.globalCenter).z;
-            if ((localZ - wheels.centerZ) * wheels.side > 0) {
-                log.append(String.format(" | box local z %.2f y %.2f to %.2f reach %.2f wall %s", localZ, box.globalCenter.y - box.heightRadius, box.globalCenter.y + box.heightRadius, Math.abs(ahead.x) * box.widthRadius + Math.abs(ahead.z) * box.depthRadius, getWallDistances(box.globalCenter, box.heightRadius, ahead)));
-            }
-        }
-        InterfaceManager.coreInterface.logError(log.toString());
-    }
-
-    /**
-     * Dev mode only, temporary: how far ahead of the middle the first solid block is at the bottom, middle and top, up to 4 blocks.
-     */
-    private String getWallDistances(Point3D center, double halfHeight, Point3D ahead) {
-        StringBuilder distances = new StringBuilder();
-        for (double y : new double[] {center.y - halfHeight + MANTLE_STEP, center.y, center.y + halfHeight - MANTLE_STEP}) {
-            String found = "-";
-            for (double distance = 0; distance <= 4; distance += MANTLE_STEP) {
-                if (isSolid(new Point3D(center.x, y, center.z).addScaled(ahead, distance))) {
-                    found = String.format("%.2f", distance);
-                    break;
-                }
-            }
-            distances.append(distances.length() == 0 ? "" : "/").append(found);
-        }
-        return distances.toString();
     }
 
     /**
@@ -3367,17 +3214,6 @@ public class PartGrapple extends APart {
         if (offset != null) {
             hookOffset.set(offset);
         }
-    }
-
-    /**
-     * Returns the total brake hold on the vehicle's grounded wheels, in kg*m/ticks^2.  For debug logging.
-     */
-    private static double getBrakeHold(EntityVehicleF_Physics vehicle) {
-        double brake = 0;
-        for (PartGroundDevice groundDevice : vehicle.groundDeviceCollective.groundedGroundDevices) {
-            brake += vehicle.getWheelBrakingForce(groundDevice);
-        }
-        return brake;
     }
 
     /**

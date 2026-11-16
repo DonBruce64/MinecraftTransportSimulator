@@ -135,11 +135,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private static final double NEAR_UPRIGHT_PITCH = 70;
     /**Push out of a wall to apply after moving this tick, if a grapple line has dragged us into one.**/
     private Point3D grapplePushOut;
-    //Dev mode grapple movement log.  See logGrappleMovement.  Temporary.
-    private static final int GRAPPLE_LOG_AFTER_TICKS = 100;
-    private static final double GRAPPLE_LOG_WILD_MOVE = 0.5;
-    private static final double GRAPPLE_LOG_WILD_TURN = 10;
-    private long lastGrappleAttachedTick = -GRAPPLE_LOG_AFTER_TICKS - 1;
 
     //Wall checks for motion that doesn't come from our own wheels, such as a grapple line.
     /**How far we are pushed out of a wall each tick, in blocks.**/
@@ -283,9 +278,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             updateGrapples();
             world.beginProfiling("TotalMovement", false);
             moveVehicle();
-            if (ConfigSystem.settings.general.devMode.value && !grapples.isEmpty()) {
-                logGrappleMovement();
-            }
             if (!world.isClient()) {
                 adjustControlSurfaces();
             }
@@ -427,57 +419,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             }
         }
         return false;
-    }
-
-    /**
-     * Client side: returns how far the server has moved us that we haven't caught up to yet, in blocks.  Temporary, for grapple hook drift logging.
-     */
-    public Point3D getServerCorrectionBacklog() {
-        return serverDeltaM.copy().subtract(clientDeltaM);
-    }
-
-    /**
-     * In dev mode, logs how we actually moved and turned this tick, on both sides, while a grapple line is
-     * attached and for {@link #GRAPPLE_LOG_AFTER_TICKS} after, so judder after a release shows up too.
-     * The move and turn are measured from where we were at the start of the tick, so they include
-     * everything: the line, a climb, ground handling, collisions, push-outs and client sync corrections.
-     * Ticks that move or turn a lot are marked WILD, so they're easy to find.  Temporary, for tracking down
-     * wild movement on grapples.
-     * <p>
-     * The turn is given as an angle about an axis in our own frame: x is pitch, y is yaw and z is roll.
-     */
-    private void logGrappleMovement() {
-        StringBuilder grappleStates = new StringBuilder();
-        boolean attached = false;
-        for (PartGrapple grapple : grapples) {
-            attached |= grapple.isAttached();
-            grappleStates.append(' ').append(grapple.getDebugState());
-        }
-        if (attached) {
-            lastGrappleAttachedTick = ticksExisted;
-        } else if (ticksExisted - lastGrappleAttachedTick > GRAPPLE_LOG_AFTER_TICKS) {
-            return;
-        }
-
-        //The turn this tick, in our own frame: the start-of-tick orientation taken back off the current one.
-        RotationMatrix turn = new RotationMatrix().multiplyTranspose(prevOrientation).multiply(orientation);
-        double turnAngle = Math.toDegrees(Math.acos(Math.max(-1, Math.min(1, (turn.m00 + turn.m11 + turn.m22 - 1) / 2D))));
-        Point3D turnAxis = new Point3D(turn.m21 - turn.m12, turn.m02 - turn.m20, turn.m10 - turn.m01);
-        if (turnAxis.length() > 1.0E-9) {
-            turnAxis.normalize();
-        }
-        Point3D moved = position.copy().subtract(prevPosition);
-        boolean wild = moved.length() > GRAPPLE_LOG_WILD_MOVE || turnAngle > GRAPPLE_LOG_WILD_TURN;
-
-        //Columns of the matrix are where our own axes point in the world.
-        InterfaceManager.coreInterface.logError(String.format("GrappleMove %s tick %d%s: climbing %b held %b/%b grounded %d pushOut %s | moved %.3f (%.3f %.3f %.3f) motion (%.3f %.3f %.3f) | turned %.2f about (%.2f %.2f %.2f) | forward (%.3f %.3f %.3f) up (%.3f %.3f %.3f) angles (%.2f %.2f %.2f) | client fix move (%.3f %.3f %.3f) turn (%.2f %.2f %.2f) | pos (%.2f %.2f %.2f) |%s",
-                world.isClient() ? "client" : "server", ticksExisted, wild ? " WILD" : "",
-                climbingWithGrapple, pitchHeldByGrapple, rollHeldByGrapple, groundDeviceCollective.groundedGroundDevices.size(), grapplePushOut,
-                moved.length(), moved.x, moved.y, moved.z, motion.x, motion.y, motion.z,
-                turnAngle, turnAxis.x, turnAxis.y, turnAxis.z,
-                orientation.m02, orientation.m12, orientation.m22, orientation.m01, orientation.m11, orientation.m21, orientation.angles.x, orientation.angles.y, orientation.angles.z,
-                clientDeltaMApplied.x, clientDeltaMApplied.y, clientDeltaMApplied.z, clientDeltaRApplied.x, clientDeltaRApplied.y, clientDeltaRApplied.z,
-                position.x, position.y, position.z, grappleStates));
     }
 
     /**

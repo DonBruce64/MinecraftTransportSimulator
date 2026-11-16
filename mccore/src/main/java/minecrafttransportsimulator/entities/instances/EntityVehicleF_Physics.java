@@ -723,13 +723,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     }
     
     /**
-     * Returns how much our engines and propellers sped us up along our heading this tick, in blocks per tick.  Temporary, for grapple tow logging.
-     */
-    public double getThrustSpeedGain() {
-        return currentMass > 0 ? thrustForce.dotProduct(headingVector, false) / currentMass : 0;
-    }
-
-    /**
      * Returns the force of gravity on us, in kg*m/ticks^2.  Blimps don't feel it while their ballast holds them up.
      */
     public double getGravitationalForce() {
