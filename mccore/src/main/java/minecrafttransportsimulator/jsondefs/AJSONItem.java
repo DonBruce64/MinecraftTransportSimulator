@@ -24,6 +24,9 @@ public abstract class AJSONItem extends AJSONBase {
         @JSONDescription("Set to true to hide this item on creative tabs.")
         public boolean hideOnCreativeTab;
 
+        @JSONDescription("If true, using a paint gun on this object will not open the repainting GUI and its definition cannot be changed by a repaint request.")
+        public boolean disableRepaint;
+
         @JSONDescription("The name of this content.  Will be displayed in item form.  Note that if the content is a type that has a set of definitions, then this name is ignored and the appropriate definition name is used instead.")
         public String name;
 
@@ -54,6 +57,9 @@ public abstract class AJSONItem extends AJSONBase {
 
         @JSONDescription("How far away this radar can detect things, in blocks.")
         public double radarRange;
+
+        @JSONDescription("If true, this item is sharp enough to cut grapple lines.  Players holding it can attack a grapple's line to snap it.")
+        public boolean canCutGrappleLines;
 
         //Moved from multiple locations.
         //Vehicle was deprecated for vehicle type.

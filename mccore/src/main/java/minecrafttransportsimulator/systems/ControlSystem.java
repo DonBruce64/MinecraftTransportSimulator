@@ -1,18 +1,33 @@
 package minecrafttransportsimulator.systems;
 
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map.Entry;
+import java.util.UUID;
 
+import minecrafttransportsimulator.baseclasses.BlockHitResult;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.*;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPanel;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.components.AItemPart;
+import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigKeyboard;
+import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityCameraChange;
@@ -25,7 +40,12 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat.SeatAction;
+import minecrafttransportsimulator.packets.instances.PacketPartGrappleCut;
+import minecrafttransportsimulator.packets.instances.PacketPlayerGrappleCut;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlNotification;
+import minecrafttransportsimulator.packets.instances.PacketVehicleDeployment;
+import minecrafttransportsimulator.packets.instances.PacketVehicleDeployment.Action;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePacking;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
@@ -36,15 +56,24 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 public final class ControlSystem {
     private static final int NULL_COMPONENT = 999;
     private static final double INTERACTION_DISTANCE = 3.5;
+    private static final double VEHICLE_DEPLOYMENT_DISTANCE = 5.0D;
+    private static final int TIMED_ACTION_COMPLETION_RETRY_INTERVAL_TICKS = 5;
+    private static final int VEHICLE_ACTION_VALIDATION_INTERVAL_TICKS = 5;
+    private static final int VEHICLE_DEPLOYMENT_GRANT_TIMEOUT_TICKS = 40;
     private static final long DISMOUNT_CONFIRM_WINDOW_MILLIS = 3000L;
     private static boolean joysticksInhibited = false;
     private static IWrapperPlayer clientPlayer;
+    private static boolean arcadeNoticeShownThisRide;
+    private static boolean standardNoticeShownThisRide;
 
     private static boolean clickingLeft = false;
     private static boolean clickingRight = false;
 
     private static double throttleRequestLastCheck;
     private static double brakeRequestLastCheck;
+    /**The vehicle a grapple winching it in has held the automatic brake off on, if gas or brake hasn't been pressed in it since.
+     * Kept as the vehicle rather than a flag, so it doesn't carry over to the next vehicle we drive.**/
+    private static EntityVehicleF_Physics autoBrakeHeldForReel;
 
     private static boolean mouseYokeEnabledLastCall;
     private static double mouseYokePosX = Double.NaN;
@@ -54,6 +83,31 @@ public final class ControlSystem {
     private static boolean dismountInputPressedLastCall;
 
     private static EntityInteractResult interactResult = null;
+    private static AEntityF_Multipart<?> partInstallationEntity;
+    private static BoundingBox partInstallationBox;
+    private static IWrapperItemStack partInstallationStack;
+    private static int partInstallationSlotIndex = -1;
+    private static int partInstallationElapsedTicks;
+    private static int partInstallationTime;
+    private static APart partRemovalPart;
+    private static BoundingBox partRemovalBox;
+    private static IWrapperItemStack partRemovalToolStack;
+    private static int partRemovalElapsedTicks;
+    private static int partRemovalTime;
+    private static int partRemovalCompletionRetryTicks;
+    private static VehicleDeploymentState vehicleDeployment;
+    private static EntityVehicleF_Physics vehiclePackingVehicle;
+    private static IWrapperItemStack vehiclePackingToolStack;
+    private static Point3D vehiclePackingMarkerPosition;
+    private static int vehiclePackingElapsedTicks;
+    private static int vehiclePackingTime;
+    private static int vehiclePackingCompletionRetryTicks;
+    private static int vehiclePackingValidationTicks;
+    private static int vehiclePackingOperationID;
+    private static int nextVehiclePackingOperationID;
+    private static boolean timedLeftClickInputCaptured;
+    private static boolean vehicleDeploymentInputCaptured;
+    private static boolean timedActionOverlayVisible;
 
     /**
      * Static initializer for the IWrapper inputs, as we need to iterate through the enums to initialize them
@@ -85,6 +139,20 @@ public final class ControlSystem {
             if (!clickingLeft) {
                 clickingLeft = true;
                 handleClick(player, playerGun, true, false, false, false);
+                if (!InterfaceManager.clientInterface.isGUIOpen() && PartGrapple.canCutLines(player)) {
+                    //Attacking with something sharp cuts the grapple line we hit, or failing that, any line hooked into us.
+                    //The server checks we can reach the line, or that it's us it's hooked into.
+                    PartGrapple attacked = PartGrapple.getLineAttacked(player);
+                    if (attacked != null) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketPartGrappleCut(attacked, player));
+                    } else if (PartGrapple.isAnyHookedInEntity(player.getWorld())) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketPlayerGrappleCut(player));
+                    }
+                }
+            } else if (isVehiclePackingInProgress()) {
+                updateVehiclePacking(player);
+            } else if (isPartRemovalInProgress()) {
+                updatePartRemoval(player);
             }
         } else if (clickingLeft) {
             clickingLeft = false;
@@ -94,14 +162,158 @@ public final class ControlSystem {
             if (!clickingRight) {
                 clickingRight = true;
                 handleClick(player, playerGun, false, false, true, false);
+            } else if (isPartInstallationInProgress()) {
+                updatePartInstallation(player);
             }
         } else if (clickingRight) {
             clickingRight = false;
+            vehicleDeploymentInputCaptured = false;
             handleClick(player, playerGun, false, false, false, true);
+        }
+        if (isVehicleDeploymentInProgress()) {
+            updateVehicleDeployment(player);
+        }
+        LanguageEntry timedActionOverlayMessage = null;
+        if (isPartInstallationInProgress() && partInstallationElapsedTicks < partInstallationTime) {
+            timedActionOverlayMessage = LanguageSystem.GUI_PARTINSTALL_INSTALLING;
+        } else if (isPartRemovalInProgress() && partRemovalElapsedTicks < partRemovalTime) {
+            timedActionOverlayMessage = LanguageSystem.GUI_PARTREMOVE_REMOVING;
+        } else if (isVehiclePackingInProgress() && vehiclePackingElapsedTicks < vehiclePackingTime) {
+            timedActionOverlayMessage = LanguageSystem.GUI_VEHICLEPACK_PACKING;
+        } else if (vehicleDeployment != null && vehicleDeployment.elapsedTicks < vehicleDeployment.deployTime) {
+            timedActionOverlayMessage = LanguageSystem.GUI_VEHICLEDEPLOY_DEPLOYING;
+        }
+        if (timedActionOverlayMessage != null) {
+            InterfaceManager.clientInterface.displayOverlayMessage(timedActionOverlayMessage.getCurrentValue());
+            timedActionOverlayVisible = true;
+        } else if (timedActionOverlayVisible) {
+            InterfaceManager.clientInterface.displayOverlayMessage("");
+            timedActionOverlayVisible = false;
         }
 
         if (playerGun != null && playerGun.activeGun != null && !InterfaceManager.clientInterface.isGUIOpen() && ControlsKeyboard.GENERAL_RELOAD.isPressed()) {
             InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.RELOAD_HAND));
+        }
+    }
+
+    public static boolean isPartInstallationInProgress() {
+        return partInstallationEntity != null;
+    }
+
+    public static float getPartInstallationProgress(float partialTicks) {
+        if (!isPartInstallationInProgress() || partInstallationTime <= 0) {
+            return 0.0F;
+        }
+        return Math.max(0.0F, Math.min(1.0F, (partInstallationElapsedTicks + partialTicks) / partInstallationTime));
+    }
+
+    public static boolean isPartInstallationTarget(AEntityF_Multipart<?> multipart, BoundingBox box) {
+        return partInstallationEntity == multipart
+                && partInstallationBox == box;
+    }
+
+    public static boolean isPartRemovalInProgress() {
+        return partRemovalPart != null;
+    }
+
+    public static float getPartRemovalProgress(float partialTicks) {
+        if (!isPartRemovalInProgress() || partRemovalTime <= 0) {
+            return 0.0F;
+        }
+        return Math.max(0.0F, Math.min(1.0F, (partRemovalElapsedTicks + partialTicks) / partRemovalTime));
+    }
+
+    public static boolean isPartRemovalTarget(AEntityF_Multipart<?> multipart) {
+        return partRemovalPart == multipart;
+    }
+
+    public static boolean isVehicleDeploymentInProgress() {
+        return vehicleDeployment != null;
+    }
+
+    public static float getVehicleDeploymentProgress(float partialTicks) {
+        if (vehicleDeployment == null || vehicleDeployment.operationID == 0) {
+            return 0.0F;
+        }
+        return Math.max(0.0F, Math.min(1.0F, (vehicleDeployment.elapsedTicks + partialTicks) / vehicleDeployment.deployTime));
+    }
+
+    public static boolean getVehicleDeploymentMarkerPosition(Point3D markerPosition) {
+        IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+        if (vehicleDeployment != null && player != null && player.getWorld() == vehicleDeployment.world) {
+            markerPosition.set(vehicleDeployment.markerPosition);
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isVehiclePackingInProgress() {
+        return vehiclePackingVehicle != null;
+    }
+
+    public static float getVehiclePackingProgress(float partialTicks) {
+        if (!isVehiclePackingInProgress() || vehiclePackingTime <= 0) {
+            return 0.0F;
+        }
+        return Math.max(0.0F, Math.min(1.0F, (vehiclePackingElapsedTicks + partialTicks) / vehiclePackingTime));
+    }
+
+    public static boolean getVehiclePackingMarkerPosition(Point3D markerPosition) {
+        if (isVehiclePackingInProgress()) {
+            markerPosition.set(vehiclePackingMarkerPosition);
+            return true;
+        }
+        return false;
+    }
+
+    public static void finishVehiclePacking(UUID vehicleID, int operationID) {
+        if (isVehiclePackingInProgress()
+                && vehiclePackingVehicle.uniqueUUID.equals(vehicleID)
+                && vehiclePackingOperationID == operationID) {
+            clearVehiclePacking();
+            interactResult = null;
+        }
+    }
+
+    /** Clears timed interaction state when normal controls are disabled for spectator mode. */
+    public static void cancelTimedActionsForSpectator(IWrapperPlayer player) {
+        if (player != null && player.isSpectator()) {
+            boolean timedActionInProgress = isPartInstallationInProgress()
+                    || isPartRemovalInProgress()
+                    || isVehiclePackingInProgress();
+            EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
+            if (playerGun != null && playerGun.activeGun != null) {
+                if (clickingLeft) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.TRIGGER_OFF));
+                }
+                if (clickingRight) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.AIM_OFF));
+                }
+            }
+            if (!timedActionInProgress && interactResult != null) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(interactResult.entity, player, interactResult.box, false, false));
+            }
+            if (isPartInstallationInProgress()) {
+                cancelPartInstallation(player);
+            }
+            if (isPartRemovalInProgress()) {
+                cancelPartRemoval(player);
+            }
+            if (isVehicleDeploymentInProgress()) {
+                cancelVehicleDeployment(player);
+            }
+            if (isVehiclePackingInProgress()) {
+                cancelVehiclePacking(player);
+            }
+            timedLeftClickInputCaptured = false;
+            vehicleDeploymentInputCaptured = false;
+            clickingLeft = false;
+            clickingRight = false;
+            interactResult = null;
+            if (timedActionOverlayVisible) {
+                InterfaceManager.clientInterface.displayOverlayMessage("");
+                timedActionOverlayVisible = false;
+            }
         }
     }
 
@@ -117,10 +329,42 @@ public final class ControlSystem {
      * the IV entity.
      */
     public static boolean shouldSuppressVanillaRightClick(IWrapperPlayer player) {
+        if (vehicleDeploymentInputCaptured) {
+            return true;
+        }
         if (player != null && player.getWorld() != null) {
             Point3D startPosition = player.getEyePosition();
             Point3D endPosition = player.getLineOfSight(INTERACTION_DISTANCE).add(startPosition);
             return player.getWorld().getMultipartEntityIntersect(startPosition, endPosition) != null;
+        }
+        return false;
+    }
+
+    /**
+     * Returns true when vanilla attack handling should be suppressed because left-click is being
+     * used for a timed part or vehicle operation.  This prevents the same input from striking an
+     * entity or block behind the IV hitbox.
+     */
+    public static boolean shouldSuppressVanillaLeftClick(IWrapperPlayer player) {
+        if (timedLeftClickInputCaptured) {
+            return true;
+        }
+        if (player != null && player.getWorld() != null && isHoldingPartRemovalTool(player)) {
+            Point3D startPosition = player.getEyePosition();
+            Point3D endPosition = player.getLineOfSight(INTERACTION_DISTANCE).add(startPosition);
+            EntityInteractResult target = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
+            if (target != null && target.entity instanceof AEntityF_Multipart) {
+                if (player.isSneaking()) {
+                    EntityVehicleF_Physics vehicle = getVehicleForMultipart((AEntityF_Multipart<?>) target.entity);
+                    return vehicle != null && vehicle.definition.motorized.packTime > 0 && vehicle.isValid;
+                } else if (target.entity instanceof APart) {
+                    APart part = (APart) target.entity;
+                    return part.definition.generic.removeTime > 0
+                            && part.isValid
+                            && !part.isFake()
+                            && part.canBeClicked();
+                }
+            }
         }
         return false;
     }
@@ -193,18 +437,462 @@ public final class ControlSystem {
                 InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.AIM_OFF));
             }
         }
+        if (leftClickUp) {
+            timedLeftClickInputCaptured = false;
+            if (isVehiclePackingInProgress()) {
+                cancelVehiclePacking(player);
+                return;
+            } else if (isPartRemovalInProgress()) {
+                cancelPartRemoval(player);
+                return;
+            }
+        }
+        if (rightClickUp) {
+            vehicleDeploymentInputCaptured = false;
+            if (isPartInstallationInProgress()) {
+                cancelPartInstallation(player);
+                return;
+            } else if (isVehicleDeploymentInProgress()) {
+                cancelVehicleDeployment(player);
+                return;
+            }
+        }
         if (leftClickDown || rightClickDown) {
             Point3D startPosition = player.getEyePosition();
             Point3D endPosition = player.getLineOfSight(INTERACTION_DISTANCE).add(startPosition);
 
             interactResult = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
             if (interactResult != null) {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(interactResult.entity, player, interactResult.box, leftClickDown, rightClickDown));
+                boolean timedActionStarted = rightClickDown && startPartInstallation(player, interactResult)
+                        || leftClickDown && (startVehiclePacking(player, interactResult) || startPartRemoval(player, interactResult));
+                if (!timedActionStarted) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(interactResult.entity, player, interactResult.box, leftClickDown, rightClickDown));
+                }
             }
         } else if (interactResult != null) {
             //Fire off un-click to entity last clicked.
             InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(interactResult.entity, player, interactResult.box, false, false));
             interactResult = null;
+        }
+    }
+
+    private static boolean startPartInstallation(IWrapperPlayer player, EntityInteractResult target) {
+        if (!(target.entity instanceof AEntityF_Multipart) || player.isSneaking()) {
+            return false;
+        }
+
+        AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) target.entity;
+        IWrapperItemStack heldStack = player.getHeldStack();
+        AItemBase heldItem = heldStack.getItem();
+        if (!(heldItem instanceof AItemPart)) {
+            return false;
+        }
+
+        AItemPart heldPart = (AItemPart) heldItem;
+        int installTime = heldPart.definition.generic.installTime;
+        if (installTime <= 0 || isPartActionVehicleLocked(multipart)) {
+            return false;
+        }
+
+        int slotIndex = getPartInstallationSlotIndex(multipart, target.box.localCenter);
+        if (slotIndex < 0 || multipart.partsInSlots.get(slotIndex) != null) {
+            return false;
+        }
+
+        JSONPartDefinition slotDefinition = multipart.definition.parts.get(slotIndex);
+        if (!multipart.isVariableListTrue(slotDefinition.interactableVariables) || !heldPart.isPartValidForPackDef(slotDefinition, multipart.subDefinition, !slotDefinition.bypassSlotMinMax)) {
+            return false;
+        }
+
+        if (isPartRemovalInProgress()) {
+            cancelPartRemoval(player);
+        }
+        if (isVehicleDeploymentInProgress()) {
+            cancelVehicleDeployment(player);
+        }
+        if (isVehiclePackingInProgress()) {
+            cancelVehiclePacking(player);
+        }
+        partInstallationEntity = multipart;
+        partInstallationBox = target.box;
+        partInstallationStack = heldStack.copy();
+        partInstallationSlotIndex = slotIndex;
+        partInstallationElapsedTicks = 0;
+        partInstallationTime = installTime;
+        InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(target.entity, player, target.box, false, true, false));
+        return true;
+    }
+
+    private static void updatePartInstallation(IWrapperPlayer player) {
+        Point3D startPosition = player.getEyePosition();
+        Point3D endPosition = player.getLineOfSight(INTERACTION_DISTANCE).add(startPosition);
+        EntityInteractResult currentTarget = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
+        IWrapperItemStack heldStack = player.getHeldStack();
+        AItemBase heldItem = heldStack.getItem();
+        JSONPartDefinition slotDefinition = partInstallationSlotIndex >= 0 && partInstallationSlotIndex < partInstallationEntity.partsInSlots.size() ? partInstallationEntity.definition.parts.get(partInstallationSlotIndex) : null;
+        boolean validTarget = currentTarget != null && currentTarget.entity == partInstallationEntity && currentTarget.box.localCenter.equals(partInstallationBox.localCenter);
+        boolean validItem = heldItem instanceof AItemPart && heldStack.isCompleteMatch(partInstallationStack);
+        boolean validSlot = slotDefinition != null && partInstallationEntity.partsInSlots.get(partInstallationSlotIndex) == null && getPartInstallationSlotIndex(partInstallationEntity, partInstallationBox.localCenter) == partInstallationSlotIndex;
+        if (!validTarget || !validItem || !validSlot || player.isSneaking() || isPartActionVehicleLocked(partInstallationEntity) || !partInstallationEntity.isVariableListTrue(slotDefinition.interactableVariables) || !((AItemPart) heldItem).isPartValidForPackDef(slotDefinition, partInstallationEntity.subDefinition, !slotDefinition.bypassSlotMinMax)) {
+            cancelPartInstallation(player);
+            return;
+        }
+
+        if (partInstallationElapsedTicks < partInstallationTime) {
+            ++partInstallationElapsedTicks;
+        }
+        if (partInstallationElapsedTicks >= partInstallationTime) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(partInstallationEntity, player, partInstallationBox, false, true, true));
+        }
+    }
+
+    private static void cancelPartInstallation(IWrapperPlayer player) {
+        InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(partInstallationEntity, player, partInstallationBox, false, false, true));
+        clearPartInstallation();
+        interactResult = null;
+    }
+
+    private static void clearPartInstallation() {
+        partInstallationEntity = null;
+        partInstallationBox = null;
+        partInstallationStack = null;
+        partInstallationSlotIndex = -1;
+        partInstallationElapsedTicks = 0;
+        partInstallationTime = 0;
+    }
+
+    private static boolean startPartRemoval(IWrapperPlayer player, EntityInteractResult target) {
+        if (!(target.entity instanceof APart) || player.isSneaking()) {
+            return false;
+        }
+
+        APart part = (APart) target.entity;
+        IWrapperItemStack heldStack = player.getHeldStack();
+        int removeTime = part.definition.generic.removeTime;
+        if (removeTime <= 0
+                || !isHoldingPartRemovalTool(player)
+                || !part.isValid
+                || part.isFake()
+                || part.isPermanent
+                || !part.canBeClicked()
+                || isPartActionVehicleLocked(part)
+                || part.checkForRemoval(player) != null) {
+            return false;
+        }
+
+        if (isPartInstallationInProgress()) {
+            cancelPartInstallation(player);
+        }
+        if (isVehicleDeploymentInProgress()) {
+            cancelVehicleDeployment(player);
+        }
+        if (isVehiclePackingInProgress()) {
+            cancelVehiclePacking(player);
+        }
+        partRemovalPart = part;
+        partRemovalBox = target.box;
+        partRemovalToolStack = heldStack.copy();
+        partRemovalElapsedTicks = 0;
+        partRemovalTime = removeTime;
+        partRemovalCompletionRetryTicks = 0;
+        timedLeftClickInputCaptured = true;
+        InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(target.entity, player, target.box, true, false, false));
+        return true;
+    }
+
+    private static void updatePartRemoval(IWrapperPlayer player) {
+        if (!partRemovalPart.isValid) {
+            cancelPartRemoval(player);
+            return;
+        }
+
+        Point3D startPosition = player.getEyePosition();
+        Point3D endPosition = player.getLineOfSight(INTERACTION_DISTANCE).add(startPosition);
+        EntityInteractResult currentTarget = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
+        IWrapperItemStack heldStack = player.getHeldStack();
+        boolean validTarget = currentTarget != null && currentTarget.entity == partRemovalPart;
+        boolean validTool = isHoldingPartRemovalTool(player) && heldStack.isCompleteMatch(partRemovalToolStack);
+        boolean validPart = !partRemovalPart.isFake()
+                && !partRemovalPart.isPermanent
+                && partRemovalPart.canBeClicked()
+                && partRemovalPart.definition.generic.removeTime == partRemovalTime
+                && partRemovalPart.checkForRemoval(player) == null;
+        if (!validTarget || !validTool || !validPart || player.isSneaking() || isPartActionVehicleLocked(partRemovalPart)) {
+            cancelPartRemoval(player);
+            return;
+        }
+
+        if (partRemovalElapsedTicks < partRemovalTime) {
+            ++partRemovalElapsedTicks;
+        }
+        if (partRemovalElapsedTicks >= partRemovalTime) {
+            if (partRemovalCompletionRetryTicks > 0) {
+                --partRemovalCompletionRetryTicks;
+            }
+            if (partRemovalCompletionRetryTicks == 0) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(partRemovalPart, player, partRemovalBox, true, false, true));
+                partRemovalCompletionRetryTicks = TIMED_ACTION_COMPLETION_RETRY_INTERVAL_TICKS;
+            }
+        }
+    }
+
+    private static void cancelPartRemoval(IWrapperPlayer player) {
+        AEntityF_Multipart<?> cancellationEntity = partRemovalPart.isValid ? partRemovalPart : partRemovalPart.entityOn;
+        if (cancellationEntity != null && cancellationEntity.isValid) {
+            BoundingBox cancellationBox = cancellationEntity == partRemovalPart ? partRemovalBox : cancellationEntity.boundingBox;
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(cancellationEntity, player, cancellationBox, false, false, true));
+        }
+        clearPartRemoval();
+        interactResult = null;
+    }
+
+    private static void clearPartRemoval() {
+        partRemovalPart = null;
+        partRemovalBox = null;
+        partRemovalToolStack = null;
+        partRemovalElapsedTicks = 0;
+        partRemovalTime = 0;
+        partRemovalCompletionRetryTicks = 0;
+    }
+
+    public static void startVehicleDeployment(IWrapperPlayer player, ItemVehicle vehicleItem, Point3D blockPosition, Axis blockSide) {
+        IWrapperItemStack heldStack = player.getHeldStack();
+        int deployTime = vehicleItem.definition.motorized.deployTime;
+        BlockHitResult currentTarget = player.getWorld().getBlockHit(player.getEyePosition(), player.getLineOfSight(VEHICLE_DEPLOYMENT_DISTANCE));
+        if (vehicleDeployment != null || deployTime <= 0
+                || heldStack.getItem() != vehicleItem
+                || currentTarget == null
+                || !currentTarget.blockPosition.equals(blockPosition)
+                || currentTarget.side != blockSide) {
+            return;
+        }
+        if (isPartInstallationInProgress()) {
+            cancelPartInstallation(player);
+        }
+        if (isPartRemovalInProgress()) {
+            cancelPartRemoval(player);
+        }
+        if (isVehiclePackingInProgress()) {
+            cancelVehiclePacking(player);
+        }
+        vehicleDeployment = new VehicleDeploymentState(vehicleItem, player.getWorld(), heldStack.copy(), blockPosition, blockSide, currentTarget.hitPosition, deployTime);
+        clickingRight = true;
+        vehicleDeploymentInputCaptured = true;
+    }
+
+    public static boolean authorizeVehicleDeployment(Point3D blockPosition, Axis blockSide, int operationID) {
+        if (vehicleDeployment == null || !vehicleDeployment.blockPosition.equals(blockPosition) || vehicleDeployment.blockSide != blockSide) {
+            return false;
+        }
+        if (vehicleDeployment.operationID != 0) {
+            return vehicleDeployment.operationID == operationID;
+        }
+        vehicleDeployment.operationID = operationID;
+        vehicleDeployment.grantWaitTicks = 0;
+        return true;
+    }
+
+    public static void finishVehicleDeployment(Point3D blockPosition, Axis blockSide, int operationID) {
+        if (vehicleDeployment != null && vehicleDeployment.blockPosition.equals(blockPosition)
+                && vehicleDeployment.blockSide == blockSide && vehicleDeployment.operationID == operationID) {
+            vehicleDeployment = null;
+        }
+    }
+
+    private static void updateVehicleDeployment(IWrapperPlayer player) {
+        VehicleDeploymentState deployment = vehicleDeployment;
+        if (deployment.operationID == 0) {
+            if (++deployment.grantWaitTicks >= VEHICLE_DEPLOYMENT_GRANT_TIMEOUT_TICKS) {
+                cancelVehicleDeployment(player);
+            }
+            return;
+        }
+
+        IWrapperItemStack heldStack = player.getHeldStack();
+        BlockHitResult currentTarget = player.getWorld().getBlockHit(player.getEyePosition(), player.getLineOfSight(VEHICLE_DEPLOYMENT_DISTANCE));
+        if (player.getWorld() != deployment.world || !InterfaceManager.inputInterface.isRightMouseButtonDown()
+                || currentTarget == null || !currentTarget.blockPosition.equals(deployment.blockPosition) || currentTarget.side != deployment.blockSide
+                || heldStack.getItem() != deployment.item || !heldStack.isCompleteMatch(deployment.stack)
+                || deployment.item.definition.motorized.deployTime != deployment.deployTime) {
+            cancelVehicleDeployment(player);
+            return;
+        }
+        deployment.markerPosition.set(currentTarget.hitPosition);
+        if (deployment.elapsedTicks < deployment.deployTime) {
+            ++deployment.elapsedTicks;
+        }
+        if (deployment.elapsedTicks < deployment.deployTime && ++deployment.validationTicks >= VEHICLE_ACTION_VALIDATION_INTERVAL_TICKS) {
+            InterfaceManager.packetInterface.sendToServer(new PacketVehicleDeployment(player, deployment.blockPosition, deployment.blockSide, Action.HEARTBEAT, deployment.operationID));
+            deployment.validationTicks = 0;
+        }
+        if (deployment.elapsedTicks >= deployment.deployTime) {
+            if (deployment.completionRetryTicks > 0) {
+                --deployment.completionRetryTicks;
+            }
+            if (deployment.completionRetryTicks == 0) {
+                InterfaceManager.packetInterface.sendToServer(new PacketVehicleDeployment(player, deployment.blockPosition, deployment.blockSide, Action.COMPLETE, deployment.operationID));
+                deployment.completionRetryTicks = TIMED_ACTION_COMPLETION_RETRY_INTERVAL_TICKS;
+            }
+        }
+    }
+
+    private static void cancelVehicleDeployment(IWrapperPlayer player) {
+        if (vehicleDeployment != null && vehicleDeployment.operationID != 0) {
+            InterfaceManager.packetInterface.sendToServer(new PacketVehicleDeployment(player, vehicleDeployment.blockPosition, vehicleDeployment.blockSide, Action.CANCEL, vehicleDeployment.operationID));
+        }
+        vehicleDeployment = null;
+        interactResult = null;
+    }
+
+    private static boolean startVehiclePacking(IWrapperPlayer player, EntityInteractResult target) {
+        if (!(target.entity instanceof AEntityF_Multipart) || !player.isSneaking() || !isHoldingPartRemovalTool(player)) {
+            return false;
+        }
+
+        EntityVehicleF_Physics vehicle = getVehicleForMultipart((AEntityF_Multipart<?>) target.entity);
+        if (vehicle == null || !canPackVehicle(vehicle, player)) {
+            return false;
+        }
+
+        if (isPartInstallationInProgress()) {
+            cancelPartInstallation(player);
+        }
+        if (isPartRemovalInProgress()) {
+            cancelPartRemoval(player);
+        }
+        if (isVehicleDeploymentInProgress()) {
+            cancelVehicleDeployment(player);
+        }
+        vehiclePackingVehicle = vehicle;
+        vehiclePackingToolStack = player.getHeldStack().copy();
+        vehiclePackingMarkerPosition = target.position.copy();
+        vehiclePackingElapsedTicks = 0;
+        vehiclePackingTime = vehicle.definition.motorized.packTime;
+        vehiclePackingCompletionRetryTicks = 0;
+        vehiclePackingValidationTicks = 0;
+        vehiclePackingOperationID = ++nextVehiclePackingOperationID;
+        if (vehiclePackingOperationID == 0) {
+            vehiclePackingOperationID = ++nextVehiclePackingOperationID;
+        }
+        timedLeftClickInputCaptured = true;
+        InterfaceManager.packetInterface.sendToServer(new PacketVehiclePacking(player, vehicle, PacketVehiclePacking.Action.START, vehiclePackingOperationID));
+        return true;
+    }
+
+    private static void updateVehiclePacking(IWrapperPlayer player) {
+        if (!vehiclePackingVehicle.isValid) {
+            cancelVehiclePacking(player);
+            return;
+        }
+
+        Point3D startPosition = player.getEyePosition();
+        Point3D endPosition = player.getLineOfSight(INTERACTION_DISTANCE).add(startPosition);
+        EntityInteractResult currentTarget = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
+        IWrapperItemStack heldStack = player.getHeldStack();
+        boolean validTarget = currentTarget != null
+                && currentTarget.entity instanceof AEntityF_Multipart
+                && getVehicleForMultipart((AEntityF_Multipart<?>) currentTarget.entity) == vehiclePackingVehicle;
+        boolean validTool = isHoldingPartRemovalTool(player) && heldStack.isCompleteMatch(vehiclePackingToolStack);
+        if (!validTarget
+                || !validTool
+                || !canPackVehicle(vehiclePackingVehicle, player)
+                || vehiclePackingVehicle.definition.motorized.packTime != vehiclePackingTime) {
+            cancelVehiclePacking(player);
+            return;
+        }
+
+        vehiclePackingMarkerPosition.set(currentTarget.position);
+        if (vehiclePackingElapsedTicks < vehiclePackingTime) {
+            ++vehiclePackingElapsedTicks;
+        }
+        if (vehiclePackingElapsedTicks < vehiclePackingTime
+                && ++vehiclePackingValidationTicks >= VEHICLE_ACTION_VALIDATION_INTERVAL_TICKS) {
+            InterfaceManager.packetInterface.sendToServer(new PacketVehiclePacking(player, vehiclePackingVehicle, PacketVehiclePacking.Action.HEARTBEAT, vehiclePackingOperationID));
+            vehiclePackingValidationTicks = 0;
+        }
+        if (vehiclePackingElapsedTicks >= vehiclePackingTime) {
+            if (vehiclePackingCompletionRetryTicks > 0) {
+                --vehiclePackingCompletionRetryTicks;
+            }
+            if (vehiclePackingCompletionRetryTicks == 0) {
+                InterfaceManager.packetInterface.sendToServer(new PacketVehiclePacking(player, vehiclePackingVehicle, PacketVehiclePacking.Action.COMPLETE, vehiclePackingOperationID));
+                vehiclePackingCompletionRetryTicks = TIMED_ACTION_COMPLETION_RETRY_INTERVAL_TICKS;
+            }
+        }
+    }
+
+    private static void cancelVehiclePacking(IWrapperPlayer player) {
+        if (vehiclePackingVehicle != null) {
+            InterfaceManager.packetInterface.sendToServer(new PacketVehiclePacking(player, vehiclePackingVehicle, PacketVehiclePacking.Action.CANCEL, vehiclePackingOperationID));
+        }
+        clearVehiclePacking();
+        interactResult = null;
+    }
+
+    private static void clearVehiclePacking() {
+        vehiclePackingVehicle = null;
+        vehiclePackingToolStack = null;
+        vehiclePackingMarkerPosition = null;
+        vehiclePackingElapsedTicks = 0;
+        vehiclePackingTime = 0;
+        vehiclePackingCompletionRetryTicks = 0;
+        vehiclePackingValidationTicks = 0;
+        vehiclePackingOperationID = 0;
+    }
+
+    private static boolean canPackVehicle(EntityVehicleF_Physics vehicle, IWrapperPlayer player) {
+        return vehicle.definition.motorized.packTime > 0
+                && vehicle.isValid
+                && player.isSneaking()
+                && !vehicle.lockedVar.isActive
+                && (!ConfigSystem.settings.general.opPickupVehiclesOnly.value || player.isOP())
+                && (!ConfigSystem.settings.general.creativePickupVehiclesOnly.value || player.isCreative());
+    }
+
+    private static boolean isHoldingPartRemovalTool(IWrapperPlayer player) {
+        return player.isHoldingItemType(ItemComponentType.WRENCH) || player.isHoldingItemType(ItemComponentType.SCREWDRIVER);
+    }
+
+    private static EntityVehicleF_Physics getVehicleForMultipart(AEntityF_Multipart<?> multipart) {
+        return multipart instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) multipart : (multipart instanceof APart ? ((APart) multipart).vehicleOn : null);
+    }
+
+    private static int getPartInstallationSlotIndex(AEntityF_Multipart<?> multipart, Point3D localCenter) {
+        for (Entry<BoundingBox, JSONPartDefinition> slotEntry : multipart.partSlotBoxes.entrySet()) {
+            if (slotEntry.getKey().localCenter.equals(localCenter)) {
+                return multipart.definition.parts.indexOf(slotEntry.getValue());
+            }
+        }
+        return -1;
+    }
+
+    private static boolean isPartActionVehicleLocked(AEntityF_Multipart<?> multipart) {
+        EntityVehicleF_Physics vehicle = getVehicleForMultipart(multipart);
+        return vehicle != null && vehicle.lockedVar.isActive;
+    }
+
+    private static class VehicleDeploymentState {
+        private final ItemVehicle item;
+        private final AWrapperWorld world;
+        private final IWrapperItemStack stack;
+        private final Point3D blockPosition;
+        private final Axis blockSide;
+        private final Point3D markerPosition;
+        private final int deployTime;
+        private int elapsedTicks;
+        private int completionRetryTicks;
+        private int validationTicks;
+        private int grantWaitTicks;
+        private int operationID;
+
+        private VehicleDeploymentState(ItemVehicle item, AWrapperWorld world, IWrapperItemStack stack, Point3D blockPosition, Axis blockSide, Point3D markerPosition, int deployTime) {
+            this.item = item;
+            this.world = world;
+            this.stack = stack;
+            this.blockPosition = blockPosition.copy();
+            this.blockSide = blockSide;
+            this.markerPosition = markerPosition.copy();
+            this.deployTime = deployTime;
         }
     }
 
@@ -232,11 +920,22 @@ public final class ControlSystem {
         dismountConfirmationExpireTime = 0;
     }
 
+    /**
+     * Call when the client player gets into a controller seat.  Starts a new ride for the
+     * default aircraft controls notice, so it shows again if it is set to show every time.
+     */
+    public static void resetAircraftControlsNotice() {
+        arcadeNoticeShownThisRide = false;
+        standardNoticeShownThisRide = false;
+    }
+
     public static void controlMultipart(AEntityF_Multipart<?> multipart, boolean isPlayerController, double mouseXDelta, double mouseYDelta) {
         clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
         if (multipart instanceof EntityVehicleF_Physics) {
             EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) multipart;
-            if (vehicle.definition.motorized.isAircraft) {
+            if (vehicle.definition.motorized.isBlimp) {
+                controlAirship(vehicle, isPlayerController);
+            } else if (vehicle.definition.motorized.isAircraft) {
                 controlAircraft(vehicle, isPlayerController, mouseXDelta, mouseYDelta);
             } else {
                 controlGroundVehicle(vehicle, isPlayerController);
@@ -247,55 +946,58 @@ public final class ControlSystem {
             controlGun(multipart, ControlsKeyboard.CAR_GUN_FIRE, ControlsKeyboard.CAR_GUN_SWITCH);
         }
 
+        //Send custom keypresses from our seat, so parts that only some seats can use know where they came from.
+        AEntityB_Existing riding = clientPlayer.getEntityRiding();
+        AEntityF_Multipart<?> keypressEntity = riding instanceof PartSeat ? (PartSeat) riding : multipart;
         if (ControlsKeyboard.GENERAL_CUSTOM1.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 1, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 1, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM1.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 1, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 1, false));
         }
         if (ControlsKeyboard.GENERAL_CUSTOM2.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 2, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 2, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM2.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 2, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 2, false));
         }
         if (ControlsKeyboard.GENERAL_CUSTOM3.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 3, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 3, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM3.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 3, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 3, false));
         }
         if (ControlsKeyboard.GENERAL_CUSTOM4.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 4, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 4, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM4.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 4, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 4, false));
         }
 		if (ControlsKeyboard.GENERAL_CUSTOM5.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 5, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 5, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM5.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 5, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 5, false));
         }
         if (ControlsKeyboard.GENERAL_CUSTOM6.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 6, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 6, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM6.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 6, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 6, false));
         }
         if (ControlsKeyboard.GENERAL_CUSTOM7.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 7, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 7, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM7.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 7, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 7, false));
         }
         if (ControlsKeyboard.GENERAL_CUSTOM8.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 8, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 8, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM8.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 8, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 8, false));
         }
         if (ControlsKeyboard.GENERAL_CUSTOM9.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 9, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 9, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM9.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 9, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 9, false));
         }
         if (ControlsKeyboard.GENERAL_CUSTOM10.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 10, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 10, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM10.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 10, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 10, false));
         }
     }
 
@@ -362,15 +1064,23 @@ public final class ControlSystem {
         }
     }
 
-    private static void controlBrake(EntityVehicleF_Physics vehicle, ControlsJoystick joystickBrakeAxis, ControlsJoystick joystickBrakeButton, ControlsKeyboard keyboardBrakeButton, ControlsKeyboard parkingBrakeButton) {
+    private static boolean controlBrake(EntityVehicleF_Physics vehicle, ControlsJoystick joystickBrakeAxis, ControlsJoystick joystickBrakeButton, ControlsKeyboard keyboardBrakeButton, ControlsKeyboard parkingBrakeButton) {
         if (parkingBrakeButton.isPressed()) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle.parkingBrakeVar));
         }
-        double brakeValue = joystickBrakeAxis.isJoystickActive() ? joystickBrakeAxis.getAxisState(true) : ((joystickBrakeButton.isPressed() || keyboardBrakeButton.isPressed()) ? EntityVehicleF_Physics.MAX_BRAKE : 0);
+        boolean brakeButtonPressed = false;
+        final double brakeValue;
+        if (joystickBrakeAxis.isJoystickActive()) {
+            brakeValue = joystickBrakeAxis.getAxisState(true);
+        } else {
+            brakeButtonPressed = joystickBrakeButton.isPressed() || keyboardBrakeButton.isPressed();
+            brakeValue = brakeButtonPressed ? EntityVehicleF_Physics.MAX_BRAKE : 0;
+        }
         if (brakeValue != brakeRequestLastCheck) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle.brakeVar, brakeValue));
         }
         brakeRequestLastCheck = brakeValue;
+        return brakeButtonPressed;
     }
 
     private static void controlGun(AEntityF_Multipart<?> multipart, ControlsKeyboard gunTrigger, ControlsKeyboard gunSwitch) {
@@ -460,7 +1170,7 @@ public final class ControlSystem {
     }
 
     private static boolean controlMouseYoke(EntityVehicleF_Physics aircraft, double mouseXDelta, double mouseYDelta) {
-        boolean mouseYokeEnabled = ConfigSystem.client.controlSettings.mouseYoke.value && !ConfigSystem.client.controlSettings.arcadeMode.value;
+        boolean mouseYokeEnabled = ConfigSystem.client.controlSettings.mouseYoke.value && !aircraft.isArcadeFlightActive();
         if (mouseYokeEnabled != mouseYokeEnabledLastCall) {
             resetMouseYoke();
             mouseYokeEnabledLastCall = mouseYokeEnabled;
@@ -507,6 +1217,78 @@ public final class ControlSystem {
         return true;
     }
 
+    /** Handles blimps with car/boat-style controls. */
+    private static void controlAirship(EntityVehicleF_Physics airship, boolean isPlayerController) {
+        controlCamera(ControlsKeyboard.AIRSHIP_ZOOM_I, ControlsKeyboard.AIRSHIP_ZOOM_O, ControlsKeyboard.AIRSHIP_CHANGEVIEW, ControlsJoystick.AIRSHIP_LOOK_UD, ControlsJoystick.AIRSHIP_LOOK_LR);
+        rotateCamera(ControlsJoystick.AIRSHIP_LOOK_R, ControlsJoystick.AIRSHIP_LOOK_L, ControlsJoystick.AIRSHIP_LOOK_U, ControlsJoystick.AIRSHIP_LOOK_D, ControlsJoystick.AIRSHIP_LOOK_A);
+        controlFreecam(ControlsKeyboard.AIRSHIP_CAMLOCK);
+        controlGun(airship, ControlsKeyboard.AIRSHIP_GUN_FIRE, ControlsKeyboard.AIRSHIP_GUN_SWITCH);
+        controlRadio(airship, ControlsKeyboard.AIRSHIP_RADIO);
+        controlJoystick(airship, ControlsKeyboard.AIRSHIP_JS_INHIBIT);
+
+        if (!isPlayerController) {
+            resetMouseYoke();
+            return;
+        }
+
+        //Airships do not use either mouse-based aircraft control mode.
+        resetMouseYoke();
+        if (MouseFlightController.isMouseFlightActive) {
+            MouseFlightController.deactivate();
+        }
+
+        controlPanel(airship, ControlsKeyboard.AIRSHIP_PANEL);
+
+        //S applies the normal brake while held.  Parking brakes remain a separate toggle.
+        boolean brakeButtonPressed = controlBrake(airship, ControlsJoystick.AIRSHIP_BRAKE, ControlsJoystick.AIRSHIP_BRAKE_DIGITAL, ControlsKeyboard.AIRSHIP_BRAKE, ControlsKeyboard.AIRSHIP_PARK);
+
+        if (ControlsJoystick.AIRSHIP_REVERSE.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(airship.reverseThrustVar));
+        }
+        if (ControlsJoystick.AIRSHIP_GEAR.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(airship.retractGearVar));
+        }
+
+        //W increases throttle incrementally.  S decreases it while also braking above.
+        if (ControlsJoystick.AIRSHIP_THROTTLE.isJoystickActive()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(airship.throttleVar, ControlsJoystick.AIRSHIP_THROTTLE.getAxisState(true) * EntityVehicleF_Physics.MAX_THROTTLE));
+        } else {
+            if (ControlsKeyboard.AIRSHIP_FORWARD.isPressed()) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(airship.throttleVar, EntityVehicleF_Physics.MAX_THROTTLE / 100D, 0, EntityVehicleF_Physics.MAX_THROTTLE));
+            }
+            if (brakeButtonPressed) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(airship.throttleVar, -EntityVehicleF_Physics.MAX_THROTTLE / 100D, 0, EntityVehicleF_Physics.MAX_THROTTLE));
+            }
+        }
+
+        //A/D steer with the rudder, as they do for cars and boats.
+        controlControlSurface(airship, ControlsJoystick.AIRSHIP_TURN, ControlsKeyboard.AIRSHIP_TURN_R, ControlsKeyboard.AIRSHIP_TURN_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, airship.rudderInputVar, ConfigSystem.client.controlSettings.steeringReturnRate.value);
+
+        //Negative ballast control raises a blimp.  Keyboard height control is
+        //momentary: it ramps only while I/K is held and centers immediately on release.
+        if (ControlsJoystick.AIRSHIP_HEIGHT.isJoystickActive()) {
+            double pitchAxisValue = ControlsJoystick.AIRSHIP_HEIGHT.getAxisState(false);
+            double heightControl = pitchAxisValue == 0 ? 0 : EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE * (-1 + 2 * pitchAxisValue);
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(airship.elevatorInputVar, heightControl));
+        } else if (ControlsKeyboard.AIRSHIP_HEIGHT_U.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(airship.elevatorInputVar, -ConfigSystem.client.controlSettings.flightControlRate.value * (airship.elevatorInputVar.currentValue > 0 ? 2 : 1), -EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE));
+            InterfaceManager.packetInterface.sendToServer(new PacketVehicleControlNotification(airship, clientPlayer));
+        } else if (ControlsKeyboard.AIRSHIP_HEIGHT_D.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(airship.elevatorInputVar, ConfigSystem.client.controlSettings.flightControlRate.value * (airship.elevatorInputVar.currentValue < 0 ? 2 : 1), -EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE));
+            InterfaceManager.packetInterface.sendToServer(new PacketVehicleControlNotification(airship, clientPlayer));
+        } else if (airship.elevatorInputVar.currentValue != 0) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(airship.elevatorInputVar, 0));
+        }
+
+        controlControlTrim(airship, ControlsJoystick.AIRSHIP_TRIM_YAW_R, ControlsJoystick.AIRSHIP_TRIM_YAW_L, EntityVehicleF_Physics.MAX_RUDDER_TRIM, airship.rudderTrimVar);
+        controlControlTrim(airship, ControlsJoystick.AIRSHIP_TRIM_PITCH_U, ControlsJoystick.AIRSHIP_TRIM_PITCH_D, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM, airship.elevatorTrimVar);
+        controlControlTrim(airship, ControlsJoystick.AIRSHIP_TRIM_ROLL_R, ControlsJoystick.AIRSHIP_TRIM_ROLL_L, EntityVehicleF_Physics.MAX_AILERON_TRIM, airship.aileronTrimVar);
+
+        if (ConfigSystem.client.controlSettings.heliAutoLevel.value ^ airship.autolevelEnabledVar.isActive) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(airship.autolevelEnabledVar, ConfigSystem.client.controlSettings.heliAutoLevel.value ? 1 : 0));
+        }
+    }
+
     private static void controlAircraft(EntityVehicleF_Physics aircraft, boolean isPlayerController, double mouseXDelta, double mouseYDelta) {
         controlCamera(ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsKeyboard.AIRCRAFT_CHANGEVIEW, ControlsJoystick.AIRCRAFT_LOOK_UD, ControlsJoystick.AIRCRAFT_LOOK_LR);
         rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
@@ -520,10 +1302,66 @@ public final class ControlSystem {
             return;
         }
 
+        if (aircraft.getArcadeFlightOverrideKey() != null && ConfigSystem.client.controlSettings.showTutorial.value) {
+            //First time this player flies this aircraft with this default, tell them what controls they have.
+            //If they already saw the other default's notice, the aircraft has changed modes.
+            //With showDefaultAircraftControlsMessageEveryTime, "first time" is per ride instead.
+            boolean arcadeDefault = aircraft.isArcadeFlightDefault();
+            //Saved on the vehicle per player, so each newly-placed aircraft shows each player the notice once per default.
+            String noticePrefix = "arcadeNoticeShown_";
+            String noticeSuffix = "_" + clientPlayer.getID();
+            ComputedVariable noticeVar = aircraft.getOrCreateVariable(noticePrefix + (arcadeDefault ? "arcade" : "standard") + noticeSuffix);
+            boolean showEveryTime = ConfigSystem.client.controlSettings.showDefaultAircraftControlsMessageEveryTime.value;
+            boolean shownBefore = showEveryTime ? (arcadeDefault ? arcadeNoticeShownThisRide : standardNoticeShownThisRide) : noticeVar.isActive;
+            if (!shownBefore) {
+                if (!noticeVar.isActive) {
+                    //Still mark the vehicle, so turning the config off doesn't re-show notices already seen.
+                    noticeVar.setTo(1, false);
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(noticeVar, 1));
+                }
+                if (arcadeDefault) {
+                    arcadeNoticeShownThisRide = true;
+                } else {
+                    standardNoticeShownThisRide = true;
+                }
+                boolean arcadeActive = aircraft.isArcadeFlightActive();
+                boolean isOverridden = arcadeActive != arcadeDefault;
+                boolean isModeChange = showEveryTime ? (arcadeDefault ? standardNoticeShownThisRide : arcadeNoticeShownThisRide) : aircraft.getOrCreateVariable(noticePrefix + (arcadeDefault ? "standard" : "arcade") + noticeSuffix).isActive;
+                LanguageEntry message;
+                if (isModeChange) {
+                    message = isOverridden ? LanguageSystem.INTERACT_ARCADEMODE_NOTICE_MODE_OVERRIDE : LanguageSystem.INTERACT_ARCADEMODE_NOTICE_MODE_DEFAULT;
+                } else {
+                    message = isOverridden ? LanguageSystem.INTERACT_ARCADEMODE_NOTICE_OVERRIDE : LanguageSystem.INTERACT_ARCADEMODE_NOTICE_DEFAULT;
+                }
+                String currentScheme = (arcadeActive ? LanguageSystem.INTERACT_ARCADEMODE_SCHEME_ARCADE : LanguageSystem.INTERACT_ARCADEMODE_SCHEME_STANDARD).getCurrentValue();
+                String otherScheme = (arcadeActive ? LanguageSystem.INTERACT_ARCADEMODE_SCHEME_STANDARD : LanguageSystem.INTERACT_ARCADEMODE_SCHEME_ARCADE).getCurrentValue();
+                ConfigKeyboard arcadeKey = ControlsKeyboard.AIRCRAFT_ARCADE.config;
+                String keyName = arcadeKey.isMouseButton ? InterfaceManager.inputInterface.getNameForMouseButton(arcadeKey.keyCode) : InterfaceManager.inputInterface.getNameForKeyCode(arcadeKey.keyCode);
+                InterfaceManager.clientInterface.displayOverlayMessage(String.format(message.getCurrentValue(), currentScheme, keyName, otherScheme));
+            }
+        }
+
         if (ControlsKeyboard.AIRCRAFT_ARCADE.isPressed()) {
-            ConfigSystem.client.controlSettings.arcadeMode.value = !ConfigSystem.client.controlSettings.arcadeMode.value;
-            ConfigSystem.saveToDisk();
-            InterfaceManager.clientInterface.displayOverlayMessage((ConfigSystem.client.controlSettings.arcadeMode.value ? LanguageSystem.INTERACT_ARCADEMODE_ENABLED : LanguageSystem.INTERACT_ARCADEMODE_DISABLED).getCurrentValue());
+            String overrideKey = aircraft.getArcadeFlightOverrideKey();
+            if (overrideKey == null) {
+                ConfigSystem.client.controlSettings.arcadeMode.value = !ConfigSystem.client.controlSettings.arcadeMode.value;
+                ConfigSystem.saveToDisk();
+                InterfaceManager.clientInterface.displayOverlayMessage((ConfigSystem.client.controlSettings.arcadeMode.value ? LanguageSystem.INTERACT_ARCADEMODE_ENABLED : LanguageSystem.INTERACT_ARCADEMODE_DISABLED).getCurrentValue());
+            } else {
+                //This aircraft sets its own default for this mode, so remember the player's choice
+                //for it here rather than changing their global setting.
+                boolean newArcadeState = !aircraft.isArcadeFlightActive();
+                if (ConfigSystem.client.controlSettings.arcadeFlightOverrides == null) {
+                    ConfigSystem.client.controlSettings.arcadeFlightOverrides = new HashMap<>();
+                }
+                if (newArcadeState == aircraft.isArcadeFlightDefault()) {
+                    ConfigSystem.client.controlSettings.arcadeFlightOverrides.remove(overrideKey);
+                } else {
+                    ConfigSystem.client.controlSettings.arcadeFlightOverrides.put(overrideKey, newArcadeState);
+                }
+                ConfigSystem.saveToDisk();
+                InterfaceManager.clientInterface.displayOverlayMessage((newArcadeState ? LanguageSystem.INTERACT_ARCADEMODE_VEHICLE_ENABLED : LanguageSystem.INTERACT_ARCADEMODE_VEHICLE_DISABLED).getCurrentValue());
+            }
         }
 
         //Open or close the panel.
@@ -599,7 +1437,7 @@ public final class ControlSystem {
                 break;
             }
         }
-        boolean useMouseFlight = ConfigSystem.client.controlSettings.arcadeMode.value
+        boolean useMouseFlight = aircraft.isArcadeFlightActive()
                 && !aircraft.definition.motorized.isBlimp
                 && !ControlsJoystick.AIRCRAFT_PITCH.isJoystickActive()
                 && !ControlsJoystick.AIRCRAFT_ROLL.isJoystickActive()
@@ -736,10 +1574,18 @@ public final class ControlSystem {
                     }
 
                     //If we are going slow, and don't have gas or brake, automatically set the brake.
+                    //Not while a grapple is winching us in, as the brake would hold us against it.  Once it stops,
+                    //put the brake back on however fast the winch got us going, as it's what took it off.
                     //Otherwise send normal values if we are in neutral or forwards,
                     //and invert controls if we are in a reverse gear (and not using a shifter).
                     //Use only the first engine for this.
-                    if (throttleValue == 0 && brakeValue == 0 && powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED) {
+                    boolean reeling = powered.isReelingGrapple();
+                    if (reeling) {
+                        autoBrakeHeldForReel = powered;
+                    } else if (throttleValue != 0 || brakeValue != 0 || autoBrakeHeldForReel != powered) {
+                        autoBrakeHeldForReel = null;
+                    }
+                    if (throttleValue == 0 && brakeValue == 0 && !reeling && (powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED || autoBrakeHeldForReel == powered)) {
                         throttleRequest = 0;
                         brakeRequest = EntityVehicleF_Physics.MAX_BRAKE;
                     } else if (powered.engines.get(0).currentGearVar.currentValue >= 0 || ConfigSystem.client.controlSettings.useShifter.value) {
@@ -983,6 +1829,23 @@ public final class ControlSystem {
         AIRCRAFT_CAMLOCK(ControlsJoystick.AIRCRAFT_CAMLOCK, true, "LMENU", LanguageSystem.INPUT_CAMLOCK),
         AIRCRAFT_JS_INHIBIT(ControlsJoystick.AIRCRAFT_JS_INHIBIT, true, "SCROLL", LanguageSystem.INPUT_JS_INHIBIT),
 
+        AIRSHIP_TURN_R(ControlsJoystick.AIRSHIP_TURN, false, "D", LanguageSystem.INPUT_TURN_R),
+        AIRSHIP_TURN_L(ControlsJoystick.AIRSHIP_TURN, false, "A", LanguageSystem.INPUT_TURN_L),
+        AIRSHIP_FORWARD(ControlsJoystick.AIRSHIP_THROTTLE, false, "W", LanguageSystem.INPUT_FORWARD),
+        AIRSHIP_BRAKE(ControlsJoystick.AIRSHIP_BRAKE, false, "S", LanguageSystem.INPUT_BRAKE),
+        AIRSHIP_HEIGHT_U(ControlsJoystick.AIRSHIP_HEIGHT, false, "I", LanguageSystem.INPUT_HEIGHT_U),
+        AIRSHIP_HEIGHT_D(ControlsJoystick.AIRSHIP_HEIGHT, false, "K", LanguageSystem.INPUT_HEIGHT_D),
+        AIRSHIP_PARK(ControlsJoystick.AIRSHIP_PARK, true, "N", LanguageSystem.INPUT_PARK),
+        AIRSHIP_PANEL(ControlsJoystick.AIRSHIP_PANEL, true, "U", LanguageSystem.INPUT_PANEL),
+        AIRSHIP_RADIO(ControlsJoystick.AIRSHIP_RADIO, true, "MINUS", LanguageSystem.INPUT_RADIO),
+        AIRSHIP_GUN_FIRE(ControlsJoystick.AIRSHIP_GUN_FIRE, false, "SPACE", LanguageSystem.INPUT_GUN_FIRE),
+        AIRSHIP_GUN_SWITCH(ControlsJoystick.AIRSHIP_GUN_SWITCH, true, "V", LanguageSystem.INPUT_GUN_SWITCH),
+        AIRSHIP_ZOOM_I(ControlsJoystick.AIRSHIP_ZOOM_I, true, "PRIOR", LanguageSystem.INPUT_ZOOM_I),
+        AIRSHIP_ZOOM_O(ControlsJoystick.AIRSHIP_ZOOM_O, true, "NEXT", LanguageSystem.INPUT_ZOOM_O),
+        AIRSHIP_CHANGEVIEW(ControlsJoystick.AIRSHIP_CHANGEVIEW, true, "X", LanguageSystem.INPUT_CHANGEVIEW),
+        AIRSHIP_CAMLOCK(ControlsJoystick.AIRSHIP_CAMLOCK, true, "LMENU", LanguageSystem.INPUT_CAMLOCK),
+        AIRSHIP_JS_INHIBIT(ControlsJoystick.AIRSHIP_JS_INHIBIT, true, "SCROLL", LanguageSystem.INPUT_JS_INHIBIT),
+
         CAR_MOD(ControlsJoystick.CAR_MOD, false, "RSHIFT", LanguageSystem.INPUT_MOD),
         CAR_TURN_R(ControlsJoystick.CAR_TURN, false, "D", LanguageSystem.INPUT_TURN_R),
         CAR_TURN_L(ControlsJoystick.CAR_TURN, false, "A", LanguageSystem.INPUT_TURN_L),
@@ -1115,6 +1978,37 @@ public final class ControlSystem {
         AIRCRAFT_TRIM_ROLL_L(false, false, LanguageSystem.INPUT_TRIM_ROLL_L),
         AIRCRAFT_REVERSE(false, true, LanguageSystem.INPUT_REVERSE),
         AIRCRAFT_JS_INHIBIT(false, true, LanguageSystem.INPUT_JS_INHIBIT),
+
+        AIRSHIP_CAMLOCK(false, true, LanguageSystem.INPUT_CAMLOCK),
+        AIRSHIP_TURN(true, false, LanguageSystem.INPUT_TURN),
+        AIRSHIP_HEIGHT(true, false, LanguageSystem.INPUT_HEIGHT),
+        AIRSHIP_THROTTLE(true, false, LanguageSystem.INPUT_THROTTLE),
+        AIRSHIP_BRAKE(true, false, LanguageSystem.INPUT_BRAKE),
+        AIRSHIP_BRAKE_DIGITAL(false, false, LanguageSystem.INPUT_BRAKE),
+        AIRSHIP_GEAR(false, true, LanguageSystem.INPUT_GEAR),
+        AIRSHIP_PANEL(false, true, LanguageSystem.INPUT_PANEL),
+        AIRSHIP_PARK(false, true, LanguageSystem.INPUT_PARK),
+        AIRSHIP_RADIO(false, true, LanguageSystem.INPUT_RADIO),
+        AIRSHIP_GUN_FIRE(false, false, LanguageSystem.INPUT_GUN_FIRE),
+        AIRSHIP_GUN_SWITCH(false, true, LanguageSystem.INPUT_GUN_SWITCH),
+        AIRSHIP_ZOOM_I(false, true, LanguageSystem.INPUT_ZOOM_I),
+        AIRSHIP_ZOOM_O(false, true, LanguageSystem.INPUT_ZOOM_O),
+        AIRSHIP_CHANGEVIEW(false, true, LanguageSystem.INPUT_CHANGEVIEW),
+        AIRSHIP_LOOK_UD(true, false, LanguageSystem.INPUT_LOOK_UD),
+        AIRSHIP_LOOK_LR(true, false, LanguageSystem.INPUT_LOOK_LR),
+        AIRSHIP_LOOK_L(false, false, LanguageSystem.INPUT_LOOK_L),
+        AIRSHIP_LOOK_R(false, false, LanguageSystem.INPUT_LOOK_R),
+        AIRSHIP_LOOK_U(false, false, LanguageSystem.INPUT_LOOK_U),
+        AIRSHIP_LOOK_D(false, false, LanguageSystem.INPUT_LOOK_D),
+        AIRSHIP_LOOK_A(false, false, LanguageSystem.INPUT_LOOK_A),
+        AIRSHIP_TRIM_YAW_R(false, false, LanguageSystem.INPUT_TRIM_YAW_R),
+        AIRSHIP_TRIM_YAW_L(false, false, LanguageSystem.INPUT_TRIM_YAW_L),
+        AIRSHIP_TRIM_PITCH_U(false, false, LanguageSystem.INPUT_TRIM_PITCH_U),
+        AIRSHIP_TRIM_PITCH_D(false, false, LanguageSystem.INPUT_TRIM_PITCH_D),
+        AIRSHIP_TRIM_ROLL_R(false, false, LanguageSystem.INPUT_TRIM_ROLL_R),
+        AIRSHIP_TRIM_ROLL_L(false, false, LanguageSystem.INPUT_TRIM_ROLL_L),
+        AIRSHIP_REVERSE(false, true, LanguageSystem.INPUT_REVERSE),
+        AIRSHIP_JS_INHIBIT(false, true, LanguageSystem.INPUT_JS_INHIBIT),
 
         CAR_MOD(false, false, LanguageSystem.INPUT_MOD),
         CAR_CAMLOCK(false, true, LanguageSystem.INPUT_CAMLOCK),

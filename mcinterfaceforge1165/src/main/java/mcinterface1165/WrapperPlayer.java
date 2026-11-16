@@ -5,6 +5,7 @@ import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -17,9 +18,11 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.SimpleNamedContainerProvider;
 import net.minecraft.inventory.container.WorkbenchContainer;
 import net.minecraft.item.Item;
+import net.minecraft.util.Hand;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.IWorldPosCallable;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -27,6 +30,7 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.network.NetworkHooks;
 
 @EventBusSubscriber
 public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
@@ -153,6 +157,11 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
     }
 
     @Override
+    public void damageHeldStack(int amount) {
+        player.inventory.getItem(getHotbarIndex()).hurtAndBreak(amount, player, damaged -> damaged.broadcastBreakEvent(Hand.MAIN_HAND));
+    }
+
+    @Override
     public IWrapperInventory getInventory() {
         return new WrapperInventory(player.inventory) {
             @Override
@@ -177,6 +186,19 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
                 }
             };
         }, new StringTextComponent("")));
+    }
+
+    @Override
+    public void openInventoryGUI(EntityInventoryContainer inventory, String texture, IWrapperItemStack inventoryItem) {
+        int heldPlayerSlot = inventoryItem != null ? getHotbarIndex() : -1;
+        NetworkHooks.openGui((ServerPlayerEntity) player, new SimpleNamedContainerProvider((containerID, playerInventory, player) ->
+            new BuilderInventoryContainerMenu(containerID, playerInventory, inventory, texture, inventoryItem, heldPlayerSlot), new StringTextComponent("")), data -> {
+                data.writeUUID(inventory.uniqueUUID);
+                data.writeInt(inventory.getSize());
+                data.writeInt(inventory.getStackSize());
+                data.writeUtf(texture == null ? "" : texture);
+                data.writeInt(heldPlayerSlot);
+            });
     }
 
     /**

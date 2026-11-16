@@ -177,7 +177,7 @@ public class GUIConfig extends AGUIBase {
 
         //Control selection buttons and text.
         controlSelectionButtons.clear();
-        addComponent(controlSelectionFaultLabel = new GUIComponentLabel(guiLeft + 10, guiTop + 100, ColorRGB.BLACK, "", TextAlignment.LEFT_ALIGNED, 0.8F, 240));
+        addComponent(controlSelectionFaultLabel = new GUIComponentLabel(guiLeft + 10, guiTop + 115, ColorRGB.BLACK, "", TextAlignment.LEFT_ALIGNED, 0.7F, 240));
         for (ControlTypeEnum controlType : ControlTypeEnum.values()) {
             GUIComponentButton buttonKeyboard = new GUIComponentButton(this, guiLeft + getWidth() / 2 - 110, guiTop + 30 + 20 * controlSelectionButtons.size() / 2, 110, 20, controlType.keyboardLanguage.getCurrentValue()) {
                 @Override
@@ -775,7 +775,8 @@ public class GUIConfig extends AGUIBase {
     private static enum ControlTypeEnum {
         GENERAL(LanguageSystem.GUI_CONFIG_CONTROLS_GENERAL_KEYBOARD, LanguageSystem.GUI_CONFIG_CONTROLS_GENERAL_JOYSTICK),
         CAR(LanguageSystem.GUI_CONFIG_CONTROLS_CAR_KEYBOARD, LanguageSystem.GUI_CONFIG_CONTROLS_CAR_JOYSTICK),
-        AIRCRAFT(LanguageSystem.GUI_CONFIG_CONTROLS_AIRCRAFT_KEYBOARD, LanguageSystem.GUI_CONFIG_CONTROLS_AIRCRAFT_JOYSTICK);
+        AIRCRAFT(LanguageSystem.GUI_CONFIG_CONTROLS_AIRCRAFT_KEYBOARD, LanguageSystem.GUI_CONFIG_CONTROLS_AIRCRAFT_JOYSTICK),
+        AIRSHIP(LanguageSystem.GUI_CONFIG_CONTROLS_AIRSHIP_KEYBOARD, LanguageSystem.GUI_CONFIG_CONTROLS_AIRSHIP_JOYSTICK);
 
         private final LanguageEntry keyboardLanguage;
         private final LanguageEntry joystickLanguage;

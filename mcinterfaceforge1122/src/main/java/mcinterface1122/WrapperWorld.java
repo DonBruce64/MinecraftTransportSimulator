@@ -168,6 +168,11 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
+    public long getTickCount() {
+        return world.getTotalWorldTime();
+    }
+
+    @Override
     public String getName() {
         return world.provider.getDimensionType().getName();
     }

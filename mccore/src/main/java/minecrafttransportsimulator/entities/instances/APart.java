@@ -417,7 +417,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
      * Code checks first one level up, then the top-level, if the level up doesn't have a tone.
      */
     public void updateTone(boolean repainting) {
-        if (placementDefinition.toneIndex != 0) {
+        if (placementDefinition.toneIndex != 0 && (!repainting || !definition.general.disableRepaint)) {
             String partTone = null;
             if (entityOn.subDefinition.partTones != null && entityOn.subDefinition.partTones.size() >= placementDefinition.toneIndex) {
                 partTone = entityOn.subDefinition.partTones.get(placementDefinition.toneIndex - 1);

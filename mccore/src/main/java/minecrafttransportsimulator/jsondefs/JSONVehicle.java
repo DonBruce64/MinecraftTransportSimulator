@@ -30,6 +30,12 @@ public class JSONVehicle extends AJSONPartProvider {
 
         @JSONDescription("If set to true, this vehicle will attempt to get and use the light states of any vehicle that is towing it. Useful for trailers where you want the lights to come on with the vehicle, but not towed cars where you want them to stay off.")
         public boolean isTrailer;
+
+        @JSONDescription("How long, in ticks, this vehicle takes to deploy while holding right-click on the target block.  Defaults to instant if left out.")
+        public int deployTime;
+
+        @JSONDescription("How long, in ticks, this vehicle takes to pack while holding sneak and left-click with the required tool.  Defaults to instant if left out.")
+        public int packTime;
         
         @JSONDescription("Sets the default third-person zoom level when this vehicle is spawned.  0 is the closest possible camera position, 1 is one step out, 2 is two steps out, and so on.  This only affects the starting zoom level; players can still zoom in or out normally after entering the vehicle.")
         public int defaultZoom;
@@ -186,6 +192,8 @@ public class JSONVehicle extends AJSONPartProvider {
         public float waterBallastFactor;
 
         @ModifiableValue
+        @JSONDescription("Sets this aircraft's default flight controls in its current mode, instead of the player's arcade flight setting.  1 defaults to arcade (mouse) flight, -1 defaults to standard controls, and 0 (the default) follows the player's setting.  Players can override the default for this aircraft and mode with the arcade key, and their choice is remembered on their client.  Make this a variableModifier to set a different default per mode, like arcade in normal flight and standard in a hover mode.")
+        public float arcadeFlightMode;
         @JSONDescription("How fast this vehicle can yaw in place, in degrees per tick at full rudder.  Unlike the rudder, this does not need airspeed, so it lets blimps and hovering aircraft turn on the spot.  0 (the default) disables it.  Make this a variableModifier to only enable it in certain modes, like a hover mode.")
         public float blimpSkidSteer;
 

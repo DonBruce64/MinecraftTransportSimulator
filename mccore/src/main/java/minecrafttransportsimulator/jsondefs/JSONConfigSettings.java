@@ -63,8 +63,51 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Set<String>> engineDimensionWhitelist = new JSONConfigEntry<>(new HashSet<>(), "Whitelist of dimension names where engines will only be alowed to work.  Overrides the blacklist if this exists.");
         public JSONConfigEntry<Map<String, Double>> packVehicleScales = new JSONConfigEntry<>(new HashMap<>(), "Scale of all vehicles for this pack.  You probably won't want to change this, but if you do want the vehicles to be smaller for some reason, you can.");
         public JSONConfigEntry<Map<String, Double>> packSpeedFactors = new JSONConfigEntry<>(new HashMap<>(), "A mapping of pack-speciifc speed factors.  These values will only apply to the vehicles in the pack modified.  This allows for speeding up packs with slower vehicles, or slowing down packs with fast vehicles for a more even play experience.  Note that this applies on top of the global speed factor.  So if that is set to 0.30, and a pack is set to 0.5, then the total speed factor will be 0.15");
+        public JSONConfigEntry<Set<String>> grappleCuttingItems = new JSONConfigEntry<>(new HashSet<>(Arrays.asList("minecraft:wooden_sword", "minecraft:stone_sword", "minecraft:iron_sword", "minecraft:copper_sword", "minecraft:golden_sword", "minecraft:diamond_sword", "minecraft:netherite_sword", "minecraft:wooden_axe", "minecraft:stone_axe", "minecraft:copper_axe", "minecraft:iron_axe", "minecraft:golden_axe", "minecraft:diamond_axe", "minecraft:netherite_axe", "minecraft:shears")), "List of items that are sharp enough to cut grapple lines.  Players holding one of these can attack a grapple's line to snap it.  Uses the item's registry name, as found in the /give command.  Pack items can also be made sharp with canCutGrappleLines in their JSON.");
+        public JSONConfigEntry<Map<String, Double>> grappleEntityMasses = new JSONConfigEntry<>(getDefaultGrappleEntityMasses(), "Masses of mobs and other entities a grapple can hook, in kg, the same units as vehicle masses.  A hooked entity listed here shares the line's pull with the grapple's vehicle by mass, the same as a hooked vehicle does, so a heavy mob pulls back on the vehicle while a light one is just reeled in.  Entities not listed don't pull on the vehicle at all.  Uses the entity's registry name, as found in the /summon command.  Players are minecraft:player.");
         public ConfigItemWeights itemWeights = new ConfigItemWeights();
         public JSONConfigEntry<List<UUID>> joinedPlayers = new JSONConfigEntry<>(new ArrayList<>(), "Listing of players that have joined this world.  Players will be given the manual on their first join.");
+
+        private static Map<String, Double> getDefaultGrappleEntityMasses() {
+            Map<String, Double> masses = new HashMap<>();
+            masses.put("minecraft:player", 80.0D);
+            masses.put("minecraft:villager", 70.0D);
+            masses.put("minecraft:wandering_trader", 70.0D);
+            masses.put("minecraft:witch", 70.0D);
+            masses.put("minecraft:pillager", 75.0D);
+            masses.put("minecraft:vindicator", 80.0D);
+            masses.put("minecraft:evoker", 70.0D);
+            masses.put("minecraft:zombie", 80.0D);
+            masses.put("minecraft:husk", 80.0D);
+            masses.put("minecraft:drowned", 80.0D);
+            masses.put("minecraft:zombie_villager", 70.0D);
+            masses.put("minecraft:skeleton", 40.0D);
+            masses.put("minecraft:stray", 40.0D);
+            masses.put("minecraft:wither_skeleton", 90.0D);
+            masses.put("minecraft:creeper", 50.0D);
+            masses.put("minecraft:enderman", 100.0D);
+            masses.put("minecraft:spider", 80.0D);
+            masses.put("minecraft:cave_spider", 20.0D);
+            masses.put("minecraft:piglin", 80.0D);
+            masses.put("minecraft:zombified_piglin", 80.0D);
+            masses.put("minecraft:piglin_brute", 100.0D);
+            masses.put("minecraft:iron_golem", 1000.0D);
+            masses.put("minecraft:ravager", 1500.0D);
+            masses.put("minecraft:cow", 700.0D);
+            masses.put("minecraft:mooshroom", 700.0D);
+            masses.put("minecraft:pig", 150.0D);
+            masses.put("minecraft:sheep", 80.0D);
+            masses.put("minecraft:goat", 70.0D);
+            masses.put("minecraft:horse", 500.0D);
+            masses.put("minecraft:donkey", 250.0D);
+            masses.put("minecraft:mule", 350.0D);
+            masses.put("minecraft:llama", 150.0D);
+            masses.put("minecraft:camel", 600.0D);
+            masses.put("minecraft:polar_bear", 450.0D);
+            masses.put("minecraft:wolf", 40.0D);
+            masses.put("minecraft:chicken", 3.0D);
+            return masses;
+        }
 
         public static class ConfigItemWeights {
             public String comment1 = "The following section is used for calculating item weights.  Any item that contains the text bits will have its weight multiplied by the following factor.";

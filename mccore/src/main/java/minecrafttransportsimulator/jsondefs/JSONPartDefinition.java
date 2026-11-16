@@ -31,7 +31,7 @@ public class JSONPartDefinition {
     @JSONDescription("Tells MTS that this part is located oustide the vehicle.  Used only for seats, this will result in MTS treating the player like they are standing outside of the vehicle for sound purpouses.")
     public boolean isExterior;
 
-    @JSONDescription("This parameter is optional.  If included and set to true, and this is on a gun part, and the part in this slot is also a gun, then when the part-slot gun is active, it will be allowed to control the main gun.  This allows for switching to SMGs placed on turrets while still moving the turret, but not firing from it.")
+    @JSONDescription("If true, this gun shares aiming control with its parent gun.  Selecting any of these guns keeps the others aimed without firing them.  Guns that do not drive the parent part's rotation inherit its animated orientation, so fixed guns turn with the mount and movable guns aim relative to it.")
     public boolean isCoAxial;
 
     @JSONDescription("This parameter is optional.  If included and set to true, any part in this position will not be able to be removed.  Useful in conjunction with a defaultPart.")
@@ -124,6 +124,12 @@ public class JSONPartDefinition {
     @JSONDescription("Like defaultPart, but this is a map of variable values associated with individual parts.  If the variable is true, then that default part will be used.  If multiple possible parts are present, the first valid one is used.")
     public LinkedHashMap<String, String> conditionalDefaultParts;
 
+    @JSONDescription("Optional name to display below this part slot's marker.  This text is displayed as provided.  If omitted or blank, the localized name for the relevant part type is used.")
+    public String markerName;
+
+    @JSONDescription("Optional path to this part slot's marker texture, relative to the root textures folder of the pack that defines the slot.  If omitted or blank, the standard icon for the slot's part type is used.  Status icons for locked, unavailable, installed, and removable parts are not replaced by this texture.")
+    public String markerIcon;
+
     @JSONRequired
     @JSONDescription("A list of part types that can go in this position.  Normally you'll only have one entry in this list, as there's really no reason to have a ground_device at the same location as an engine.  There are some exceptions to this, however.  One is for interior equipment, like seats and chests, where you want players to be able to choose what they put in that position. ")
     public List<String> types;
@@ -143,7 +149,7 @@ public class JSONPartDefinition {
     @JSONDescription("A double-nested list of variables.  If this is set, then this part will be locked in place unless all variables in each of the sets is true (think of variables in a set being an OR condition, and each set being AND ed together).")
     public List<List<String>> lockingVariables;
 
-    @JSONDescription("A list of indexes for parts that are linked to this one.  Normally not used, but is required to link wheels to engines, propellers to engines, guns to seats that control them, guns to ammo crates for them to pull from, and effectors to crates they can pull supplies from and feed drops into.  The linking is bi-directional: you can link an engine to a wheel, or a wheel to an engine.  Also, linking is recursive.  So if you link an engine to an axle custom part, any wheels on that part when placed will be linked as if they were in that slot.  Similar logic applies for seats to hardmount points that might hold guns.")
+    @JSONDescription("A list of indexes for parts that are linked to this one.  Normally not used, but is required to link wheels to engines, propellers to engines, guns and grapples to seats that control them, guns to ammo crates for them to pull from, and effectors to crates they can pull supplies from and feed drops into.  The linking is bi-directional: you can link an engine to a wheel, or a wheel to an engine.  Also, linking is recursive.  So if you link an engine to an axle custom part, any wheels on that part when placed will be linked as if they were in that slot.  Similar logic applies for seats to hardmount points that might hold guns.")
     public List<Integer> linkedParts;
 
     @JSONDescription("If this part is a seat, this list of potion effects will be applied to the rider. This section works the same as the normal vehicle-based effects, but apply only to the rider of a specific seat, rather than the entire vehicle")

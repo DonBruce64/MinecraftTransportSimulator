@@ -100,6 +100,12 @@ public class WrapperEntity implements IWrapperEntity {
     }
 
     @Override
+    public String getRegistryName() {
+        ResourceLocation registration = entity.getType().getRegistryName();
+        return registration != null ? registration.toString() : null;
+    }
+
+    @Override
     public AWrapperWorld getWorld() {
         return WrapperWorld.getWrapperFor(entity.level);
     }

@@ -1,5 +1,5 @@
 plugins {
-    id "net.neoforged.moddev" version "2.0.+"
+    id "net.neoforged.moddev" version "${moddev_version}"
 }
 
 version = "${project.mc_version}-${project.mod_version}"
@@ -7,6 +7,9 @@ group = project.mod_group
 base.archivesName = project.archive_name
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+// Ensure mccore is evaluated first so we can reference its sourceSets.
+evaluationDependsOn(":mccore")
 
 neoForge {
     version = project.neoforge_version
@@ -27,6 +30,7 @@ neoForge {
     mods {
         mts {
             sourceSet sourceSets.main
+            sourceSet project(":mccore").sourceSets.main
         }
     }
 }
@@ -38,8 +42,8 @@ repositories {
     maven { url = "https://www.cursemaven.com" }
     // Sodium, compile-only for its optional mixin
     maven {
-        url = "https://api.modrinth.com/maven"
-        content { includeGroup "maven.modrinth" }
+        url = "https://maven.caffeinemc.net/releases"
+        content { includeGroup "net.caffeinemc" }
     }
 }
 
@@ -64,8 +68,10 @@ dependencies {
     compileOnly "mezz.jei:jei-${project.mc_version}-neoforge-api:${project.jei_version}"
     runtimeOnly "mezz.jei:jei-${project.mc_version}-neoforge:${project.jei_version}"
     compileOnly "curse.maven:jade-324717:${project.jade_file_id}"
-    // Compile against Sodium for the optional dynamic light mixin; it is never shipped or required.
-    compileOnly "maven.modrinth:sodium:${project.sodium_version}"
+    // The unwrapped mod exposes the classes used by the optional dynamic light mixin.
+    compileOnly("net.caffeinemc:sodium-neoforge-mod:${project.sodium_version}") {
+        transitive = false
+    }
 }
 
 jar {

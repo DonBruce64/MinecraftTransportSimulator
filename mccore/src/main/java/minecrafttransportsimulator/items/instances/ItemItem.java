@@ -154,10 +154,11 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                             //Left clicking removes parts, or removes vehicles, if we were sneaking.
                             if(player.isSneaking()) {
                                 if(vehicle != null) {
-                                    if ((!ConfigSystem.settings.general.opPickupVehiclesOnly.value || player.isOP()) && (!ConfigSystem.settings.general.creativePickupVehiclesOnly.value || player.isCreative()) && entity.isValid) {
-                                        vehicle.disconnectAllConnections();
-                                        vehicle.world.spawnItemStack(vehicle.getStack(), hitBox.globalCenter, null);
-                                        vehicle.remove();
+                                    if (vehicle.definition.motorized.packTime > 0) {
+                                        //Timed packing is handled by PacketVehiclePacking after server-side duration validation.
+                                        return CallbackType.NONE;
+                                    } else if ((!ConfigSystem.settings.general.opPickupVehiclesOnly.value || player.isOP()) && (!ConfigSystem.settings.general.creativePickupVehiclesOnly.value || player.isCreative()) && entity.isValid) {
+                                        packVehicle(vehicle, hitBox.globalCenter);
                                     }
                                 }
                             }else {
@@ -165,7 +166,13 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                     APart part = (APart) entity;
                                     if (!part.isPermanent && part.isValid) {
                                         LanguageEntry partResult = part.checkForRemoval(player);
-                                        if (partResult != null) {
+                                        if (part.definition.generic.removeTime > 0) {
+                                            //Timed removals are handled by PacketEntityInteract after server-side duration validation.
+                                            if (partResult != null) {
+                                                player.sendPacket(new PacketPlayerChatMessage(player, partResult));
+                                            }
+                                            return CallbackType.NONE;
+                                        } else if (partResult != null) {
                                             player.sendPacket(new PacketPlayerChatMessage(player, partResult));
                                             return CallbackType.NONE;
                                         } else {
@@ -184,7 +191,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                 return CallbackType.NONE;
             }
             case PAINT_GUN: {
-                if (!entity.definition.disableRepaint && !entity.world.isClient() && rightClick) {
+                if (!entity.definition.general.disableRepaint && !entity.world.isClient() && rightClick) {
                     if (vehicle == null || !vehicle.lockedVar.isActive) {
                         player.sendPacket(new PacketEntityGUIRequest(entity, player, PacketEntityGUIRequest.EntityGUIType.PAINT_GUN));
                     } else {
@@ -423,6 +430,10 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 }
                                 double newDamage = entity.damageVar.currentValue - amountRepaired;
                                 entity.damageVar.setTo(newDamage, true);
+                                if (definition.repair.canRepairTotaled && entity instanceof EntityVehicleF_Physics) {
+                                    EntityVehicleF_Physics vehicleToCharge = (EntityVehicleF_Physics) entity;
+                                    vehicleToCharge.electricUsageVar.adjustBy(vehicleToCharge.electricPower - vehicleToCharge.batteryCapacityVar.currentValue * AEntityVehicleE_Powered.BATTERY_DEFAULT_CHARGE, true);
+                                }
                                 if (entity instanceof PartEngine) {
                                     ((PartEngine) entity).hoursVar.setTo(0, true);
                                 }
@@ -447,13 +458,19 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
         }
     }
 
+    public static void packVehicle(EntityVehicleF_Physics vehicle, Point3D itemSpawnPosition) {
+        vehicle.disconnectAllConnections();
+        vehicle.world.spawnItemStack(vehicle.getStack(), itemSpawnPosition, null);
+        vehicle.remove();
+    }
+
     @Override
     public boolean onBlockClicked(AWrapperWorld world, IWrapperPlayer player, Point3D position, Axis axis) {
         if (definition.item.type == ItemComponentType.PAINT_GUN) {
             if (!world.isClient()) {
                 ATileEntityBase<?> tile = world.getTileEntity(position);
                 if (tile instanceof TileEntityDecor) {
-                    if (!tile.definition.disableRepaint) {
+                    if (!tile.definition.general.disableRepaint) {
                         player.sendPacket(new PacketEntityGUIRequest(tile, player, PacketEntityGUIRequest.EntityGUIType.PAINT_GUN));
                     }
                     return true;
@@ -462,7 +479,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                     //Change the axis to match the 8-dim axis for poles.  Blocks only get a 4-dim axis.
                     axis = Axis.getFromRotation(player.getYaw(), pole.definition.pole.allowsDiagonals).getOpposite();
                     if (pole.components.containsKey(axis)) {
-                        if (!pole.components.get(axis).definition.disableRepaint) {
+                        if (!pole.components.get(axis).definition.general.disableRepaint) {
                             player.sendPacket(new PacketEntityGUIRequest(pole.components.get(axis), player, PacketEntityGUIRequest.EntityGUIType.PAINT_GUN));
                         }
                     }

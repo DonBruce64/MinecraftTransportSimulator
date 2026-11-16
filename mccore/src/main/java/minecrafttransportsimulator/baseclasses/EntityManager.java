@@ -383,6 +383,15 @@ public abstract class EntityManager {
      * If nothing is intersected, null is returned.
      */
     public EntityInteractResult getMultipartEntityIntersect(Point3D startPoint, Point3D endPoint, AEntityF_Multipart<?> entityToIgnore, CollisionType... collisionTypes) {
+        return getMultipartEntityIntersect(startPoint, endPoint, entityToIgnore, false, collisionTypes);
+    }
+
+    /**
+     * Like {@link #getMultipartEntityIntersect(Point3D, Point3D, AEntityF_Multipart, CollisionType...)}, but if skipPartBounds is true,
+     * parts' own bounding boxes are ignored, so only the collision boxes packs define are hit.  Every part has a bounding box that
+     * can be clicked and attacked, even ones with no model or collision of their own.
+     */
+    public EntityInteractResult getMultipartEntityIntersect(Point3D startPoint, Point3D endPoint, AEntityF_Multipart<?> entityToIgnore, boolean skipPartBounds, CollisionType... collisionTypes) {
         EntityInteractResult closestResult = null;
         boolean clickOnly = collisionTypes.length == 1 && collisionTypes[0] == CollisionType.CLICK;
         BoundingBox vectorBounds = new BoundingBox(startPoint, endPoint);
@@ -400,6 +409,9 @@ public abstract class EntityManager {
                             if (closestResult == null || startPoint.isFirstCloserThanSecond(intersectionPoint.position, closestResult.position)) {
                                 APart part = multipart.getPartWithBox(box);
                                 if (part != null) {
+                                    if (skipPartBounds && box == part.boundingBox) {
+                                        continue;
+                                    }
                                     if ((entityToIgnore == null || !entityToIgnore.allParts.contains(part)) && (!clickOnly || part.canBeClicked())) {
                                         closestResult = new EntityInteractResult(part, box, intersectionPoint.position);
                                     }
