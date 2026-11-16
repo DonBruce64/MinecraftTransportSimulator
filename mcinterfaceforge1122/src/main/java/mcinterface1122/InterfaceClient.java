@@ -12,8 +12,10 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
+import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
@@ -150,6 +152,16 @@ public class InterfaceClient implements IInterfaceClient {
     @Override
     public void setActiveGUI(AGUIBase gui) {
         FMLCommonHandler.instance().showGuiScreen(new BuilderGUI(gui));
+    }
+
+    public void openInventoryGUI(IWrapperNBT inventoryData, int inventorySize, int stackSize, String texture, int heldPlayerSlot, int windowID) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        WrapperWorld world = WrapperWorld.getWrapperFor(minecraft.world);
+        EntityInventoryContainer inventory = new EntityInventoryContainer(world, inventoryData, inventorySize, stackSize);
+        BuilderInventoryContainerMenu menu = new BuilderInventoryContainerMenu(minecraft.player.inventory, inventory, texture, null, heldPlayerSlot);
+        menu.windowId = windowID;
+        minecraft.player.openContainer = menu;
+        minecraft.displayGuiScreen(new BuilderInventoryContainerScreen(menu));
     }
 
     @Override

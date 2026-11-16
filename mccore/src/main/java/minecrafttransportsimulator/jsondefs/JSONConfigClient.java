@@ -64,6 +64,7 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> mouseYoke = new JSONConfigEntry<>(false, "If true, aircraft pitch and roll are controlled by an invisible on-screen mouse yoke.  Cursor center is neutral; window edges are full input.");
         public JSONConfigEntry<Boolean> arcadeMode = new JSONConfigEntry<>(false, "If true, arcade-style flight and mouse aiming will be enabled. This allows the mouse cursor to control aircraft/helicopter steering systems.");
         public JSONConfigEntry<Boolean> showTutorial = new JSONConfigEntry<>(true, "If true, tutorial and onboarding overlays may be shown.  Set this to false to hide those prompts.");
+        public JSONConfigEntry<Boolean> showDefaultAircraftControlsMessageEveryTime = new JSONConfigEntry<>(true, "If true, the message telling you which controls an aircraft defaults to will show every time you get into the pilot seat of an aircraft that sets its own default.  If false, it only shows the first time you fly each aircraft in each mode.");
         public JSONConfigEntry<Boolean> showHoverTxt = new JSONConfigEntry<>(true, "If true, hover text helpers may be shown when looking at supported vehicle elements.  Set this to false to hide those prompts.");
         public JSONConfigEntry<Boolean> cullingWarn = new JSONConfigEntry<>(true, "If true, IV will show a one-time startup warning when Entity Culling is detected.");
 
@@ -79,6 +80,11 @@ public class JSONConfigClient {
         public JSONConfigEntry<Double> joystickDeadZone = new JSONConfigEntry<>(0.03D, "Dead zone for joystick axis.  This is NOT joystick specific.");
         public JSONConfigEntry<Float> soundVolume = new JSONConfigEntry<>(1.0F, "Volume for all sounds in the mod.  This is used instead of the game's master volume.");
         public JSONConfigEntry<Float> radioVolume = new JSONConfigEntry<>(1.0F, "Volume for radios in the mod.  This is used instead of the game's master volume.");
+
+        //Per-aircraft arcade flight choices for aircraft that set arcadeFlightMode, set with the arcade key.
+        //Keyed by "packID:systemName|arcade" or "packID:systemName|standard" (the default being overridden).
+        //True is arcade flight, false is standard controls.  May be null if loaded from an older config.
+        public Map<String, Boolean> arcadeFlightOverrides = new HashMap<>();
     }
 
     public static class JSONControls {
