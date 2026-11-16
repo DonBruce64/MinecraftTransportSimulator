@@ -46,6 +46,11 @@ public class PacketEntityCSHandshakeServer extends APacketBase {
 
     @Override
     public void handle(AWrapperWorld world) {
+        if (FlashbackCompat.isReplayClient() && !builderID.contains(",")) {
+            UUID id = UUID.fromString(builderID);
+            FlashbackCompat.DATA.put(id, ((WrapperNBT) data).tag.copy());
+            FlashbackCompat.markDataArrived(id);
+        }
         if (builderID.contains(",")) {
             String[] stringPos = builderID.split(",");
             BuilderTileEntity tile = (BuilderTileEntity) ((WrapperWorld) world).world.getBlockEntity(BlockPos.containing(Integer.parseInt(stringPos[0]), Integer.parseInt(stringPos[1]), Integer.parseInt(stringPos[2])));

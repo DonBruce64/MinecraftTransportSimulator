@@ -29,6 +29,7 @@ public abstract class ABuilderEntityBase extends Entity {
      * This flag is true if we need to get server data for syncing.  Set on construction tick, but only used on clients.
      **/
     private boolean needDataFromServer = true;
+    private int replayWaitTicks;
     /**
      * Data loaded on last NBT call.  Saved here to prevent loading of things until the update method.  This prevents
      * loading entity data when this entity isn't being ticked.  Some mods love to do this by making a lot of entities
@@ -89,8 +90,20 @@ public abstract class ABuilderEntityBase extends Entity {
             //entities on the client.  By waiting for an update, we will know we're valid.
             //I'm looking at YOU: The One Probe!
             if (needDataFromServer) {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityCSHandshakeClient(InterfaceManager.clientInterface.getClientPlayer(), this));
-                needDataFromServer = false;
+                if (FlashbackCompat.isReplayClient()) {
+                    CompoundTag cached = FlashbackCompat.DATA.get(getUUID());
+                    if (cached != null) {
+                        lastLoadedNBT = cached.copy();
+                        loadFromSavedNBT = true;
+                        needDataFromServer = false;
+                    } else if (++replayWaitTicks > 10) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityCSHandshakeClient(InterfaceManager.clientInterface.getClientPlayer(), this));
+                        needDataFromServer = false;
+                    }
+                } else {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityCSHandshakeClient(InterfaceManager.clientInterface.getClientPlayer(), this));
+                    needDataFromServer = false;
+                }
             }
         } else if (loadedFromSavedNBT) {
             //Send any packets to clients that requested them.
@@ -110,8 +123,8 @@ public abstract class ABuilderEntityBase extends Entity {
         }
     }
 
-    //@Override - signature changed in 1.21.1
-    public void lerpTo(double pX, double pY, double pZ, float pYRot, float pXRot, int pLerpSteps, boolean pTeleport) {
+    @Override
+    public void lerpTo(double pX, double pY, double pZ, float pYRot, float pXRot, int pLerpSteps) {
         //Overridden due to stupid tracker behavior.
     }
 

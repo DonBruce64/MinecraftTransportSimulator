@@ -34,6 +34,10 @@ class InterfacePacket implements IInterfacePacket {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCSHandshakeClient.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCSHandshakeServer.class);
         APacketBase.initPackets(packetIndex);
+
+        // Using packet index from end so they don't change and replays work on newer versions when new packets are added.
+        InterfaceManager.packetInterface.registerPacket((byte) 254, PacketReplayTransform.class);
+        InterfaceManager.packetInterface.registerPacket((byte) 253, PacketReplayEngines.class);
     }
 
     /**

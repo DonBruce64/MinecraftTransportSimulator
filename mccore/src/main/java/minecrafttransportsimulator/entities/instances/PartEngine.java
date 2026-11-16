@@ -29,6 +29,9 @@ public class PartEngine extends APart {
     public boolean backfired;
     public boolean badShift;
     public boolean running;
+    private boolean hasReplayState;
+    private boolean replayRunning;
+    private double replayRpm;
     public byte forwardsGears;
     public byte reverseGears;
     public int upshiftCountdown;
@@ -107,6 +110,12 @@ public class PartEngine extends APart {
     public static final float FAILURE_TEMP = 132.222F;
     public static final float LOW_OIL_PRESSURE = 40F;
     public static final float MAX_SHIFT_SPEED = 0.35F;
+
+    public void setReplayState(boolean running, double rpm) {
+        this.replayRunning = running;
+        this.replayRpm = rpm;
+        this.hasReplayState = true;
+    }
     
     private static double[] parseOffsetAndFrequencyMultiplier(String variable, String prefix) {
         String suffix = variable.substring(prefix.length());
@@ -237,6 +246,24 @@ public class PartEngine extends APart {
     @Override
     public void update() {
         super.update();
+
+        if (world.isClient() && InterfaceManager.clientInterface.isReplayPlayback()) {
+            //Replay: engine state is recorded, don't simulate.
+            if (hasReplayState) {
+                running = replayRunning;
+                rpm = replayRpm;
+            }
+            backfired = false;
+            badShift = false;
+            if (upshiftCountdown > 0) {
+                --upshiftCountdown;
+            }
+            if (downshiftCountdown > 0) {
+                --downshiftCountdown;
+            }
+            return;
+        }
+
         //Reset states.
         backfired = false;
         badShift = false;

@@ -102,6 +102,9 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         //them from the listing of entities to find.
         //Only do this once a second, and if we hit 5 seconds, bail.
         //We do this linking both ways, as we don't know if the towed vehicle or the towing vehicle will load first.
+        if (savedTowingConnections != null && world.isClient() && InterfaceManager.clientInterface.isReplayPlayback()) {
+            savedTowingConnections.clear();
+        }
         if (savedTowedByConnection != null) {
             if (ticksExisted % 20 == 0 && ticksExisted > 0) {
                 if (ticksExisted <= 100 || world.isClient()) {
@@ -513,6 +516,18 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                     }
                 }
             }
+        }
+        return false;
+    }
+
+    public void addPendingTowingConnection(TowingConnection connection) {
+        savedTowingConnections.add(connection);
+    }
+
+    public boolean cancelPendingTowingConnection() {
+        if (!savedTowingConnections.isEmpty()) {
+            savedTowingConnections.remove(savedTowingConnections.size() - 1);
+            return true;
         }
         return false;
     }

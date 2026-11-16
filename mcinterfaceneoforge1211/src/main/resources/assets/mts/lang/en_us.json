@@ -43,5 +43,18 @@
     "advancements.mts.ticket.title": "Ticket to Ride",
     "advancements.mts.ticket.description": "Create a Ticket to load entities into vehicles",
     "advancements.mts.wrench.title": "Better Than Duct Tape",
-    "advancements.mts.wrench.description": "Create a wrench for repairing vehicles"
+    "advancements.mts.wrench.description": "Create a wrench for repairing vehicles",
+
+    "mts.flashback.visuals.world.render_iv": "Render IV Vehicles",
+    "mts.flashback.vehicle_list": "IV Vehicle List",
+    "mts.flashback.search_name_or_uuid": "Search by Name or UUID",
+    "mts.flashback.no_vehicles_loaded": "No vehicles loaded",
+    "mts.flashback.no_vehicles_match": "No vehicle match",
+    "mts.flashback.passengers": "Passengers",
+    "mts.flashback.look_at": "Look At",
+    "mts.flashback.copy_uuid_vehicle": "Copy Vehicle UUID",
+    "mts.flashback.copy_uuid_entity": "Copy Entity UUID",
+    "mts.flashback.mod_name": "Immersive Vehicles",
+    "mts.flashback.mute_vehicle": "Mute Vehicle",
+    "mts.flashback.unmute_vehicle": "Unmute Vehicle"
 }

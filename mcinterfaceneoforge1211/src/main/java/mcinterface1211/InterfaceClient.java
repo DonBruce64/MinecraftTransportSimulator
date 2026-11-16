@@ -1,12 +1,7 @@
 package mcinterface1211;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -21,6 +16,7 @@ import minecrafttransportsimulator.mcinterface.IInterfaceClient;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.RenderText;
@@ -108,6 +104,16 @@ public class InterfaceClient implements IInterfaceClient {
         if (preloadIndex >= modelsToPreload.size()) {
             InterfaceManager.coreInterface.logError("MTS model preload complete: " + modelsToPreload.size() + " models cached.");
         }
+    }
+
+    @Override
+    public boolean isReplayPlayback() {
+        return FlashbackCompat.isReplayClient();
+    }
+
+    @Override
+    public void queueReplayPacket(UUID target, APacketBase packet) {
+        FlashbackCompat.queuePacket(target, packet);
     }
 
     @Override
@@ -405,7 +411,9 @@ public class InterfaceClient implements IInterfaceClient {
                 //Need to update world brightness since sky darken isn't calculated normally on clients.
                 ((WrapperWorld) world).world.updateSkyBrightness();
 
-                world.tickAll(true);
+                if (!FlashbackCompat.shouldSkipWorldTick(world)) {
+                    world.tickAll(true);
+                }
                     
                 //Complain about Entity Culling mod at 10 second mark.
                 if(ConfigSystem.settings.general.performModCompatFunctions.value && ConfigSystem.client.controlSettings.cullingWarn.value && InterfaceManager.coreInterface.isModPresent("entityculling")) {
@@ -425,7 +433,10 @@ public class InterfaceClient implements IInterfaceClient {
         if (!InterfaceManager.clientInterface.isGamePaused() && player != null) {
             AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
             if (world != null) {
-                world.tickAll(false);
+                if (!FlashbackCompat.shouldSkipWorldTick(world)) {
+                    world.tickAll(false);
+                    FlashbackCompat.onClientTickPost(world);
+                }
                     
                 //Handle camera requests.
                 if(cameraModeRequest != null) {

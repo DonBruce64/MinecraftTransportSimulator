@@ -215,6 +215,8 @@ public class InterfaceRender implements IInterfaceRender {
     
     @Override
     public void renderVertices(RenderableData data, boolean changedSinceLastRender) {
+        final boolean isGhost = FlashbackCompat.ghostPass && !data.vertexObject.isLines;
+
         matrixStack.pushPose();
         Matrix4f matrix4f = convertMatrix4f(data.transform);
         Matrix3f matrix3f = new Matrix3f(matrix4f);
@@ -253,9 +255,9 @@ public class InterfaceRender implements IInterfaceRender {
             //Rewind buffer for next read.
             data.vertexObject.vertices.rewind();
         } else {
-            String typeID = (renderingGUI ? "gui_" : "entity_") + data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending + data.writeDepth;
+            String typeID = (isGhost ? "ghost" : "") + (renderingGUI ? "gui_" : "entity_") + data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending + data.writeDepth;
             final RenderType renderType;
-            if (data.vertexObject.cacheVertices && !renderingGUI && ConfigSystem.client.renderingSettings.renderingMode.value != 2) {
+            if (data.vertexObject.cacheVertices && !renderingGUI && !isGhost && ConfigSystem.client.renderingSettings.renderingMode.value != 2) {
             	//Get the render type and data buffer for this entity.
                 renderType = renderTypes.computeIfAbsent(typeID, k -> CustomRenderType.create("mts_entity", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.TRIANGLES, 2097152, true, data.isTranslucent, CustomRenderType.createForObject(data).createCompositeState(false)));
                 BufferData bufferData = buffers.computeIfAbsent(data, k -> new BufferData(renderType, data));
@@ -300,7 +302,7 @@ public class InterfaceRender implements IInterfaceRender {
                 //Use TRIANGLES directly.  Disable sortOnUpload (false) because MC's sortQuads
                 //assumes QUADS format and corrupts triangle vertex data, causing UV artifacts.
                 //Translucent depth sorting is handled by MTS's own render ordering instead.
-                renderType = renderTypes.computeIfAbsent(typeID, k -> CustomRenderType.create("mts_entity_" + typeID, DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.TRIANGLES, 2097152, true, false, CustomRenderType.createForObject(data).createCompositeState(false)));
+                renderType = renderTypes.computeIfAbsent(typeID, k -> CustomRenderType.create("mts_entity_" + typeID, DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.TRIANGLES, 2097152, true, false, (isGhost ? CustomRenderType.createForGhost(data) : CustomRenderType.createForObject(data)).createCompositeState(false)));
                 VertexConsumer buffer = renderBuffer.getBuffer(renderType);
                 while (data.vertexObject.vertices.hasRemaining()) {
                     //Need to parse these out first since our order differs.
@@ -314,7 +316,7 @@ public class InterfaceRender implements IInterfaceRender {
                     float posZ = data.vertexObject.vertices.get();
 
                     buffer.addVertex(stackEntry.pose(), posX, posY, posZ)
-                        .setColor(data.color.red, data.color.green, data.color.blue, data.alpha)
+                        .setColor(data.color.red, data.color.green, data.color.blue, isGhost ? data.alpha * 0.2F : data.alpha)
                         .setUv(texU, texV)
                         .setOverlay(OverlayTexture.NO_OVERLAY)
                         .setLight(data.worldLightValue)
@@ -345,9 +347,21 @@ public class InterfaceRender implements IInterfaceRender {
             //The Slow mode draws its vertices here, without buffers: dynamic light shadows copy them as they go.
             DynamicLightShadowAtlas.setCapturing(captureBodies && ConfigSystem.client.renderingSettings.renderingMode.value == 2);
             for (AEntityC_Renderable entity : allEntities) {
+                if (FlashbackCompat.isVehicleHidden(entity)) {
+                    continue;
+                }
                 matrixStack.pushPose();
                 matrixStack.translate(entity.position.x - renderCameraOffset.x, entity.position.y - renderCameraOffset.y, entity.position.z - renderCameraOffset.z);
-                entity.render(blendingEnabled, partialTicks);
+                if (FlashbackCompat.isGhost(entity)) {
+                    FlashbackCompat.ghostPass = true;
+                    try {
+                        entity.render(blendingEnabled, partialTicks);
+                    } finally {
+                        FlashbackCompat.ghostPass = false;
+                    }
+                } else {
+                    entity.render(blendingEnabled, partialTicks);
+                }
                 matrixStack.popPose();
             }
             DynamicLightShadowAtlas.setCapturing(false);
@@ -512,6 +526,37 @@ public class InterfaceRender implements IInterfaceRender {
             //stateBuilder.setWriteMaskState(COLOR_DEPTH_WRITE);
             //Don't need to poke lines, there's only one state and we don't change lines for non-line renders.
             //stateBuilder.setLineState(DEFAULT_LINE);
+
+            //Return.
+            return stateBuilder;
+        }
+
+        private static RenderType.CompositeState.CompositeStateBuilder createForGhost(RenderableData data) {
+            //Create the state builder.  Changed states are active, default states are commented to save processing but still show the state.
+            RenderType.CompositeState.CompositeStateBuilder stateBuilder = RenderType.CompositeState.builder();
+
+            //Set shader to use.
+            if (data.lightingMode.disableTextureShadows && data.lightingMode.disableWorldLighting) {
+                //This shouldn't use OpenGL lighting, use shader that ignores this.
+                stateBuilder.setShaderState(MTS_ENTITY_LIGHTS_SHADER);
+            } else if (data.lightingMode.disableTextureShadows) {
+                stateBuilder.setShaderState(MTS_ENTITY_CUTOUT_NOSHADOWS_SHADER);
+            } else {
+                stateBuilder.setShaderState(RENDERTYPE_ENTITY_SOLID_SHADER);
+            }
+
+            //Set transparency.
+            stateBuilder.setTransparencyState(PROPER_TRANSLUCENT_TRANSPARENCY);
+            //Texture is just based on what is specified.
+            stateBuilder.setTextureState(data.texture != null ? getTexture(data.texture) : NO_TEXTURE);
+            //Always need lightmaps for entities per their vertex format.
+            stateBuilder.setLightmapState(LIGHTMAP);
+            //Entities go to the main target.
+            stateBuilder.setOutputState(MAIN_TARGET);
+            //All entity shaders require overlays, so we use those here.
+            stateBuilder.setOverlayState(OVERLAY);
+            //Culling is required for textured surfaces since they have normals and this saves FPS.
+            stateBuilder.setCullState(CULL);
 
             //Return.
             return stateBuilder;

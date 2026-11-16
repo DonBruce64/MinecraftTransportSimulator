@@ -56,6 +56,9 @@ public class WrapperAABBCollective extends AABB {
 
     @Override
     public boolean intersects(double otherMinX, double otherMinY, double otherMinZ, double otherMaxX, double otherMaxY, double otherMaxZ) {
+        if (FlashbackCompat.pickingActive) {
+            return false;
+        }
         //CHeck super first, as that's the encompassing box.
         if (super.intersects(otherMinX, otherMinY, otherMinZ, otherMaxX, otherMaxY, otherMaxZ)) {
             for (BoundingBox testBox : getBoxes()) {
@@ -69,11 +72,17 @@ public class WrapperAABBCollective extends AABB {
 
     @Override
     public boolean contains(Vec3 vec) {
+        if (FlashbackCompat.pickingActive) {
+            return false;
+        }
         return this.intersects(vec.x, vec.y, vec.z, vec.x, vec.y, vec.z);
     }
 
     @Override
     public Optional<Vec3> clip(Vec3 vecA, Vec3 vecB) {
+        if (FlashbackCompat.pickingActive) {
+            return Optional.empty();
+        }
         //Check all the bounding boxes for collision to see if we hit one of them.
         Point3D start = new Point3D(vecA.x, vecA.y, vecA.z);
         Point3D end = new Point3D(vecB.x, vecB.y, vecB.z);

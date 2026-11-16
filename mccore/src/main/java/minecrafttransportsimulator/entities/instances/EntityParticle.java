@@ -356,6 +356,10 @@ public class EntityParticle extends AEntityC_Renderable {
         this.killBadParticle = false;
     }
 
+    public AEntityC_Renderable getSpawningEntity() {
+        return entitySpawning;
+    }
+
     public void setTrailSegmentLength(double trailLength) {
         scale.z = entitySpawning.scale.z != 0 ? trailLength / entitySpawning.scale.z : trailLength;
         prevScale.set(scale);

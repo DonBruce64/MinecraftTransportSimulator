@@ -2,9 +2,11 @@ package minecrafttransportsimulator.mcinterface;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 
 /**
@@ -18,6 +20,12 @@ import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
  * @author don_bruce
  */
 public interface IInterfaceClient {
+
+    default boolean isReplayPlayback() {
+        return false;
+    }
+
+    default void queueReplayPacket(UUID target, APacketBase packet) {}
 
     /**
      * Returns true if the game is paused.

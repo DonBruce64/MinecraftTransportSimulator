@@ -4,10 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
-import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -16,9 +13,11 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.IItemEntityProvider.IItemEntityFactory;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
@@ -70,6 +69,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
      **/
     private WrapperAABBCollective interactAttackBoxes;
 
+    private float replayTrackYaw;
+
     public BuilderEntityExisting(EntityType<? extends BuilderEntityExisting> eType, Level world) {
         super(eType, world);
     }
@@ -77,6 +78,17 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     @Override
     public void baseTick() {
         super.baseTick();
+
+        if (entity != null && !entity.isValid && level().isClientSide && FlashbackCompat.isReplayClient()
+                && !isRemoved()) {
+            CompoundTag cached = FlashbackCompat.DATA.get(getUUID());
+            if (cached != null) {
+                entity = null;
+                loadedFromSavedNBT = false;
+                loadFromSavedNBT = true;
+                lastLoadedNBT = cached.copy();
+            }
+        }
 
         //If our entity isn't null, update it and our position.
         if (entity != null) {
@@ -142,6 +154,15 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     }
                     loadedFromSavedNBT = true;
                     lastLoadedNBT = null;
+                    if (level().isClientSide && FlashbackCompat.isReplayClient()) {
+                        FlashbackCompat.BUILDERS_UUID.put(entity.uniqueUUID, getUUID());
+                        FlashbackCompat.BUILDERS_ID.put(entity.uniqueUUID, getId());
+                        FlashbackCompat.applyCachedTransform(entity.uniqueUUID, entity);
+                        FlashbackCompat.applyQueuedPackets(getUUID(), entity);
+                        try {
+                            entity.update();
+                        } catch (Exception ignored) {}
+                    }
                 } catch (Exception e) {
                     InterfaceManager.coreInterface.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
                     InterfaceManager.coreInterface.logError(e.getMessage());
@@ -149,6 +170,14 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                 }
             }
         }
+    }
+
+    private static float partialTick() {
+        return Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
+    }
+
+    private boolean isReplayVehicle() {
+        return level().isClientSide && entity instanceof EntityVehicleF_Physics && InterfaceManager.clientInterface.isReplayPlayback();
     }
 
     @Override
@@ -163,6 +192,44 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
         if (entity != null) {
             entity.remove();
         }
+    }
+
+    private static float yawOf(RotationMatrix rotationMatrix) {
+        Point3D heading = new Point3D(0, 0, 0.0001).rotate(rotationMatrix);
+        return (float) Math.toDegrees(Math.atan2(-heading.x, heading.z));
+    }
+
+    private static float pitchOf(RotationMatrix rotationMatrix) {
+        Point3D heading = new Point3D(0, 0, 0.0001).rotate(rotationMatrix);
+        return (float) Math.toDegrees(-Math.asin(Math.clamp(heading.y, -1D, 1D)));
+    }
+
+    @Override
+    public float getYHeadRot() {
+        if (!isReplayVehicle()) {
+            return super.getYHeadRot();
+        }
+        float prev = yawOf(entity.prevOrientation);
+        float yaw = prev + partialTick() * Mth.wrapDegrees(yawOf(entity.orientation) - prev);
+        replayTrackYaw += Mth.wrapDegrees(yaw - replayTrackYaw);
+        return replayTrackYaw;
+    }
+
+    @Override
+    public float getXRot() {
+        if (!isReplayVehicle()) {
+            return super.getXRot();
+        }
+        float prev = pitchOf(entity.prevOrientation);
+        return prev + partialTick() * (pitchOf(entity.orientation) - prev);
+    }
+
+    @Override
+    public void lerpTo(double x, double y, double z, float yRot, float xRot, int lerpSteps) {
+        if (isReplayVehicle()) {
+            return;
+        }
+        super.lerpTo(x, y, z, yRot, xRot, lerpSteps);
     }
 
     @Override
