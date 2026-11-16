@@ -29,6 +29,8 @@ public class ItemPartGrapple extends AItemPart {
         super.addTooltipLines(tooltipLines, data);
         tooltipLines.add(LanguageSystem.ITEMINFO_GRAPPLE_RANGE.getCurrentValue() + definition.grapple.range);
         tooltipLines.add(LanguageSystem.ITEMINFO_GRAPPLE_REELSPEED.getCurrentValue() + definition.grapple.reelSpeed);
+        tooltipLines.add(LanguageSystem.ITEMINFO_GRAPPLE_WINCHFORCE.getCurrentValue() + (definition.grapple.winchForce > 0 ? definition.grapple.winchForce : LanguageSystem.ITEMINFO_GRAPPLE_WINCHFORCE_DEFAULT.getCurrentValue()));
+        tooltipLines.add(LanguageSystem.ITEMINFO_GRAPPLE_BREAKFORCE.getCurrentValue() + (definition.grapple.breakForce > 0 ? definition.grapple.breakForce : LanguageSystem.ITEMINFO_GRAPPLE_BREAKFORCE_DEFAULT.getCurrentValue()));
         List<String> attachesTo = new ArrayList<>();
         if (!definition.grapple.disableBlockAttach) {
             attachesTo.add(LanguageSystem.ITEMINFO_GRAPPLE_BLOCKS.getCurrentValue());

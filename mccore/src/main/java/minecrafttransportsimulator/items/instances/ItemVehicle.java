@@ -11,9 +11,12 @@ import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.packets.instances.PacketVehicleDeployment;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.ControlSystem;
 
 public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEntityProvider {
 
@@ -23,36 +26,45 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 
     @Override
     public boolean onBlockClicked(AWrapperWorld world, IWrapperPlayer player, Point3D position, Axis axis) {
-        if (!world.isClient()) {
-            //First construct the class.
-            //This takes into account all saved data in the stack, so the vehicle will re-load its data from it
-            //as if it has been saved in the world rather than into an item.  If there's no data,
-            //then we just make a blank, new instance.
-            IWrapperNBT data = player.getHeldStack().getData();
-            EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(world, player, this, data);
-
-            //Set position to the spot that was clicked by the player.
-            //Add a -90 rotation offset so the vehicle is facing perpendicular.
-            //Remove motion to prevent it if it was previously stored.
-            //Makes placement easier and is less likely for players to get stuck.
-            //Then spawn the vehicle into the world once these properties are set.
-            vehicle.position.set(position).add(0.5, 1, 0.5);
-            vehicle.prevPosition.set(position);
-            vehicle.orientation.setToAngles(new Point3D(0, player.getYaw() + 90, 0));
-            vehicle.prevOrientation.set(vehicle.orientation);
-            vehicle.motion.set(0, 0, 0);
-            vehicle.prevMotion.set(vehicle.motion);
-            vehicle.world.spawnEntity(vehicle);
-
-            //Now add the parts.  These have to be done after spawning the vehicle so they have the right tick order and position.
-            vehicle.addPartsPostAddition(player, data);
-
-            //Decrement stack if we are not in creative.
-            if (!player.isCreative()) {
-                player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
+        if (definition.motorized.deployTime > 0) {
+            if (world.isClient()) {
+                ControlSystem.startVehicleDeployment(player, this, position, axis);
+            } else {
+                PacketVehicleDeployment.grantVehicleDeployment(player, this, position, axis);
             }
+            return true;
         }
+
+        deployVehicle(world, player, position);
         return true;
+    }
+
+    /**Spawns the vehicle after the server has validated the required hold duration.*/
+    public void deployVehicle(AWrapperWorld world, IWrapperPlayer player, Point3D position) {
+        if (world.isClient()) {
+            return;
+        }
+        IWrapperItemStack heldStack = player.getHeldStack();
+        if (heldStack.isEmpty() || heldStack.getItem() != this) {
+            return;
+        }
+        IWrapperItemStack deploymentStack = heldStack.copy().split(1);
+        if (!player.isCreative() && !player.getInventory().removeFromSlot(player.getHotbarIndex(), 1)) {
+            return;
+        }
+        IWrapperNBT data = deploymentStack.getData();
+        EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(world, player, this, data);
+        vehicle.position.set(position).add(0.5, 1, 0.5);
+        vehicle.prevPosition.set(position);
+        vehicle.orientation.setToAngles(new Point3D(0, player.getYaw() + 90, 0));
+        vehicle.prevOrientation.set(vehicle.orientation);
+        vehicle.motion.set(0, 0, 0);
+        vehicle.prevMotion.set(vehicle.motion);
+        if (!player.isCreative()) {
+            vehicle.setPlacementStack(deploymentStack);
+        }
+        vehicle.world.spawnEntity(vehicle);
+        vehicle.addPartsPostAddition(player, data);
     }
 
     @Override

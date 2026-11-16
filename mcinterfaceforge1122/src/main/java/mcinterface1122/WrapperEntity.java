@@ -100,6 +100,16 @@ public class WrapperEntity implements IWrapperEntity {
     }
 
     @Override
+    public String getRegistryName() {
+        if (entity instanceof EntityPlayer) {
+            //Players aren't in the entity list.
+            return "minecraft:player";
+        }
+        ResourceLocation registration = EntityList.getKey(entity);
+        return registration != null ? registration.toString() : null;
+    }
+
+    @Override
     public AWrapperWorld getWorld() {
         return WrapperWorld.getWrapperFor(entity.world);
     }

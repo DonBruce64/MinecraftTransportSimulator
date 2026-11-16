@@ -9,6 +9,7 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketCameraShake;
 import minecrafttransportsimulator.packets.instances.PacketCrafterFuelAdd;
@@ -36,16 +37,19 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
-import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Add;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Remove;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
+import minecrafttransportsimulator.packets.instances.PacketPartGrapple;
+import minecrafttransportsimulator.packets.instances.PacketPartGrappleCut;
+import minecrafttransportsimulator.packets.instances.PacketPartGrappleHook;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
+import minecrafttransportsimulator.packets.instances.PacketPlayerGrappleCut;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityChargerBattery;
@@ -61,6 +65,8 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnect
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlNotification;
+import minecrafttransportsimulator.packets.instances.PacketVehicleDeployment;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePacking;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
@@ -112,6 +118,15 @@ public abstract class APacketBase {
      * the world is passed-in here for referencing objects.
      */
     public abstract void handle(AWrapperWorld world);
+
+    /**
+     * Handles a packet with the authenticated network sender when it was sent from a client.
+     * Packets that need sender identity may override this method; all existing packets retain
+     * their normal payload-based handling through the default implementation.
+     */
+    public void handleFromClient(AWrapperWorld world, IWrapperPlayer sendingPlayer) {
+        handle(world);
+    }
 
     /**
      * Helper method to write a string to the buffer.
@@ -254,7 +269,6 @@ public abstract class APacketBase {
 
         //Inventory container packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketInventoryContainerChange.class);
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketItemInteractable.class);
 
         //Furnace packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketCrafterFuelAdd.class);
@@ -268,6 +282,9 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartChange_Add.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartChange_Remove.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartGun.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartGrapple.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartGrappleHook.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartGrappleCut.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartEngine.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartGroundDevice.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartInteractable.class);
@@ -277,6 +294,7 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPlayerChatMessage.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPlayerCraftItem.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPlayerItemTransfer.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPlayerGrappleCut.class);
 
         //Radio packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketRadioStateChange.class);
@@ -297,6 +315,8 @@ public abstract class APacketBase {
         //Vehicle packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleControlNotification.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleDeployment.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehiclePacking.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
 
         //World packets.
