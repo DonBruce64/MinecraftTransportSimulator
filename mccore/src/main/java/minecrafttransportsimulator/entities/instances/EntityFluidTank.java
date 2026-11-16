@@ -34,6 +34,13 @@ public class EntityFluidTank extends AEntityA_Base {
         } else {
             this.currentFluid = "";
         }
+        //Older code could assign the empty fluid to a tank without adding any volume.
+        //Normalize such saved tanks so they can accept fluid again.
+        if (fluidLevel <= 0) {
+            fluidLevel = 0;
+            currentFluid = "";
+            currentFluidMod = "";
+        }
         //For older versions of saved data, ensure this isn't null.
         if (currentFluidMod == null) {
             this.currentFluidMod = WILDCARD_FLUID_MOD;
@@ -99,6 +106,12 @@ public class EntityFluidTank extends AEntityA_Base {
      * amount filled.
      */
     public double fill(String fluid, String fluidMod, double maxAmount, boolean doFill) {
+        //A zero-volume fill must never assign a fluid type to an empty tank.
+        //Fluid container APIs represent empty containers with an empty fluid stack,
+        //so callers may legitimately ask to fill zero units.
+        if (maxAmount <= 0) {
+            return 0;
+        }
         if (currentFluid.isEmpty() || (currentFluid.equals(fluid) && (currentFluidMod.equals(fluidMod) || fluidMod.equals(WILDCARD_FLUID_MOD)))) {
             if (maxAmount >= getMaxLevel() - fluidLevel) {
                 maxAmount = getMaxLevel() - fluidLevel;
