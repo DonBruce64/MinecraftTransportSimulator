@@ -494,15 +494,15 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             //Get part number from raw variable.
             int partNumber = ComputedVariable.getVariableNumber(variable);
 
-            //Special handling for isSpare variables - these don't follow part-type prefixes.
-            if (partVariable.equals("isSpare") || partVariable.equals("part_isSpare") || partVariable.equals("part_isspare")) {
+            //Special handling for part_isSpare, which doesn't follow part-type prefixes.
+            if (partVariable.equals("part_isSpare")) {
                 if (definition.parts != null) {
                     for (int i = 0; i < definition.parts.size(); ++i) {
                         JSONPartDefinition partDef = definition.parts.get(i);
                         if (partNumber == 0) {
                             APart partFound = partsInSlots.get(i);
                             if (partFound != null) {
-                                return partFound.getOrCreateVariable("isSpare");
+                                return partFound.getOrCreateVariable("part_isSpare");
                             } else {
                                 return new ComputedVariable(false);
                             }
@@ -513,7 +513,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 }
                 APart partFound = partNumber < partsInSlots.size() ? partsInSlots.get(partNumber) : null;
                 if (partFound != null) {
-                    return partFound.getOrCreateVariable("isSpare");
+                    return partFound.getOrCreateVariable("part_isSpare");
                 } else if (partNumber < partsInSlots.size()) {
                     return new ComputedVariable(false);
                 }

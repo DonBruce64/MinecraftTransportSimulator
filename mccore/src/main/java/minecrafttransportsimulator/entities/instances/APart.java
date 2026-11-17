@@ -73,7 +73,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public boolean isPermanent = false;
     public final boolean isMoveable;
     public final boolean turnsWithSteer;
-    public final boolean isSpare;
     public final boolean isMirrored;
     private boolean requestedForcedCamera;
     private final ComputedVariable newlyAddedVar;
@@ -160,13 +159,13 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         this.isMoveable = placementMovementSwitchbox != null || internalMovementSwitchbox != null;
         this.turnsWithSteer = placementDefinition.turnsWithSteer || (partOn != null && partOn.turnsWithSteer);
-        this.isSpare = placementDefinition.isSpare || (partOn != null && partOn.isSpare);
         this.isMirrored = placementDefinition.isMirrored || (partOn != null && partOn.isMirrored);
 
         addVariable(this.newlyAddedVar = new ComputedVariable(this, "newlyAdded", data));
         addVariable(this.isExteriorVar = new ComputedVariable(this, "part_isExterior", data));
         addVariable(this.isActiveVar = new ComputedVariable(this, "part_active", data));
         addVariable(this.isSpareVar = new ComputedVariable(this, "part_isSpare"));
+        isSpareVar.setActive(placementDefinition.isSpare || (partOn != null && partOn.isSpareVar.isActive), false);
         if (placingPlayer != null) {
             newlyAddedVar.setActive(true, false);
         }
@@ -175,7 +174,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     @Override
     public void addPartsPostAddition(IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super.addPartsPostAddition(placingPlayer, data);
-        //Apply own variable modifiers early so isSpare can be set from part JSON at spawn
+        //Apply own variable modifiers early so they can update variables before sub-parts are added.
         if (definition.variableModifiers != null) {
             try {
                 updateVariableModifiers();
@@ -319,9 +318,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public void setVariableDefaults() {
         super.setVariableDefaults();
         isExteriorVar.setActive(placementDefinition.isExterior, false);
-        if (ticksExisted < 2) {
-            isSpareVar.setActive((placementDefinition.isSpare || (partOn != null && partOn.isSpare)), false);
-        }
     }
 
     @Override
@@ -653,10 +649,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                         return new ComputedVariable(isMirrored);
                     case ("part_isonfront"):
                         return new ComputedVariable(placementDefinition.pos.z > 0);
-                    case ("isSpare"):
-                        return new ComputedVariable(this, variable, partialTicks -> (isSpare || isSpareVar.isActive) ? 1 : 0, false);
-                    case ("part_isspare"):
-                        return new ComputedVariable(this, variable, partialTicks -> (isSpare || isSpareVar.isActive) ? 1 : 0, false);
                     case ("part_onvehicle"):
                         return new ComputedVariable(vehicleOn != null);
                     case ("part_added_vehicle"):
