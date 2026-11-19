@@ -115,6 +115,7 @@ public class PartGun extends APart {
     public boolean isHandHeldGunEquipped;
     public boolean isHandHeldGunReloadRequested;
     public boolean isRunningInCoaxialMode;
+    private boolean isFiringActual;
     private int camOffset;
     private int cooldownTimeRemaining;
     private int reloadDelayRemaining;
@@ -446,6 +447,8 @@ public class PartGun extends APart {
             //spawning and ensures that they spawn every tick on quick-firing guns.  Hits are registered on both sides, but
             //hit processing is only done on the server; clients just de-spawn the bullet and wait for packets.
             //Because of this, there is no linking between client and server bullets, and therefore they do not handle NBT or UUIDs.
+            boolean serverIsPrimaryController = lastLoadedBullet != null && (lastLoadedBullet.definition.bullet.isLongRange || !(lastController instanceof IWrapperPlayer));
+            boolean hasBulletsToFire = loadedBulletCount > 0 || (world.isClient() && serverIsPrimaryController && bulletsPresentOnServer);
             if (state.isAtLeast(GunState.FIRING_REQUESTED)) {
                 if (ableToFireVar.isActive) {
                     //Get current group and use it to determine firing offset.
@@ -473,8 +476,7 @@ public class PartGun extends APart {
                     //The only exception is if the server is the controller, in that case fire until we are told to stop.
                     //This can happen if the gun fires quickly and bullet counts get de-synced with on/off states.
                     boolean cycledGun = false;
-                    boolean serverIsPrimaryController = lastLoadedBullet != null && (lastLoadedBullet.definition.bullet.isLongRange || !(lastController instanceof IWrapperPlayer));
-                    if (loadedBulletCount > 0 || (world.isClient() && serverIsPrimaryController && bulletsPresentOnServer)) {
+                    if (hasBulletsToFire) {
                         state = state.promote(GunState.FIRING_CURRENTLY);
 
                         //If we are in our cam, fire the bullets.
@@ -585,6 +587,12 @@ public class PartGun extends APart {
                 firedSinceRequested = false;
             }
 
+            //Keep actual firing active between shots, but only after a shot starts the current burst.
+            isFiringActual = firedThisTick || (isFiringActual && state.isAtLeast(GunState.FIRING_REQUESTED)
+                && hasBulletsToFire && !isReloading && !isSemiAutoVar.isActive
+                && windupTimeCurrent == definition.gun.windupTime
+                && (ableToFireVar.isActive || cooldownTimeRemaining > 0));
+
             //Handle reload delay and recoil.
             if (state.isAtLeast(GunState.FIRING_CURRENTLY) || (cooldownTimeRemaining != 0 && !isSemiAutoVar.isActive)) {
                 reloadDelayRemaining = definition.gun.reloadDelay;
@@ -607,6 +615,7 @@ public class PartGun extends APart {
         } else {
             //Inactive gun, set as such and set to default position if we have one.
             state = GunState.INACTIVE;
+            isFiringActual = false;
             entityTarget = null;
             engineTarget = null;
             updateTargetRegistration();
@@ -1596,6 +1605,8 @@ public class PartGun extends APart {
                 return new ComputedVariable(this, variable, partialTicks -> state.isAtLeast(GunState.CONTROLLED) ? 1 : 0, false);
             case ("gun_firing"):
                 return new ComputedVariable(this, variable, partialTicks -> state.isAtLeast(GunState.FIRING_REQUESTED) ? 1 : 0, false);
+            case ("gun_firing_actual"):
+                return new ComputedVariable(this, variable, partialTicks -> isFiringActual ? 1 : 0, false);
             case ("gun_fired"):
                 return new ComputedVariable(this, variable, partialTicks -> firedThisTick ? 1 : 0, false);
             case ("gun_muzzleflash"):
