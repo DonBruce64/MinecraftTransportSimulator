@@ -149,7 +149,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         addVariable(this.elevatorAreaVar = new ComputedVariable(this, "elevatorArea"));
 
         addVariable(this.rudderInputVar = new ComputedVariable(this, "input_rudder", data));
-        addVariable(this.rudderAngleVar = new ComputedVariable(this, "rudder", data));
+        addVariable(this.rudderAngleVar = new ComputedVariable(this, "rudder", true, data));
         addVariable(this.rudderTrimVar = new ComputedVariable(this, "trim_rudder", data));
         addVariable(this.rudderAreaVar = new ComputedVariable(this, "rudderArea"));
 
