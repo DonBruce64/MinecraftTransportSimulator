@@ -1041,6 +1041,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             case ("time"):
                 return new ComputedVariable(this, variable, partialTicks -> world.getTime(), false);
             case ("random"):
+            case ("probability"):
                 return new ComputedVariable(this, variable, partialTicks -> Math.random(), true);
             case ("random_flip"):
                 return new ComputedVariable(this, variable, partialTicks -> Math.random() < 0.5 ? 0 : 1, true);

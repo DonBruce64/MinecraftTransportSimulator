@@ -48,7 +48,7 @@ public class ComputedVariable {
         this.variableKey = variable;
         this.entity = entity;
         this.changesOnPartialTicks = changesOnPartialTicks;
-        this.randomVariable = variable.startsWith("random");
+        this.randomVariable = variable.startsWith("random") || variable.equals("probability");
         this.isConstant = variable.startsWith(CONSTANT_PREFIX);
         if (!variable.startsWith(INVERTED_PREFIX)) {
             if (isConstant) {
