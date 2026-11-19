@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.guis.components;
 
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
@@ -30,6 +31,6 @@ public class GUIComponentInstrument extends AGUIComponent {
     @Override
     public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks) {
         transform.setTranslation(position.x, position.y, position.z + MODEL_DEFAULT_ZOFFSET * 0.5);
-        RenderInstrument.drawInstrument(entity, transform, slot, true, blendingEnabled, partialTicks);
+        RenderInstrument.drawInstrument(entity, transform, slot, true, blendingEnabled, ComputedVariable.getRenderPartialTicks(partialTicks));
     }
 }

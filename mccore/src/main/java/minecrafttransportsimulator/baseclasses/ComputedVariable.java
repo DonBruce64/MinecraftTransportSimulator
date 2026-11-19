@@ -27,6 +27,7 @@ public class ComputedVariable {
     /**The entity this variable is defined on.**/
     public AEntityD_Definable<?> entity;
     private ComputedVariableOperator function;
+    private ComputedVariableOperator renderFunction;
     private boolean changesOnPartialTicks;
     private boolean randomVariable;
     private boolean isConstant;
@@ -64,6 +65,28 @@ public class ComputedVariable {
         }else {
             setInternal(0, true);
         }
+    }
+
+    /**Constructor for variables with a separate render value that does not overwrite the tick value.**/
+    public ComputedVariable(AEntityD_Definable<?> entity, String variable, ComputedVariableOperator function, ComputedVariableOperator renderFunction) {
+        this(entity, variable, function, false);
+        setRenderFunction(renderFunction);
+    }
+
+    private void setRenderFunction(ComputedVariableOperator renderFunction) {
+        this.renderFunction = renderFunction;
+        if (invertedVariable != null) {
+            invertedVariable.renderFunction = renderFunction != null ? partialTicks -> (renderFunction.apply(partialTicks) > 0 ? 0 : 1) : null;
+        }
+    }
+
+    public final boolean hasRenderFunction() {
+        return renderFunction != null;
+    }
+
+    public static float getRenderPartialTicks(float partialTicks) {
+        //Zero is reserved for tick reads. Use the start of the frame interval for a render at zero.
+        return partialTicks == 0 ? Float.MIN_VALUE : partialTicks;
     }
 
     /**Constructor for variables with no logic, and instead saved state.**/
@@ -128,6 +151,7 @@ public class ComputedVariable {
     public final void setFunctionTo(ComputedVariable other) {
         this.entity = other.entity;
         this.function = other.function;
+        setRenderFunction(other.renderFunction);
         this.isConstant = other.isConstant;
         this.changesOnPartialTicks = other.changesOnPartialTicks;
         this.randomVariable = other.randomVariable;
@@ -142,6 +166,9 @@ public class ComputedVariable {
      * Computes the value of this variable, updating {@link #currentValue}, and returning it.
      */
     public final double computeValue(float partialTicks) {
+        if (partialTicks != 0 && renderFunction != null) {
+            return renderFunction.apply(partialTicks);
+        }
         if (function != null) {
             if (randomVariable || (changesOnPartialTicks && partialTicks != 0)) {
                 setInternal(function.apply(partialTicks), false);

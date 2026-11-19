@@ -5,6 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
@@ -45,6 +46,7 @@ public class AnimationSwitchbox {
     private boolean switchboxEnabled;
     private long lastTickRun;
     private float lastPartialTickRun;
+    private ComputedVariable interpolatedMotionVariable;
 
     public AnimationSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations, String applyAfter) {
         this(entity, animations, applyAfter, null);
@@ -59,10 +61,18 @@ public class AnimationSwitchbox {
         }
     }
 
+    /**The first interpolated angle used by the transforms of the last tick pose.**/
+    public ComputedVariable getInterpolatedMotionVariable() {
+        return interpolatedMotionVariable;
+    }
+
     public boolean runSwitchbox(float partialTicks, boolean forceSameTick) {
         if (forceSameTick || lastTickRun != entity.ticksExisted || lastPartialTickRun != partialTicks) {
             lastTickRun = entity.ticksExisted;
             lastPartialTickRun = partialTicks;
+            if (partialTicks == 0) {
+                interpolatedMotionVariable = null;
+            }
 
             if (applyAfter != null) {
                 AnimationSwitchbox switchbox = entity.animatedObjectSwitchboxes.get(applyAfter);
@@ -75,6 +85,9 @@ public class AnimationSwitchbox {
                     rotation.set(switchbox.rotation);
                     scale.set(switchbox.scale);
                     netMatrix.set(switchbox.netMatrix);
+                    if (partialTicks == 0) {
+                        interpolatedMotionVariable = switchbox.interpolatedMotionVariable;
+                    }
                 } else {
                     switchboxEnabled = false;
                     return false;
@@ -143,7 +156,14 @@ public class AnimationSwitchbox {
     }
 
     protected double getAnimatedVariableValue(DurationDelayClock clock, double scaleFactor, float partialTicks) {
-        return entity.getAnimatedVariableValue(clock, scaleFactor, partialTicks);
+        ComputedVariable variable = entity.getOrCreateVariable(clock.animation.variable);
+        if (partialTicks == 0 && interpolatedMotionVariable == null && variable.hasRenderFunction() && !clock.isUseful
+            && !clock.animation.variable.startsWith(ComputedVariable.INVERTED_PREFIX)
+            && (clock.animation.animationType == AnimationComponentType.ROTATION
+                || clock.animation.animationType == AnimationComponentType.TRANSLATION)) {
+            interpolatedMotionVariable = variable;
+        }
+        return clock.clampAndScale(entity, variable.computeValue(partialTicks), scaleFactor, 0, partialTicks);
     }
 
     public void runTranslation(DurationDelayClock clock, float partialTicks) {
