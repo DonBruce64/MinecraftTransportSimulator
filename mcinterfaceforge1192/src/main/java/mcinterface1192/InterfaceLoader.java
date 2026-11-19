@@ -153,7 +153,7 @@ public class InterfaceLoader {
                             if (!BuilderCreativeTab.createdTabs.containsKey(tabID)) {
                                 JSONPack packConfiguration = PackParser.getPackConfiguration(tabID);
                                 AItemPack<?> tabItem = packConfiguration.packItem != null ? PackParser.getItem(packConfiguration.packID, packConfiguration.packItem) : null;
-                                BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, tabItem));
+                                BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(tabID, packConfiguration.packName, tabItem));
                             }
                             itemProperties.tab(BuilderCreativeTab.createdTabs.get(tabID));
                         }

@@ -10,6 +10,9 @@ public class JSONSubDefinition {
     @JSONDescription("Set to true to hide this item on creative tabs.")
     public boolean hideOnCreativeTab;
 
+    @JSONDescription("Optional definition-specific creative side-tab assignment.  Accepts one tab name or a list of names, including 'default'.  When present, this overrides general.customTabGroups for this definition.")
+    public Object customTabGroups;
+
     @JSONRequired
     @JSONDescription("This text value will be appended to the JSON filename to get the name of the component.  This name is then used to tell MTS the name of the texture and item to use when rendering this component.  Remember, the subName is APPENDED to the JSON file name.  If you name your textures off the sub name MTS will not be able to find them!  If you are making a single-variant model you can leave this field blank, but it must be present otherwise MTS will crash on load.")
     public String subName;

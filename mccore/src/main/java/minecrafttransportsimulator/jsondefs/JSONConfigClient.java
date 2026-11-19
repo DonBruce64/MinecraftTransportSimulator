@@ -44,6 +44,7 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> lightsTransp = new JSONConfigEntry<>(false, "If true, textures that light up will be rendered on the transperent pass.  This is required for some shaders to prevent lit textures without alpha channels from becoming invible, but it may break rendering on non-shader builds.");
         public JSONConfigEntry<Boolean> playerTweaks = new JSONConfigEntry<>(true, "If true, player hands will be modified when holding guns, and hands and legs will be modified when riding in vehicles.  Set this to false (and restart the game) if mods cause issues, like two-hand rendering or player model issues.  Automatically set to false if some mods are detected.");
         public JSONConfigEntry<Boolean> gunCrosshair = new JSONConfigEntry<>(true, "If false, the aiming crosshair for active guns will not be rendered.");
+        public JSONConfigEntry<Boolean> customInventoryTabs = new JSONConfigEntry<>(true, "If false, pack-authored creative-inventory side tabs are disabled and every pack item is shown together in the normal pack tab.  Disable this if another mod's creative inventory is incompatible with the side-tab UI.");
 
         public JSONConfigEntry<Integer> renderingMode = new JSONConfigEntry<>(0, "Internal rendering mode value, don't touch!");
     }

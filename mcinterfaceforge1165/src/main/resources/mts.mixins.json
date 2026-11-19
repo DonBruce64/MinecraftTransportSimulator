@@ -17,6 +17,7 @@
 				"client.VillagerModelMixin",
 				"client.WorldRendererMixin",
 				"client.ClientWorldMixin",
+				"client.CreativeScreenMixin",
 				"client.EntityRendererMixin",
 				"client.MinecraftMixin",
 				"client.RenderTypeStateMixin",

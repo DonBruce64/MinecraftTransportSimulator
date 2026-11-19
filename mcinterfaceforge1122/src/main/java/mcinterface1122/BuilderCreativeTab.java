@@ -25,12 +25,18 @@ public class BuilderCreativeTab extends CreativeTabs {
      **/
     protected static final Map<String, BuilderCreativeTab> createdTabs = new HashMap<>();
 
+    private final String packID;
     private final Item itemIcon;
     private final List<Item> items = new ArrayList<>();
 
-    BuilderCreativeTab(String name, BuilderItem mcItem) {
+    BuilderCreativeTab(String packID, String name, BuilderItem mcItem) {
         super(name);
+        this.packID = packID;
         this.itemIcon = mcItem;
+    }
+
+    public String getPackID() {
+        return packID;
     }
 
     /**
