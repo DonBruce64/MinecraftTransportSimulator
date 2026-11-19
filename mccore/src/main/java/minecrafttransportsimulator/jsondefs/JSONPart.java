@@ -46,6 +46,10 @@ public class JSONPart extends AJSONPartProvider {
     @JSONDescription("Properties for effectors.")
     public JSONPartEffector effector;
 
+    @JSONRequired(dependentField = "type", dependentValues = {"grapple"}, subField = "generic")
+    @JSONDescription("Properties for grapples.")
+    public JSONPartGrapple grapple;
+
     @Deprecated
     public List<JSONPartDefinition> subParts;
     @Deprecated
@@ -75,7 +79,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Interactable is a generic bucket for parts that can be interacted with.  These parts don't do anything to the vehicle.  Rather, they are mainly for player interaction.  They may display a GUI for the player to use, store items, or run tasks set by the player.  Exactly what they do depends on the interactionType parameter.")
         INTERACTABLE,
         @JSONDescription("Effectors are parts that effect the world they are in.  Different effectors do different things, but the one thing they have in common is they do something with blocks in the world.  Unlike interactable parts, they do not have any inventories or GUIs.  To have such functionality, they should be combined with an interactable part.  For example, a planter combined with a crate to hold seeds for the planter.")
-        EFFECTOR
+        EFFECTOR,
+        @JSONDescription("Grapples fire a hook on a line from the vehicle they are on.  The hook flies to whatever is under the controller's crosshair, or along the part's +Z axis if nobody is controlling it, and attaches to the first thing it hits, unless disableBlockAttach, disableEntityAttach or disableVehicleAttach stops it.  The line only ever pulls: hooked blocks hold the vehicle and let it winch itself in, swing round corners and climb walls, hooked entities get reeled in, sharing the pull by mass if they have one in the grappleEntityMasses config, and hooked vehicles share the pull by mass.  The hook can't attach to the vehicle it's on, or to anything in that vehicle's tow chain.\nBoth ends of the line get the same physics.  A vehicle is pulled with its whole tow chain, and the chain's mass counts towards the share.  A grapple on a trailer pulls the vehicle towing it, and the trailer swings about its hitch.  Each vehicle's brakes hold back pulls in any direction by their motiveFriction, so a braked vehicle needs the line to pull harder before it moves, and its tyres hold back a little of any sideways pull by their lateralFriction.  The line also turns each vehicle so the point the line is on swings round towards the other end: with the brakes off, it swings about the wheels at its far end like a trailer about its hitch; with them on, it has to twist the vehicle against them.  It also pitches or rolls the vehicle up off its wheels when the line lifts it, against its weight.  Off the ground, the vehicle hangs from the line.\nGrapples are driven entirely by variables, so use customKeybinds or panel switches to set the inputs, and animations to render the cable and hook.\nTo limit who can use a grapple, tie it to seats with linkedParts, the same as guns.  Seats on the grapple and the seat it's on count too.  Then only riders of those seats aim it, see its crosshair, and can work its inputs with customKeybinds.  A grapple with no seats is aimed by the vehicle's controller, and anyone can work it.  Inputs: grapple_fire (toggle; 1 fires the hook, 0 releases it), grapple_reel (button; winches the line in) and grapple_slack (button; lets the line out).\nOutputs: grapple_state (0 idle, 1 flying, 2 hooked a block, 3 hooked an entity, 4 hooked a vehicle), grapple_line_out, grapple_attached, grapple_rope (line length), grapple_mantle (0 normally, 1 climbing a wall, 2 winched in near the top and ready to be pulled over, 3 being pulled over the top, 4 on top, 5 driving back down), grapple_anchor_x/y/z (the hook's world position), grapple_snapped (1 for the tick the line snaps from being pulled past its breakForce or too far apart, for a one-shot snap sound; not when released normally), and grapple_cut (1 for the tick a player cuts the line with something sharp, for a one-shot cut sound; grapple_snapped isn't set then), grapple_missing_hook (1 while the hook is lost to a snap and needs reloading, see loseHookOnSnap) and grapple_cooldown (ticks left before the grapple can fire again after a snap or cut, see snapCooldown).\nFor rendering: grapple_body_yaw and grapple_body_pitch turn the launcher body about grapplePivotPoint to follow the controller's view or the hook.  grapple_line_yaw and grapple_line_pitch then turn the cable and hook about the part's origin, relative to the body, and grapple_length is the distance from the origin to the hook.  Model the cable 1 block long along +Z from the origin and scale it by grapple_length, and translate the hook along +Z by grapple_length.\nGrapples only work on vehicles.  The hook is not a bullet: it is simulated on the server so the line can hold across clients and reloads, and it never consumes ammo, though loseHookOnSnap can make a snapped line cost the hook.")
+        GRAPPLE
     }
 
     public static class JSONPartGeneric {
@@ -688,6 +694,99 @@ public class JSONPart extends AJSONPartProvider {
         SPRAYER,
         @JSONDescription("Crafts items from inventories based on the set material parameters.  Will craft as fast as the operations delay is set.  Note that while this can put the resulting item into any inventory, it can only pull from linked inventories that have feedsVehicles as true.  Use this for separate input/output inventories if desired.")
         CRAFTER;
+    }
+
+    public static class JSONPartGrapple {
+        @ModifiableValue
+        @JSONDescription("How far the hook can fly, in blocks.  This is also the longest the line can be let out to.  If the two ends are pulled more than 1.5 times this far apart, the line snaps.  Defaults to 100.")
+        public float range;
+
+        @ModifiableValue
+        @JSONDescription("How fast the hook flies, in m/s.  Defaults to 80.")
+        public float hookSpeed;
+
+        @ModifiableValue
+        @JSONDescription("How fast the winch reels the line in or lets it out, in m/s.  Defaults to 5.")
+        public float reelSpeed;
+
+        @ModifiableValue
+        @JSONDescription("The most the winch can pull with while reeling the line in, in kN.  The line holds up to breakForce, so driving away from the hook can't pull line out of the winch, but driving away harder than this, such as reversing on full throttle, stalls the winch so it stops reeling in, and anything less slows how fast it reels you in.  On a hooked vehicle, the line then drags that vehicle after you instead.  0 (default) makes it twice the weight of the vehicle the grapple is on, enough to hoist that vehicle up the line.")
+        public float winchForce;
+
+        @ModifiableValue
+        @JSONDescription("The tension the line snaps at, in kN.  It has to be pulled past this for a few ticks in a row to snap, so a single jolt, such as hitting the end of the line, doesn't break it, but driving away from the hook harder than this, or hanging something too heavy off it, does.  0 (default) makes it 5 times winchForce.")
+        public float breakForce;
+
+        @ModifiableValue
+        @JSONDescription("The shortest the winch can reel the line, in blocks.  Short lines let the vehicle be pulled right up over the top of a wall when the hook is just past the edge.  Defaults to 0, which lets the line be reeled all the way in.")
+        public float minLength;
+
+        @ModifiableValue
+        @JSONDescription("How far the hook hangs below the barrel tip while the line is in, in blocks.  The hook dangles on a line this long and swings as the vehicle moves, through grapple_line_yaw, grapple_line_pitch and grapple_length.  This is only drawn: the dangling hook doesn't hit or catch anything.  0 (default) keeps the hook on the barrel.")
+        public float idleLength;
+
+        @ModifiableValue
+        @JSONDescription("The furthest the hook can be fired to either side, in degrees of yaw from the part's +Z axis (or from the direction aimStartPitch and aimStartYaw turn it to).  If the controller aims further round than this, the hook is fired at this limit instead, and the crosshair stops there.  This never stops the controller looking further: to stop the view at the limit too, clamp the camera's animations.  0 (default) means no limit.")
+        public float maxAimAngleHorizontal;
+
+        @ModifiableValue
+        @JSONDescription("The furthest the hook can be fired up or down, in degrees of pitch from the part's +Z axis (or from the direction aimStartPitch and aimStartYaw turn it to).  This is measured after maxAimAngleHorizontal turns the shot, so it's how far above or below the horizon of the aim start direction the hook can go.  Works the same as maxAimAngleHorizontal otherwise.  0 (default) means no limit.")
+        public float maxAimAngleVertical;
+
+        @ModifiableValue
+        @JSONDescription("Pitches the direction maxAimAngleHorizontal and maxAimAngleVertical are measured from away from the part's +Z axis, in degrees.  Positive pitches it down, so 90 with both limits at 45 makes a grapple that can only fire downwards, up to 45 degrees from straight down.  With nobody controlling it, the hook is fired straight along this direction.  Defaults to 0.")
+        public float aimStartPitch;
+
+        @ModifiableValue
+        @JSONDescription("Yaws the direction maxAimAngleHorizontal and maxAimAngleVertical are measured from away from the part's +Z axis, in degrees, the same way as other yaw rotations, so a grapple can fire out to one side.  This swings it round the part's vertical axis after aimStartPitch tilts it, so a pitched direction stays tilted by the same amount.  Defaults to 0.")
+        public float aimStartYaw;
+
+        @ModifiableValue
+        @JSONDescription("How much damage the hook does to an entity or vehicle when it sticks into it.  This is raw damage: unlike bullets, it is not scaled by speed or by the bullet damage config factors.  It does nothing to blocks, or when the hook bounces off.  0 (default) does no damage.")
+        public float hookDamage;
+
+        @ModifiableValue
+        @JSONDescription("If true, the launcher body doesn't turn to follow the controller's view or the hook, so grapple_body_yaw and grapple_body_pitch are always 0.  The hook is still fired where the controller aims, within maxAimAngleHorizontal and maxAimAngleVertical, and the cable still swings out from the part's origin. Defaults to false.")
+        public boolean isFixed;
+
+        @ModifiableValue
+        @JSONDescription("If true, the hook can't attach to blocks or placed parts.  It bounces off them and is reeled back in instead.  Use this for harpoons that should only catch mobs and vehicles.  Defaults to false.")
+        public boolean disableBlockAttach;
+
+        @ModifiableValue
+        @JSONDescription("If true, the hook can't attach to mobs, players or other entities, and bounces off them instead.  Otherwise, hooked entities are reeled in.  Defaults to false.")
+        public boolean disableEntityAttach;
+
+        @ModifiableValue
+        @JSONDescription("If true, the hook can't attach to other vehicles, and bounces off them instead.  Otherwise, hooked vehicles share the line's pull by mass.  Defaults to false.")
+        public boolean disableVehicleAttach;
+
+        @ModifiableValue
+        @JSONDescription("Normally, once a wheel or block collision box at the end of the vehicle facing the hook is reeled up against a wall too tall for its wheels to drive up by their climbHeight, with the hook up on it above that height, the vehicle squares up to the wall and climbs it as the line is reeled in.  The plane between the bottoms of its wheels pitches up the face while its far end slides along the ground, then slides up the face once upright, stepping out over any overhang that sticks out no further than the wheels could drive up.  A bigger overhang stops it underneath, where letting the line out or reversing takes it back down.  Once the line is all the way in near the top, holding reel tips it over the lip onto the top, where it's held until the grapple is released.  Only if the vehicle fits on top, though: with a block in the way up there, such as when the hook is in the face of a taller wall, it stops with its front wheels at the top instead.  Driving backwards from there takes it back down.  If true, the vehicle still climbs the wall, but can't be pulled over the edge, and stops with its front wheels at the top. Defaults to false.")
+        public boolean disableMantle;
+
+        @ModifiableValue
+        @JSONDescription("If true, the vehicle doesn't climb walls at all.  Reeling it up against one just pulls it with the line's usual physics, like anywhere else.  Mantling needs the climb, so this only applies when disableMantle is true too.  If this becomes true mid-climb, the climb stops and the line takes over.  Defaults to false.")
+        public boolean disableClimb;
+
+        @ModifiableValue
+        @JSONDescription("If true, the hook is lost when the line snaps, from being pulled past its breakForce or too far apart, or is cut by a player.  It's left behind rather than reeled back in, so the grapple can't be fired again until a player reloads it by right-clicking it with a hookItem, the same as loading bullets into a gun.  grapple_missing_hook is 1 until then, so packs can hide the hook.  Defaults to false.")
+        public boolean loseHookOnSnap;
+
+        @JSONRequired(dependentField = "loseHookOnSnap", dependentValues = {"true"})
+        @JSONDescription("The item that reloads a hook lost by loseHookOnSnap.  One is used up each reload.  Format is packID:itemName, and any variant of that item works.  Add a variant's subName to the itemName, as in packID:itemName_red, to only accept that variant.  Required if loseHookOnSnap is true.")
+        public String hookItem;
+
+        @ModifiableValue
+        @JSONDescription("How long after the line snaps or is cut before the grapple can be fired again, in ticks.  grapple_cooldown counts down the ticks left, so packs can animate it.  If loseHookOnSnap is also set, the grapple needs reloading and has to finish cooling down before it can fire.  Defaults to 0, for no cooldown.")
+        public int snapCooldown;
+
+        @ModifiableValue
+        @JSONDescription("How much durability is taken off the tool a player cuts this grapple's line with.  Only tools that can be damaged lose any, such as swords and axes in the grappleCuttingItems config.  Unbreaking applies, players in creative mode don't lose any, and the tool breaks if it runs out.  Defaults to 0, which doesn't damage the tool.")
+        public int cutToolDamage;
+
+        @JSONDescription("The point the launcher body turns about for grapple_body_yaw and grapple_body_pitch, in part coordinates.  This must match the centerPoint of the animations that use those variables, so the cable lines up with the turned barrel.  Defaults to the part's origin.")
+        public Point3D grapplePivotPoint;
     }
 
     @Deprecated

@@ -84,6 +84,12 @@ public interface IWrapperPlayer extends IWrapperEntity {
     int getHotbarIndex();
 
     /**
+     * Takes the passed-in amount of durability off the held stack, the same as using it as a tool.
+     * Unbreaking and creative mode apply, and the stack breaks if it runs out.  Does nothing to items that can't be damaged.
+     */
+    void damageHeldStack(int amount);
+
+    /**
      * Gets the inventory of the player.
      */
     IWrapperInventory getInventory();

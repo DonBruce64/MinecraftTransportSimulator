@@ -22,6 +22,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.SimpleNamedContainerProvider;
 import net.minecraft.inventory.container.WorkbenchContainer;
 import net.minecraft.item.Item;
+import net.minecraft.util.Hand;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.IWorldPosCallable;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -153,6 +154,11 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
     @Override
     public int getHotbarIndex() {
         return player.inventory.selected;
+    }
+
+    @Override
+    public void damageHeldStack(int amount) {
+        player.inventory.getItem(getHotbarIndex()).hurtAndBreak(amount, player, damaged -> damaged.broadcastBreakEvent(Hand.MAIN_HAND));
     }
 
     @Override

@@ -40,12 +40,16 @@ import minecrafttransportsimulator.packets.instances.PacketInventoryContainerCha
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Add;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Remove;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
+import minecrafttransportsimulator.packets.instances.PacketPartGrapple;
+import minecrafttransportsimulator.packets.instances.PacketPartGrappleCut;
+import minecrafttransportsimulator.packets.instances.PacketPartGrappleHook;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
+import minecrafttransportsimulator.packets.instances.PacketPlayerGrappleCut;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityChargerBattery;
@@ -278,6 +282,9 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartChange_Add.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartChange_Remove.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartGun.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartGrapple.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartGrappleHook.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartGrappleCut.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartEngine.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartGroundDevice.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartInteractable.class);
@@ -287,6 +294,7 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPlayerChatMessage.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPlayerCraftItem.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPlayerItemTransfer.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPlayerGrappleCut.class);
 
         //Radio packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketRadioStateChange.class);

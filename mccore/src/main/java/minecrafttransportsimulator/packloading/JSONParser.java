@@ -601,6 +601,7 @@ public class JSONParser {
                     partDefinition.gun = loadedPartDefinition.gun;
                     partDefinition.interactable = loadedPartDefinition.interactable;
                     partDefinition.effector = loadedPartDefinition.effector;
+                    partDefinition.grapple = loadedPartDefinition.grapple;
                     loadedDefinition = loadedPartDefinition;
                     break;
                 }

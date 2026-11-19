@@ -58,6 +58,9 @@ public abstract class AJSONItem extends AJSONBase {
         @JSONDescription("How far away this radar can detect things, in blocks.")
         public double radarRange;
 
+        @JSONDescription("If true, this item is sharp enough to cut grapple lines.  Players holding it can attack a grapple's line to snap it.")
+        public boolean canCutGrappleLines;
+
         //Moved from multiple locations.
         //Vehicle was deprecated for vehicle type.
         //Part was for part type, and went to generic.

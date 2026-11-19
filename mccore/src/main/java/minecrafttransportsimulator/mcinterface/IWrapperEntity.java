@@ -46,6 +46,12 @@ public interface IWrapperEntity {
     String getName();
 
     /**
+     * Returns the registry name of this entity's type, such as minecraft:zombie, as used by the /summon command.
+     * Players are minecraft:player.  Returns null if the type isn't registered.
+     */
+    String getRegistryName();
+
+    /**
      * Returns the world this entity is in.
      */
     AWrapperWorld getWorld();

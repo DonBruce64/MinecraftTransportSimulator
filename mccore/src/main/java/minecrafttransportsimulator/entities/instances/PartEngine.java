@@ -615,7 +615,8 @@ public class PartEngine extends APart {
                 for (PartGroundDevice wheel : drivenWheels) {
                     //If we have grounded wheels, and this wheel is not on the ground, don't take it into account.
                     //This means the wheel is spinning in the air and can't provide force or feedback.
-                    if (vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(wheel)) {
+                    //A grapple climb holds the wheels against the wall, where the ground checks can't always find them, so they count then too.
+                    if (vehicleOn.climbingWithGrapple || vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(wheel)) {
                         wheelFriction += wheel.motiveFrictionVar.currentValue;
                         lowestWheelVelocity = Math.min(wheel.angularVelocity, lowestWheelVelocity);
                         desiredWheelVelocity = Math.max(wheel.getDesiredAngularVelocity(), desiredWheelVelocity);

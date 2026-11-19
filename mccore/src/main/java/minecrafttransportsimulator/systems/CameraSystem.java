@@ -45,6 +45,7 @@ public class CameraSystem {
     private static final double CAMERA_SHAKE_MAX_ANGLE = 10.0D;
     private static final int CAMERA_SHAKE_DURATION_TICKS = 10;
     private static final Point3D cameraOffset = new Point3D();
+    private static final Point3D cameraEntityPosition = new Point3D();
     private static final Point3D cameraCollisionStart = new Point3D();
     private static final Point3D cameraCollisionVector = new Point3D();
     private static final RotationMatrix riderOrientation = new RotationMatrix();
@@ -92,8 +93,6 @@ public class CameraSystem {
         if (cameraProvider != null) {
             activeCamera = cameraProvider.activeCamera;
             if (activeCamera != null) {
-                AnimationSwitchbox switchbox = cameraProvider.activeCameraSwitchbox;
-
                 //Set current overlay for future calls.
                 customCameraOverlay = activeCamera.overlay != null ? activeCamera.overlay + ".png" : null;
 
@@ -113,36 +112,7 @@ public class CameraSystem {
                     InterfaceManager.clientInterface.setMouseSensitivity(activeCamera.mouseSensitivityOverride);
                 }
 
-                //First set the position of the camera to the defined position.
-                cameraAdjustedPosition.set(activeCamera.pos);
-
-                //Now run transforms on this position to get it's proper position.
-                if (switchbox != null) {
-                    switchbox.runSwitchbox(partialTicks, false);
-                    cameraAdjustedPosition.transform(switchbox.netMatrix);
-                }
-
-                //Get the rotational component of the operation.
-                //First, get the orientation of the entity we are on.
-                cameraProvider.activeCameraEntity.getInterpolatedOrientation(cameraRotation, partialTicks);
-
-                //We need to rotate the camera position by our orientation here.
-                //This puts the position into global orientation rather than animation-local.
-                cameraAdjustedPosition.rotate(cameraRotation);
-
-                //Now add the rotation from the animation, plus the definition rotation, if we have it.
-                if (switchbox != null) {
-                    cameraRotation.multiply(switchbox.rotation);
-                }
-                if (activeCamera.rot != null) {
-                    cameraRotation.multiply(activeCamera.rot);
-                }
-
-                //Rotational portion is good.  Finally, add the position of the provider.
-                //This needs to be interpolated to ensure smooth movement on partial ticks.
-                //Custom cameras keep their defined position; collision clipping only applies to third-person views.
-                cameraOffset.set(cameraProvider.activeCameraEntity.prevPosition).interpolate(cameraProvider.activeCameraEntity.position, partialTicks);
-                cameraAdjustedPosition.add(cameraOffset);
+                getCameraTransform(cameraProvider, cameraAdjustedPosition, cameraRotation, partialTicks);
 
                 //Also check night vision.
                 if (activeCamera.nightVision) {
@@ -193,6 +163,47 @@ public class CameraSystem {
             //Not doing any camera changes.
             return false;
         }
+    }
+
+    /**
+     * Sets the passed-in position and rotation to the world position and rotation of the provider's active camera.
+     * This is where the player sees from when looking through it, so things aimed with the camera can use it too.
+     * The provider must have an active camera.  A partialTicks of 1 gives where the camera is this tick.
+     */
+    public static void getCameraTransform(AEntityB_Existing cameraProvider, Point3D cameraPosition, RotationMatrix cameraRotation, float partialTicks) {
+        AnimationSwitchbox switchbox = cameraProvider.activeCameraSwitchbox;
+        JSONCameraObject camera = cameraProvider.activeCamera;
+
+        //First set the position of the camera to the defined position.
+        cameraPosition.set(camera.pos);
+
+        //Now run transforms on this position to get it's proper position.
+        if (switchbox != null) {
+            switchbox.runSwitchbox(partialTicks, false);
+            cameraPosition.transform(switchbox.netMatrix);
+        }
+
+        //Get the rotational component of the operation.
+        //First, get the orientation of the entity we are on.
+        cameraProvider.activeCameraEntity.getInterpolatedOrientation(cameraRotation, partialTicks);
+
+        //We need to rotate the camera position by our orientation here.
+        //This puts the position into global orientation rather than animation-local.
+        cameraPosition.rotate(cameraRotation);
+
+        //Now add the rotation from the animation, plus the definition rotation, if we have it.
+        if (switchbox != null) {
+            cameraRotation.multiply(switchbox.rotation);
+        }
+        if (camera.rot != null) {
+            cameraRotation.multiply(camera.rot);
+        }
+
+        //Rotational portion is good.  Finally, add the position of the provider.
+        //This needs to be interpolated to ensure smooth movement on partial ticks.
+        //Custom cameras keep their defined position; collision clipping only applies to third-person views.
+        cameraEntityPosition.set(cameraProvider.activeCameraEntity.prevPosition).interpolate(cameraProvider.activeCameraEntity.position, partialTicks);
+        cameraPosition.add(cameraEntityPosition);
     }
 
     /**Applies the active camera's final rotation after rider input and entity movement have been updated.**/

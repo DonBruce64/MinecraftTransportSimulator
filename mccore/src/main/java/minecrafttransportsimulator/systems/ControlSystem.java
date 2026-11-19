@@ -40,6 +40,8 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat.SeatAction;
+import minecrafttransportsimulator.packets.instances.PacketPartGrappleCut;
+import minecrafttransportsimulator.packets.instances.PacketPlayerGrappleCut;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlNotification;
 import minecrafttransportsimulator.packets.instances.PacketVehicleDeployment;
 import minecrafttransportsimulator.packets.instances.PacketVehicleDeployment.Action;
@@ -69,6 +71,9 @@ public final class ControlSystem {
 
     private static double throttleRequestLastCheck;
     private static double brakeRequestLastCheck;
+    /**The vehicle a grapple winching it in has held the automatic brake off on, if gas or brake hasn't been pressed in it since.
+     * Kept as the vehicle rather than a flag, so it doesn't carry over to the next vehicle we drive.**/
+    private static EntityVehicleF_Physics autoBrakeHeldForReel;
 
     private static boolean mouseYokeEnabledLastCall;
     private static double mouseYokePosX = Double.NaN;
@@ -134,6 +139,16 @@ public final class ControlSystem {
             if (!clickingLeft) {
                 clickingLeft = true;
                 handleClick(player, playerGun, true, false, false, false);
+                if (!InterfaceManager.clientInterface.isGUIOpen() && PartGrapple.canCutLines(player)) {
+                    //Attacking with something sharp cuts the grapple line we hit, or failing that, any line hooked into us.
+                    //The server checks we can reach the line, or that it's us it's hooked into.
+                    PartGrapple attacked = PartGrapple.getLineAttacked(player);
+                    if (attacked != null) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketPartGrappleCut(attacked, player));
+                    } else if (PartGrapple.isAnyHookedInEntity(player.getWorld())) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketPlayerGrappleCut(player));
+                    }
+                }
             } else if (isVehiclePackingInProgress()) {
                 updateVehiclePacking(player);
             } else if (isPartRemovalInProgress()) {
@@ -931,55 +946,58 @@ public final class ControlSystem {
             controlGun(multipart, ControlsKeyboard.CAR_GUN_FIRE, ControlsKeyboard.CAR_GUN_SWITCH);
         }
 
+        //Send custom keypresses from our seat, so parts that only some seats can use know where they came from.
+        AEntityB_Existing riding = clientPlayer.getEntityRiding();
+        AEntityF_Multipart<?> keypressEntity = riding instanceof PartSeat ? (PartSeat) riding : multipart;
         if (ControlsKeyboard.GENERAL_CUSTOM1.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 1, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 1, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM1.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 1, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 1, false));
         }
         if (ControlsKeyboard.GENERAL_CUSTOM2.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 2, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 2, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM2.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 2, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 2, false));
         }
         if (ControlsKeyboard.GENERAL_CUSTOM3.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 3, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 3, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM3.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 3, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 3, false));
         }
         if (ControlsKeyboard.GENERAL_CUSTOM4.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 4, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 4, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM4.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 4, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 4, false));
         }
 		if (ControlsKeyboard.GENERAL_CUSTOM5.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 5, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 5, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM5.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 5, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 5, false));
         }
         if (ControlsKeyboard.GENERAL_CUSTOM6.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 6, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 6, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM6.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 6, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 6, false));
         }
         if (ControlsKeyboard.GENERAL_CUSTOM7.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 7, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 7, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM7.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 7, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 7, false));
         }
         if (ControlsKeyboard.GENERAL_CUSTOM8.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 8, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 8, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM8.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 8, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 8, false));
         }
         if (ControlsKeyboard.GENERAL_CUSTOM9.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 9, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 9, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM9.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 9, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 9, false));
         }
         if (ControlsKeyboard.GENERAL_CUSTOM10.isPressed()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 10, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 10, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM10.justReleased()) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 10, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(keypressEntity, clientPlayer, 10, false));
         }
     }
 
@@ -1556,10 +1574,18 @@ public final class ControlSystem {
                     }
 
                     //If we are going slow, and don't have gas or brake, automatically set the brake.
+                    //Not while a grapple is winching us in, as the brake would hold us against it.  Once it stops,
+                    //put the brake back on however fast the winch got us going, as it's what took it off.
                     //Otherwise send normal values if we are in neutral or forwards,
                     //and invert controls if we are in a reverse gear (and not using a shifter).
                     //Use only the first engine for this.
-                    if (throttleValue == 0 && brakeValue == 0 && powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED) {
+                    boolean reeling = powered.isReelingGrapple();
+                    if (reeling) {
+                        autoBrakeHeldForReel = powered;
+                    } else if (throttleValue != 0 || brakeValue != 0 || autoBrakeHeldForReel != powered) {
+                        autoBrakeHeldForReel = null;
+                    }
+                    if (throttleValue == 0 && brakeValue == 0 && !reeling && (powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED || autoBrakeHeldForReel == powered)) {
                         throttleRequest = 0;
                         brakeRequest = EntityVehicleF_Physics.MAX_BRAKE;
                     } else if (powered.engines.get(0).currentGearVar.currentValue >= 0 || ConfigSystem.client.controlSettings.useShifter.value) {

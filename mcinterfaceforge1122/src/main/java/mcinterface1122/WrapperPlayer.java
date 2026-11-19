@@ -156,6 +156,11 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
     }
 
     @Override
+    public void damageHeldStack(int amount) {
+        player.inventory.getStackInSlot(getHotbarIndex()).damageItem(amount, player);
+    }
+
+    @Override
     public IWrapperInventory getInventory() {
         return new WrapperInventory(player.inventory) {
             @Override

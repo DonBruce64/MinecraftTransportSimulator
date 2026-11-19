@@ -223,6 +223,9 @@ public class LanguageSystem {
     public static final LanguageEntry DEATH_PROPELLER_NULL = new LanguageEntry("death.propeller.null", "%s was shredded by a propeller");
     public static final LanguageEntry DEATH_PROPELLER_PLAYER = new LanguageEntry("death.propeller.player", "%s was shredded by %s's propeller");
 
+    public static final LanguageEntry DEATH_GRAPPLE_NULL = new LanguageEntry("death.grapple.null", "%s was harpooned");
+    public static final LanguageEntry DEATH_GRAPPLE_PLAYER = new LanguageEntry("death.grapple.player", "%s was harpooned by %s");
+
     public static final LanguageEntry DEATH_JETINTAKE_NULL = new LanguageEntry("death.jet_intake.null", "%s was sucked into a jet engine");
     public static final LanguageEntry DEATH_JETINTAKE_PLAYER = new LanguageEntry("death.jet_intake.player", "%s was sucked into %s's jet engine");
 
@@ -418,6 +421,10 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_JUMPERCABLE_LINKDROPPED = new LanguageEntry("interact.jumpercable.linkdropped", "The two engines have moved too far apart from one another.  Breaking link.");
     public static final LanguageEntry INTERACT_JUMPERCABLE_POWEREQUAL = new LanguageEntry("interact.jumpercable.powerequal", "The two engines now have the same battery level.  Breaking link.");
     public static final LanguageEntry INTERACT_JUMPERCABLE_ALREADYLINKED = new LanguageEntry("interact.jumpercable.alreadylinked", "This engine is already linked to another engine and cannot be linked.");
+    public static final LanguageEntry INTERACT_GRAPPLE_MANTLEREADY = new LanguageEntry("interact.grapple.mantleready", "Continue holding winch to pull up over the edge.");
+    public static final LanguageEntry INTERACT_GRAPPLE_MANTLECOMPLETE = new LanguageEntry("interact.grapple.mantlecomplete", "Mantle complete.  Release the grapple to drive off, or reverse to go back down.");
+    public static final LanguageEntry INTERACT_GRAPPLE_MANTLEBLOCKED = new LanguageEntry("interact.grapple.mantleblocked", "An overhang sticks out too far for the wheels to climb past.  Let the line out or reverse to go back down.");
+    public static final LanguageEntry INTERACT_GRAPPLE_MANTLENOROOM = new LanguageEntry("interact.grapple.mantlenoroom", "There's no room on top to be pulled up onto.  Let the line out or reverse to go back down.");
     public static final LanguageEntry INTERACT_JUMPERCABLE_TOOFAR = new LanguageEntry("interact.jumpercable.toofar", "The two engines are too far away.  They should be no further than 16 blocks apart.");
     public static final LanguageEntry INTERACT_JUMPERCABLE_SAMEVEHICLE = new LanguageEntry("interact.jumpercable.samevehicle", "The two engines are on the same vehicle.  That's not going to work well..");
 
@@ -498,6 +505,17 @@ public class LanguageSystem {
     public static final LanguageEntry ITEMINFO_GUN_AUTORELOAD = new LanguageEntry("iteminfo.gun.autoReload", "Auto-Reloads");
     public static final LanguageEntry ITEMINFO_GUN_YAWRANGE = new LanguageEntry("iteminfo.gun.yawRange", "Yaw Range: ");
     public static final LanguageEntry ITEMINFO_GUN_PITCHRANGE = new LanguageEntry("iteminfo.gun.pitchRange", "Pitch Range: ");
+
+    public static final LanguageEntry ITEMINFO_GRAPPLE_RANGE = new LanguageEntry("iteminfo.grapple.range", "Range (blocks): ");
+    public static final LanguageEntry ITEMINFO_GRAPPLE_REELSPEED = new LanguageEntry("iteminfo.grapple.reelSpeed", "Winch Speed (blk/s): ");
+    public static final LanguageEntry ITEMINFO_GRAPPLE_WINCHFORCE = new LanguageEntry("iteminfo.grapple.winchForce", "Winch Force (kN): ");
+    public static final LanguageEntry ITEMINFO_GRAPPLE_WINCHFORCE_DEFAULT = new LanguageEntry("iteminfo.grapple.winchForceDefault", "Twice vehicle weight");
+    public static final LanguageEntry ITEMINFO_GRAPPLE_BREAKFORCE = new LanguageEntry("iteminfo.grapple.breakForce", "Break Force (kN): ");
+    public static final LanguageEntry ITEMINFO_GRAPPLE_BREAKFORCE_DEFAULT = new LanguageEntry("iteminfo.grapple.breakForceDefault", "5x winch force");
+    public static final LanguageEntry ITEMINFO_GRAPPLE_ATTACHESTO = new LanguageEntry("iteminfo.grapple.attachesTo", "Attaches To: ");
+    public static final LanguageEntry ITEMINFO_GRAPPLE_BLOCKS = new LanguageEntry("iteminfo.grapple.blocks", "Blocks");
+    public static final LanguageEntry ITEMINFO_GRAPPLE_ENTITIES = new LanguageEntry("iteminfo.grapple.entities", "Mobs");
+    public static final LanguageEntry ITEMINFO_GRAPPLE_VEHICLES = new LanguageEntry("iteminfo.grapple.vehicles", "Vehicles");
 
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_EXPLOSIVE = new LanguageEntry("iteminfo.bullet.type.explosive", "Explosive Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_INCENDIARY = new LanguageEntry("iteminfo.bullet.type.incendiary", "Incendiary Bullet");
