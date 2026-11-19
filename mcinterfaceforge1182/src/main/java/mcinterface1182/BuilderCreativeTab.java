@@ -28,15 +28,21 @@ public class BuilderCreativeTab extends CreativeModeTab {
      **/
     protected static final Map<String, BuilderCreativeTab> createdTabs = new HashMap<>();
 
+    private final String packID;
     private final String label;
     private final AItemPack<?> tabItem;
     private final List<Item> items = new ArrayList<>();
 
-    BuilderCreativeTab(String name, AItemPack<?> tabItem) {
+    BuilderCreativeTab(String packID, String name, AItemPack<?> tabItem) {
         super(name);
+        this.packID = packID;
         this.label = name;
         //Need to delay turning this into a MC item since we may not yet have created a builder.
         this.tabItem = tabItem;
+    }
+
+    public String getPackID() {
+        return packID;
     }
 
     /**

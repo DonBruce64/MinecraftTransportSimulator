@@ -116,6 +116,10 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
         return item;
     }
 
+    public static BuilderItem getBuilderItem(AItemBase item) {
+        return itemMap.get(item);
+    }
+
     /**
      * This is called by the main MC system to get the displayName for the item.
      * Normally this is a translated version of the unlocalized name, but we
