@@ -32,6 +32,9 @@ public class JSONAnimationDefinition {
     @JSONDescription("Like clampMin, but for the max value.")
     public double clampMax;
 
+    @JSONDescription("The chance that this animation runs on each activation, from 0 (never) to 1 (always). Defaults to 1. For visibility, inhibitor, and activator animations, the chance is checked when the normal condition becomes true. Each animation has its own result, which stays fixed until its next activation.")
+    public Double probability;
+
     @JSONDescription("If true, the absolute value of the variable will be used rather than the actual value.  Note that negative movements are still possible via a negative rotation factor or a large negative offset.")
     public boolean absolute;
 

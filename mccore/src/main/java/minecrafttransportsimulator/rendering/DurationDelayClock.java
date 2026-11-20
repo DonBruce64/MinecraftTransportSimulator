@@ -28,6 +28,7 @@ public class DurationDelayClock {
     public final double animationAxisMagnitude;
     public final Point3D animationAxisNormalized;
     public final boolean isUseful;
+    public final boolean usesProbability;
     private Long timeCommandedForwards = 0L;
     private Long timeCommandedReverse = 0L;
 
@@ -37,12 +38,69 @@ public class DurationDelayClock {
     private boolean startedReverseMovement = false;
     private boolean endedReverseMovement = false;
 
+    private long lastProbabilityRun = Long.MIN_VALUE;
+    private boolean probabilityWasActive;
+    private boolean probabilityPassed;
+    private Double sampledTransformInput;
+    private final boolean deferAnimationSounds;
+    private String pendingFirstSound;
+    private String pendingSecondSound;
+
     public DurationDelayClock(JSONAnimationDefinition animation) {
         this.animation = animation;
         this.animationAxisMagnitude = animation.axis != null ? animation.axis.length() : 1.0;
         this.animationAxisNormalized = animation.axis != null ? animation.axis.copy().normalize() : null;
         this.shouldDoFactoring = animation.duration != 0 || animation.forwardsDelay != 0 || animation.reverseDelay != 0;
-        this.isUseful = shouldDoFactoring || animation.animationType.equals(AnimationComponentType.VISIBILITY) || animation.animationType.equals(AnimationComponentType.INHIBITOR) || animation.animationType.equals(AnimationComponentType.ACTIVATOR) || animation.forwardsStartSound != null || animation.forwardsEndSound != null || animation.reverseStartSound != null || animation.reverseEndSound != null;
+        boolean conditional = animation.animationType == AnimationComponentType.VISIBILITY || animation.animationType == AnimationComponentType.INHIBITOR || animation.animationType == AnimationComponentType.ACTIVATOR;
+        this.isUseful = shouldDoFactoring || conditional || animation.forwardsStartSound != null || animation.forwardsEndSound != null || animation.reverseStartSound != null || animation.reverseEndSound != null;
+        this.usesProbability = animation.probability != null && !(animation.probability >= 1);
+        this.deferAnimationSounds = usesProbability && conditional;
+    }
+
+    public boolean passesConditionProbability(AEntityD_Definable<?> entity, long run, boolean active) {
+        if (!usesProbability) {
+            return true;
+        }
+        boolean passed = !active || passesProbability(run, true);
+        if (active && passed) {
+            playAnimationSound(entity, pendingFirstSound);
+            playAnimationSound(entity, pendingSecondSound);
+        }
+        pendingFirstSound = null;
+        pendingSecondSound = null;
+        return passed;
+    }
+
+    public boolean passesTransformProbability(AEntityD_Definable<?> entity, long run, double input, float partialTicks) {
+        boolean active = shouldDoFactoring ? input > 0 : input != 0;
+        boolean passed = passesProbability(run, active);
+        if (!passed && shouldDoFactoring && timeCommandedForwards == 0 && timeCommandedReverse == 0) {
+            //Initialize an unplayed animation at rest so a later accepted activation can start from there.
+            getFactoredState(entity, 0, partialTicks);
+        }
+        return passed;
+    }
+
+    private boolean passesProbability(long run, boolean active) {
+        //A gap means the condition was false or an earlier entry kept this animation from running.
+        if (lastProbabilityRun != run - 1 || (active && !probabilityWasActive)) {
+            probabilityPassed = animation.probability > 0 && Math.random() < animation.probability;
+        }
+        lastProbabilityRun = run;
+        probabilityWasActive = active;
+        return probabilityPassed;
+    }
+
+    public void setSampledTransformInput(Double input) {
+        sampledTransformInput = input;
+    }
+
+    public Double getSampledTransformInput() {
+        return sampledTransformInput;
+    }
+
+    public double getEntityInput(AEntityD_Definable<?> entity, float partialTicks) {
+        return sampledTransformInput != null ? sampledTransformInput : entity.getOrCreateVariable(animation.variable).computeValue(partialTicks);
     }
 
     /**
@@ -142,26 +200,12 @@ public class DurationDelayClock {
                     movementFactor = 1;
                     if (!endedForwardsMovement) {
                         endedForwardsMovement = true;
-                        if (animation.forwardsEndSound != null && entity.world.isClient()) {
-                            double distance = entity.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
-                            if (distance < SoundInstance.DEFAULT_MAX_DISTANCE) {
-                                SoundInstance sound = new SoundInstance(entity, animation.forwardsEndSound);
-                                sound.volume = (float) (1 - distance / SoundInstance.DEFAULT_MAX_DISTANCE);
-                                InterfaceManager.soundInterface.playQuickSound(sound);
-                            }
-                        }
+                        playOrDeferAnimationSound(entity, animation.forwardsEndSound);
                     }
                 }
                 if (!startedForwardsMovement) {
                     startedForwardsMovement = true;
-                    if (animation.forwardsStartSound != null && entity.world.isClient()) {
-                        double distance = entity.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
-                        if (distance < SoundInstance.DEFAULT_MAX_DISTANCE) {
-                            SoundInstance sound = new SoundInstance(entity, animation.forwardsStartSound);
-                            sound.volume = (float) (1 - distance / SoundInstance.DEFAULT_MAX_DISTANCE);
-                            InterfaceManager.soundInterface.playQuickSound(sound);
-                        }
-                    }
+                    playOrDeferAnimationSound(entity, animation.forwardsStartSound);
                 }
             }
         } else {
@@ -177,32 +221,41 @@ public class DurationDelayClock {
                     movementFactor = 1;
                     if (!endedReverseMovement) {
                         endedReverseMovement = true;
-                        if (animation.reverseEndSound != null && entity.world.isClient()) {
-                            double distance = entity.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
-                            if (distance < SoundInstance.DEFAULT_MAX_DISTANCE) {
-                                SoundInstance sound = new SoundInstance(entity, animation.reverseEndSound);
-                                sound.volume = (float) (1 - distance / SoundInstance.DEFAULT_MAX_DISTANCE);
-                                InterfaceManager.soundInterface.playQuickSound(sound);
-                            }
-                        }
+                        playOrDeferAnimationSound(entity, animation.reverseEndSound);
                     }
                 }
                 if (!startedReverseMovement) {
                     startedReverseMovement = true;
-                    if (animation.reverseStartSound != null && entity.world.isClient()) {
-                        double distance = entity.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
-                        if (distance < SoundInstance.DEFAULT_MAX_DISTANCE) {
-                            SoundInstance sound = new SoundInstance(entity, animation.reverseStartSound);
-                            sound.volume = (float) (1 - distance / SoundInstance.DEFAULT_MAX_DISTANCE);
-                            InterfaceManager.soundInterface.playQuickSound(sound);
-                        }
-                    }
+                    playOrDeferAnimationSound(entity, animation.reverseStartSound);
                 }
             }
             movementFactor = 1 - movementFactor;
         }
 
         return shouldDoFactoring ? movementFactor : value;
+    }
+
+    private void playOrDeferAnimationSound(AEntityD_Definable<?> entity, String soundName) {
+        if (deferAnimationSounds && soundName != null) {
+            if (pendingFirstSound == null) {
+                pendingFirstSound = soundName;
+            } else {
+                pendingSecondSound = soundName;
+            }
+        } else {
+            playAnimationSound(entity, soundName);
+        }
+    }
+
+    private void playAnimationSound(AEntityD_Definable<?> entity, String soundName) {
+        if (soundName != null && entity.world.isClient()) {
+            double distance = entity.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
+            if (distance < SoundInstance.DEFAULT_MAX_DISTANCE) {
+                SoundInstance sound = new SoundInstance(entity, soundName);
+                sound.volume = (float) (1 - distance / SoundInstance.DEFAULT_MAX_DISTANCE);
+                InterfaceManager.soundInterface.playQuickSound(sound);
+            }
+        }
     }
 
     /**
