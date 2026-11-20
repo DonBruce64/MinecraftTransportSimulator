@@ -81,6 +81,9 @@ public class JSONParticle {
     @JSONDescription("Like above, but tells the particle to gradually change from its initial scale to this value.  Defaults to 1.0 if this and scale are not set.")
     public float toScale;
 
+    @JSONDescription("Random fraction of the rendered scale to add or subtract. A value of 0.25 gives a multiplier between 0.75 and 1.25. Defaults to 0 if are not set..")
+    public float scaleRandomness;
+
     @JSONDescription("The time, in ticks, for the particle to scale in at the start of its lifespan.  Particles scale by multiplying their defined scale times the relative time-value of this value.  So if fade-in time is 10, and the particle is 5 ticks from spawn, scale will be half of what is defined (5/10).")
     public int fadeInScaleTime;
 

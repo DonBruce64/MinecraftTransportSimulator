@@ -56,6 +56,7 @@ public class EntityParticle extends AEntityC_Renderable {
     private final AnimationSwitchbox spawningSwitchbox;
     private final JSONParticle definition;
     private final int maxAge;
+    private final float scaleMultiplier;
     private final Point3D initialVelocity;
     private final IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
 
@@ -86,6 +87,8 @@ public class EntityParticle extends AEntityC_Renderable {
         this.definition = definition;
         this.spawningSwitchbox = spawningSwitchbox;
         this.maxAge = generateMaxAge();
+        float scaleRandomness = definition.scaleRandomness;
+        this.scaleMultiplier = scaleRandomness == 0 ? 1F : Math.max(0F, 1F + scaleRandomness * (2F * particleRandom.nextFloat() - 1F));
         boundingBox.widthRadius = definition.hitboxSize / 2D;
         boundingBox.heightRadius = boundingBox.widthRadius;
         boundingBox.depthRadius = boundingBox.widthRadius;
@@ -644,6 +647,7 @@ public class EntityParticle extends AEntityC_Renderable {
             } else {
                 helperScale.set(1, 1, 1);
             }
+            helperScale.scale(scaleMultiplier);
             if (definition.fadeInScaleTime >= ticksExisted) {
                 helperScale.scale(1 - ((definition.fadeInScaleTime - ticksExisted) / (float) definition.fadeInScaleTime));
             }
