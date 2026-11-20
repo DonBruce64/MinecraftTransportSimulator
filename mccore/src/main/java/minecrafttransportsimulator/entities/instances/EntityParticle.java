@@ -87,8 +87,7 @@ public class EntityParticle extends AEntityC_Renderable {
         this.definition = definition;
         this.spawningSwitchbox = spawningSwitchbox;
         this.maxAge = generateMaxAge();
-        float scaleRandomness = definition.scaleRandomness;
-        this.scaleMultiplier = scaleRandomness == 0 ? 1F : Math.max(0F, 1F + scaleRandomness * (2F * particleRandom.nextFloat() - 1F));
+        this.scaleMultiplier = definition.scaleRandomness == 0 ? 1F : Math.max(0F, 1F + definition.scaleRandomness * (2F * particleRandom.nextFloat() - 1F));
         boundingBox.widthRadius = definition.hitboxSize / 2D;
         boundingBox.heightRadius = boundingBox.widthRadius;
         boundingBox.depthRadius = boundingBox.widthRadius;
