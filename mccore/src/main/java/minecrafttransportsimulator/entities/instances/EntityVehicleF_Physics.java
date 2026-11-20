@@ -18,6 +18,7 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.rendering.PlayerAnimationSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
@@ -188,7 +189,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         if (!world.isClient() && controllerCount == 0 && mouseAimControlVar.isActive) {
             mouseAimControlVar.setActive(false, true);
         }
+        if (world.isClient()) {
+            PlayerAnimationSystem.updateVehicle(this);
+        }
         world.endProfiling();
+    }
+
+    @Override
+    public void remove() {
+        super.remove();
+        if (world.isClient()) {
+            PlayerAnimationSystem.removeVehicle(this);
+        }
     }
 
     @Override

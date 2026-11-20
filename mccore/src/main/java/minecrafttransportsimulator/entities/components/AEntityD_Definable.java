@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.CameraSwitchbox;
@@ -51,6 +52,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.DurationDelayClock;
+import minecrafttransportsimulator.rendering.PlayerAnimationSystem;
 import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderableModelObject;
 import minecrafttransportsimulator.sound.SoundInstance;
@@ -402,6 +404,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             if (world.isClient()) {
                 IWrapperPlayer thisClient = InterfaceManager.clientInterface.getClientPlayer();
                 if (playersInteracting.contains(thisClient) && !InterfaceManager.clientInterface.isGUIOpen()) {
+                    //The local player is removed immediately, before the
+                    //server echoes PacketEntityInteractGUI back.  Preserve
+                    //visual actor attribution for this same-tick falling edge
+                    //so initiatingPlayerOnly entries can perform their linger.
+                    PlayerAnimationSystem.recordPlayerInteraction(this, thisClient.getID());
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityInteractGUI(this, thisClient, false));
                     playersInteracting.remove(thisClient);
                 }
@@ -1380,28 +1387,36 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * Performs the requested action.  Only call this on servers!
      */
     public void performAction(JSONAction action, boolean conditionsTrue) {
+        performAction(action, conditionsTrue, null);
+    }
+
+    /**
+     * Performs an action while preserving the initiating player as visual-only
+     * metadata for vehicle player animations.
+     */
+    public void performAction(JSONAction action, boolean conditionsTrue, UUID initiatingPlayerID) {
         switch (action.action) {
             case BUTTON: {
                 if (conditionsTrue) {
-                    getOrCreateVariable(action.variable).setTo(action.value, true);
+                    getOrCreateVariable(action.variable).setTo(action.value, true, initiatingPlayerID);
                 } else {
-                    getOrCreateVariable(action.variable).setTo(0, true);
+                    getOrCreateVariable(action.variable).setTo(0, true, initiatingPlayerID);
                 }
                 break;
             }
             case INCREMENT:
                 if (conditionsTrue) {
-                    getOrCreateVariable(action.variable).increment(action.value, action.clampMin, action.clampMax, true);
+                    getOrCreateVariable(action.variable).increment(action.value, action.clampMin, action.clampMax, true, initiatingPlayerID);
                 }
                 break;
             case SET:
                 if (conditionsTrue) {
-                    getOrCreateVariable(action.variable).setTo(action.value, true);
+                    getOrCreateVariable(action.variable).setTo(action.value, true, initiatingPlayerID);
                 }
                 break;
             case TOGGLE: {
                 if (conditionsTrue) {
-                    getOrCreateVariable(action.variable).toggle(true);
+                    getOrCreateVariable(action.variable).toggle(true, initiatingPlayerID);
                 }
                 break;
             }

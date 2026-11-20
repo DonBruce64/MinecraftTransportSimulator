@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.baseclasses;
 
 import java.util.List;
+import java.util.UUID;
 
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -159,8 +160,17 @@ public class ComputedVariable {
     }
 
     public final void setTo(double value, boolean sendPacket) {
+        setTo(value, sendPacket, null);
+    }
+
+    /**
+     * Sets this variable while optionally carrying the player who initiated the
+     * change.  The UUID is visual metadata for player animations only; it does
+     * not alter variable authority or synchronization.
+     */
+    public final void setTo(double value, boolean sendPacket, UUID initiatingPlayerID) {
         if (!isConstant && setInternal(value, false) && sendPacket) {
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, currentValue));
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, currentValue, initiatingPlayerID));
         }
     }
     
@@ -175,8 +185,12 @@ public class ComputedVariable {
     }
 
     public final void toggle(boolean sendPacket) {
+        toggle(sendPacket, null);
+    }
+
+    public final void toggle(boolean sendPacket, UUID initiatingPlayerID) {
         if (!isConstant && setInternal(currentValue + currentValue > 0 ? 0 : 1, false) && sendPacket) {
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this));
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, initiatingPlayerID));
         }
     }
 
@@ -184,6 +198,10 @@ public class ComputedVariable {
      * Returns true if the value was changed, false if not due to clamps.
      */
     public final boolean increment(double incrementValue, double minValue, double maxValue, boolean sendPacket) {
+        return increment(incrementValue, minValue, maxValue, sendPacket, null);
+    }
+
+    public final boolean increment(double incrementValue, double minValue, double maxValue, boolean sendPacket, UUID initiatingPlayerID) {
         if (!isConstant) {
             double newValue = currentValue + incrementValue;
             if (minValue != 0 || maxValue != 0) {
@@ -198,7 +216,7 @@ public class ComputedVariable {
             if (newValue != currentValue) {
                 incrementValue = newValue - currentValue;
                 if (setInternal(newValue, false) && sendPacket) {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, incrementValue, minValue, maxValue));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, incrementValue, minValue, maxValue, initiatingPlayerID));
                 }
                 return true;
             }

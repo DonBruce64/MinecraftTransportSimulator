@@ -1,9 +1,12 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**
@@ -15,6 +18,7 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
 public class PacketEntityCustomKeypress extends APacketEntity<AEntityF_Multipart<?>> {
     private final byte keyIndex;
     private final boolean keyPressed;
+    private UUID initiatingPlayerID;
 
     public PacketEntityCustomKeypress(AEntityF_Multipart<?> entity, int keyIndex, boolean keyPressed) {
         super(entity);
@@ -38,8 +42,14 @@ public class PacketEntityCustomKeypress extends APacketEntity<AEntityF_Multipart
     @Override
     public boolean handle(AWrapperWorld world, AEntityF_Multipart<?> entity) {
         AEntityF_Multipart<?> masterEntity = entity instanceof APart ? ((APart) entity).masterEntity : entity;
-        masterEntity.handleCustomKeypress(keyIndex, keyPressed);
-        masterEntity.allParts.forEach(part -> part.handleCustomKeypress(keyIndex, keyPressed));
+        masterEntity.handleCustomKeypress(keyIndex, keyPressed, initiatingPlayerID);
+        masterEntity.allParts.forEach(part -> part.handleCustomKeypress(keyIndex, keyPressed, initiatingPlayerID));
         return false;
+    }
+
+    @Override
+    public void handleFromClient(AWrapperWorld world, IWrapperPlayer sendingPlayer) {
+        initiatingPlayerID = sendingPlayer.getID();
+        super.handleFromClient(world, sendingPlayer);
     }
 }

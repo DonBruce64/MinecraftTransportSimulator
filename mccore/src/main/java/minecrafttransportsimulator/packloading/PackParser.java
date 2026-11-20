@@ -28,6 +28,7 @@ import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONBase;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONBlock;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONConfigSettings;
@@ -37,7 +38,10 @@ import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPanel;
 import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPlayerAnimation;
+import minecrafttransportsimulator.jsondefs.JSONPlayerAnimation.JSONPlayerGripOverride;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONRendering;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
@@ -473,6 +477,7 @@ public final class PackParser {
             //This will populate any required fields that were not in older versions.
             LegacyCompatSystem.performLegacyCompats(itemDef);
             JSONParser.validateFields(itemDef, itemDef.packID + ":" + itemDef.systemName + "/", 1);
+            validatePlayerAnimations(itemDef);
 
             //Create all required items.
             if (itemDef instanceof AJSONMultiModelProvider) {
@@ -527,6 +532,77 @@ public final class PackParser {
             InterfaceManager.coreInterface.logError(e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Checks the rendering.playerAnimations of the passed-in definition, logging an error for every problem found.
+     * Player animations are only supported on vehicles, so they are cleared from any other definition.  Invalid
+     * entries on vehicles are removed so the animation system only ever sees entries that can work.  Unlike
+     * {@link JSONParser#validateFields(Object, String, int)}, a bad entry does not stop the definition from loading.
+     */
+    public static void validatePlayerAnimations(AJSONBase definition) {
+        if (!(definition instanceof AJSONMultiModelProvider)) {
+            return;
+        }
+        JSONRendering rendering = ((AJSONMultiModelProvider) definition).rendering;
+        if (rendering == null || rendering.playerAnimations == null) {
+            return;
+        }
+        String definitionName = definition.packID + ":" + definition.systemName;
+        if (!(definition instanceof JSONVehicle)) {
+            if (!rendering.playerAnimations.isEmpty()) {
+                InterfaceManager.coreInterface.logError("Player animations are only supported on vehicles.  Ignoring rendering.playerAnimations in " + definitionName + ".");
+            }
+            rendering.playerAnimations = null;
+            return;
+        }
+
+        List<JSONPlayerAnimation> validAnimations = new ArrayList<>();
+        for (int i = 0; i < rendering.playerAnimations.size(); ++i) {
+            JSONPlayerAnimation animation = rendering.playerAnimations.get(i);
+            String error = getPlayerAnimationError(animation, rendering);
+            if (error == null) {
+                //An empty seatSlot list means the same as no seatSlot: an exterior entry.
+                if (animation.seatSlot != null && animation.seatSlot.isEmpty()) {
+                    animation.seatSlot = null;
+                }
+                validAnimations.add(animation);
+            } else {
+                InterfaceManager.coreInterface.logError("Ignoring player animation entry #" + (i + 1) + " of " + definitionName + ": " + error);
+            }
+        }
+        rendering.playerAnimations = validAnimations;
+    }
+
+    private static String getPlayerAnimationError(JSONPlayerAnimation animation, JSONRendering rendering) {
+        boolean hasSeatSlot = animation.seatSlot != null && !animation.seatSlot.isEmpty();
+        boolean hasRange = animation.range != null && animation.range > 0;
+        if (hasSeatSlot == hasRange) {
+            return hasSeatSlot ? "it has both seatSlot and range.  Use seatSlot for seated animations and range for exterior ones." : "it has neither seatSlot nor a range above 0.  Use seatSlot for seated animations and range for exterior ones.";
+        }
+        if (!isAnimatedObject(rendering, animation.applyAfter)) {
+            return "applyAfter '" + animation.applyAfter + "' is not an objectName in rendering.animatedObjects.";
+        }
+        if (animation.gripOverrides != null) {
+            for (int i = 0; i < animation.gripOverrides.size(); ++i) {
+                JSONPlayerGripOverride override = animation.gripOverrides.get(i);
+                if (override.applyAfter != null && !isAnimatedObject(rendering, override.applyAfter)) {
+                    return "applyAfter '" + override.applyAfter + "' of grip override #" + (i + 1) + " is not an objectName in rendering.animatedObjects.";
+                }
+            }
+        }
+        return null;
+    }
+
+    private static boolean isAnimatedObject(JSONRendering rendering, String objectName) {
+        if (rendering.animatedObjects != null) {
+            for (JSONAnimatedObject animatedObject : rendering.animatedObjects) {
+                if (animatedObject.objectName.equals(objectName)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
