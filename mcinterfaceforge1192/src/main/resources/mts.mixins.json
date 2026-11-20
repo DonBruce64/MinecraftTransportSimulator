@@ -18,6 +18,7 @@
 				"client.MinecraftMixin",
 				"client.MultiPackResourceManagerMixin",
 				"client.OptionInstanceMixin",
+				"client.ScreenTooltipMixin",
 				"client.VillagerModelMixin"
     ],
 		"mixins": [

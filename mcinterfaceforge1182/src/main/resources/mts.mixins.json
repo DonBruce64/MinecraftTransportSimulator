@@ -17,6 +17,7 @@
 				"client.LivingEntityRendererMixin",
 				"client.MinecraftMixin",
 				"client.MultiPackResourceManagerMixin",
+				"client.ScreenTooltipMixin",
 				"client.VillagerModelMixin"
     ],
 		"mixins": [

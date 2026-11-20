@@ -53,6 +53,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.extensions.IForgeMenuType;
 
 /**
@@ -109,6 +110,7 @@ public class InterfaceLoader {
         //Init interfaces and send to the main game system.
         if (isClient) {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), new InterfaceClient(), new InterfaceInput(), new InterfaceSound(), new InterfaceRender());
+            MinecraftForge.EVENT_BUS.register(new TooltipRenderHandler());
             context.getModEventBus().addListener(InterfaceInput::onIVRegisterKeyMappingsEvent);
             context.getModEventBus().addListener(InterfaceRender::onIVRegisterShadersEvent);
             context.getModEventBus().addListener(InterfaceRender::onIVRegisterRenderersEvent);
