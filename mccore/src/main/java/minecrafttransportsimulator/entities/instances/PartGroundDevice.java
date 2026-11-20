@@ -87,17 +87,6 @@ public class PartGroundDevice extends APart {
         //Create the initial boxes and slots.
         super.addPartsPostAddition(placingPlayer, data);
 
-        //If we are a long ground device, add a fake ground device at the offset to make us
-        //have a better contact area.  We don't need to check if we are a fake part since
-        //we block this method call from fake parts and just add the fake part directly.
-        //Also set some parameters manually as fake parts have a few special properties.
-        if (!isFake() && getLongPartOffset() != 0 && !isSpare) {
-            //Need to swap placement for fake part so it uses the offset.
-            JSONPartDefinition fakePlacementDef = JSONParser.duplicateJSON(placementDefinition);
-            fakePlacementDef.pos.z += getLongPartOffset();
-            fakePart = new PartGroundDeviceFake(this, placingPlayer, fakePlacementDef, (ItemPartGroundDevice) getStack().getItem(), null);
-            entityOn.addPart(fakePart, false);
-        }
     }
 
     @Override
@@ -110,7 +99,25 @@ public class PartGroundDevice extends APart {
 
     @Override
     public void update() {
-        if (vehicleOn != null && !isSpare) {
+        if (isSpareVar.hasChanged()) {
+            if (vehicleOn != null) {
+                vehicleOn.groundDeviceCollective.updateMembers();
+                vehicleOn.groundDeviceCollective.updateBounds();
+            }
+            if (isSpareVar.isActive) {
+                if (fakePart != null && fakePart.isValid) {
+                    entityOn.removePart(fakePart, false, false);
+                }
+                fakePart = null;
+            } else if (!isFake() && getLongPartOffset() != 0 && fakePart == null) {
+                //Need to swap placement for fake part so it uses the offset.
+                JSONPartDefinition fakePlacementDef = JSONParser.duplicateJSON(placementDefinition);
+                fakePlacementDef.pos.z += getLongPartOffset();
+                fakePart = new PartGroundDeviceFake(this, null, fakePlacementDef, (ItemPartGroundDevice) getStack().getItem(), null);
+                entityOn.addPart(fakePart, false);
+            }
+        }
+        if (vehicleOn != null && !isSpareVar.isActive) {
             //Change ground device collective if we changed active state or offset or height.
             if (isActiveVar.hasChanged()) {
                 vehicleOn.groundDeviceCollective.updateMembers();
