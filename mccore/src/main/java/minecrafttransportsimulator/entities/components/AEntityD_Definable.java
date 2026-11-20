@@ -349,7 +349,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 for (JSONAnimatedObject animatedDef : definition.rendering.animatedObjects) {
                     animatedObjectDefinitions.put(animatedDef.objectName, animatedDef);
                     if (animatedDef.animations != null) {
-                        animatedObjectSwitchboxes.put(animatedDef.objectName, new AnimationSwitchbox(this, animatedDef.animations, animatedDef.applyAfter, "rendering animated object '" + animatedDef.objectName + "'"));
+                        animatedObjectSwitchboxes.put(animatedDef.objectName, new AnimationSwitchbox(this, animatedDef.animations, animatedDef.applyAfter, "rendering animated object '" + animatedDef.objectName + "'", animatedDef.blendedAnimations));
                     }
                 }
             }
@@ -1277,8 +1277,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * the scale parameter as only the variable value should be scaled, not the offset..
      */
     public final double getAnimatedVariableValue(DurationDelayClock clock, double scaleFactor, double offset, float partialTicks) {
-        double value = getOrCreateVariable(clock.animation.variable).computeValue(partialTicks);
-        return clock.clampAndScale(this, value, scaleFactor, offset, partialTicks);
+        return clock.clampAndScale(this, clock.getEntityInput(this, partialTicks), scaleFactor, offset, partialTicks);
     }
 
     /**
