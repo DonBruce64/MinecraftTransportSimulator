@@ -52,8 +52,7 @@ public class MouseFlightController {
     /** How quickly the camera follows the aim (higher = faster, 0-1 range per tick). */
     private static final double CAM_SMOOTH_SPEED = 5.0;
 
-    /** Autopilot proportional gain for control surfaces (fixed-wing). */
-    private static final double AUTOPILOT_GAIN = 2.0;
+    private static int overrideAxes;
 
     /** Mouse-aim instructor tuning for helicopters.  Rates are in degrees per tick. */
     private static final double HELI_AIM_DEAD_ZONE = 0.35;
@@ -73,9 +72,6 @@ public class MouseFlightController {
     private static final double HELI_VERTICAL_AIM_BLEND = 0.05;
     private static double lastHelicopterYawError = 0;
 
-    /** Angle threshold for blending between banking turn and wings-level. */
-    private static final double AGGRESSIVE_TURN_ANGLE = 10.0;
-
     // Orientation matrices built from angles for camera use.
     private static final RotationMatrix aimOrientation = new RotationMatrix();
     private static final RotationMatrix camOrientation = new RotationMatrix();
@@ -93,11 +89,11 @@ public class MouseFlightController {
         isMouseFlightActive = true;
         isHelicopter = hasRotors;
         activeAircraft = aircraft;
+        overrideAxes = 0;
         lastHelicopterYawError = 0;
-        if (hasRotors) {
-            aircraft.mouseAimControlVar.setActive(true, false);
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.mouseAimControlVar, 1));
-        }
+        //1 is the existing helicopter instructor; 2 selects fixed-wing physics-tick feedback.
+        aircraft.mouseAimControlVar.setTo(hasRotors ? 1 : 2, false);
+        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.mouseAimControlVar, hasRotors ? 1 : 2));
         // Extract aircraft yaw/pitch from its orientation.
         aircraft.orientation.convertToAngles();
         aimYaw = aircraft.orientation.angles.y;
@@ -115,7 +111,7 @@ public class MouseFlightController {
      * Deactivates mouse flight.
      */
     public static void deactivate() {
-        if (isHelicopter && activeAircraft != null) {
+        if (activeAircraft != null) {
             activeAircraft.mouseAimControlVar.setActive(false, false);
             if (InterfaceManager.packetInterface != null) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(activeAircraft.mouseAimControlVar, 0));
@@ -124,6 +120,7 @@ public class MouseFlightController {
         isMouseFlightActive = false;
         isHelicopter = false;
         activeAircraft = null;
+        overrideAxes = 0;
         lastHelicopterYawError = 0;
     }
 
@@ -211,6 +208,14 @@ public class MouseFlightController {
         store.set(interpAimPitch - interpCamPitch, shortestAngleDelta(interpCamYaw, interpAimYaw), 0);
     }
 
+    public static boolean isControlling(EntityVehicleF_Physics aircraft) {
+        return isMouseFlightActive && activeAircraft == aircraft;
+    }
+
+    public static int getOverrideAxes() {
+        return overrideAxes;
+    }
+
     /**
      * Returns the aim yaw angle.
      */
@@ -254,60 +259,18 @@ public class MouseFlightController {
     }
 
     /**
-     * Runs the fixed-wing autopilot: converts aim direction into control surface deflections.
-     * Uses banking turns for large heading changes and wings-level for small corrections.
-     * Axes with active keyboard override are skipped to let keyboard take full control.
+     * Sends the fixed-wing aim command.  Surface feedback runs on each aircraft's
+     * physics tick so it does not wait for control packets to make a round trip.
      */
     private static void runAutopilot(EntityVehicleF_Physics aircraft,
                                      boolean keyboardYaw, boolean keyboardPitch, boolean keyboardRoll) {
-        // Transform aim direction into aircraft local space.
-        tempLocal.set(mouseAimForward);
-        aircraft.orientation.reOrigin(tempLocal);
-
-        // Rudder: positive rudder = yaw right. Aim right = negative local X.
-        double yawInput = -tempLocal.x * AUTOPILOT_GAIN;
-
-        // Elevator: positive elevator = pitch up. Aim above = positive local Y.
-        double pitchInput = tempLocal.y * AUTOPILOT_GAIN;
-
-        // Calculate angle off target for roll blending.
-        double dot = clamp(tempLocal.z, -1.0, 1.0);
-        double angleOffTarget = Math.toDegrees(Math.acos(dot));
-
-        // Roll: bank into the target direction.
-        double aggressiveRoll = -tempLocal.x * AUTOPILOT_GAIN;
-
-        // Wings level: counter current bank using aircraft's right vector world Y.
-        // Negative because positive tempRight.y (banked right) needs negative aileron (roll left).
-        tempRight.set(1, 0, 0).rotate(aircraft.orientation);
-        double wingsLevelRoll = -tempRight.y * AUTOPILOT_GAIN;
-
-        double rollInput;
-        if (angleOffTarget > AGGRESSIVE_TURN_ANGLE) {
-            rollInput = aggressiveRoll;
-        } else {
-            double blend = angleOffTarget / AGGRESSIVE_TURN_ANGLE;
-            rollInput = wingsLevelRoll * (1.0 - blend) + aggressiveRoll * blend;
-        }
-
-        // Clamp to control surface limits.
-        double maxAil = EntityVehicleF_Physics.MAX_AILERON_ANGLE;
-        double maxElev = EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE;
-        double maxRud = EntityVehicleF_Physics.MAX_RUDDER_ANGLE;
-
-        // Only send autopilot commands for axes NOT overridden by keyboard.
-        if (!keyboardRoll) {
-            double aileronValue = clamp(rollInput * maxAil, -maxAil, maxAil);
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.aileronInputVar, aileronValue));
-        }
-        if (!keyboardPitch) {
-            double elevatorValue = clamp(pitchInput * maxElev, -maxElev, maxElev);
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.elevatorInputVar, elevatorValue));
-        }
-        if (!keyboardYaw) {
-            double rudderValue = clamp(yawInput * maxRud, -maxRud, maxRud);
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.rudderInputVar, rudderValue));
-        }
+        overrideAxes = (keyboardYaw ? 1 : 0) | (keyboardPitch ? 2 : 0) | (keyboardRoll ? 4 : 0);
+        aircraft.mouseAimYawVar.setTo(aimYaw, false);
+        aircraft.mouseAimPitchVar.setTo(aimPitch, false);
+        aircraft.mouseAimOverrideVar.setTo(overrideAxes, false);
+        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.mouseAimYawVar, aimYaw));
+        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.mouseAimPitchVar, aimPitch));
+        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.mouseAimOverrideVar, overrideAxes));
         InterfaceManager.packetInterface.sendToServer(new PacketVehicleControlNotification(aircraft, InterfaceManager.clientInterface.getClientPlayer()));
     }
 
