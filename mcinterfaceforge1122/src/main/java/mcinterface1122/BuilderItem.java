@@ -84,6 +84,10 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
         return item;
     }
 
+    public static BuilderItem getBuilderItem(AItemBase item) {
+        return itemMap.get(item);
+    }
+
     /**
      * This is called by the main MC system to get the displayName for the item.
      * Normally this is a translated version of the unlocalized name, but we
@@ -258,7 +262,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
                 String tabID = item.getCreativeTabID();
                 if (!BuilderCreativeTab.createdTabs.containsKey(tabID)) {
                     JSONPack packConfiguration = PackParser.getPackConfiguration(tabID);
-                    BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, itemMap.get(PackParser.getItem(packConfiguration.packID, packConfiguration.packItem))));
+                    BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(tabID, packConfiguration.packName, itemMap.get(PackParser.getItem(packConfiguration.packID, packConfiguration.packItem))));
                 }
                 BuilderCreativeTab.createdTabs.get(tabID).addItem(item, mcItem);
             }

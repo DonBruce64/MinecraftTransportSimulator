@@ -19,6 +19,9 @@ public class JSONPack {
     @JSONDescription("The name of the item that will be the icon for the creative tab.  Leave blank to have the icon cycle through all items.")
     public String packItem;
 
+    @JSONDescription("Optional ordered list of side tabs shown while this pack's creative inventory tab is open.  Each entry needs a unique name and either an icon texture or itemIcon.  Icon paths may be pack-relative or a full resource location.  itemIcon renders a registered pack item with its normal model and texture.  Items opt in with customTabGroups in general or a specific definition; it may be one name or a list, and 'default' also includes the normal pack tab.  Missing, blank, duplicate, or unknown-only assignments remain in the default tab.")
+    public List<JSONCustomInventoryTab> customInventoryTabs;
+
     @JSONDescription("A number that represents the file structure of this pack.  0 is default, 1 is layered, and 2 is modular.  This is to allow flexibility in how you arrange your pack components and to make it easier to see where things are and where components are missing.  Each structure is explained in detail in the following sections.  However, there are a few things you should be aware of:<ul>" + "<li>All assets MUST be located in 'assets/[yourpackid]'  This prefix will be omitted in the follwing section for clarity, but please remember this.</li>" + "<li>Whenever you see a [===], it means that you can put the listed component into a sub-folder for easier organization.</li>" + "<li>Whenever you see a [+++] it means that the activator/blocker folder should be used at this point, if you have one set and wish to use it for the assets.  If not, you can simply omit the folder.</li>"
             + "<li>Whenever you see a [###] it means that the component-specific folder name needs to be used here.  This is based on the name of the component.  For example, vehicles go in a 'vehicles/' folder.</li>" + "<li>The main 1024x1024 instrument texture is located in 'assets/[yourpackid]/textures'. It cannot go anywhere else, even if you have sub-folders for textures.</li>" + "<li>Sounds are located in the 'assets/[yourpackid]/sounds' folder.</li>" + "</ul>" + "The default structure is the classic pack format.  Pack components are grouped into folders based on their type, and some sub-folders exist that allow for some segmentation of components.  Item textures and optional JSON models are hard-coded to the 'textures/items' and 'models/item' folders respectively.  No sub-folders are permitted anywhere except the jsondefs folder.  Therefore, the folder structure is as follows:<ul>" + "<li>Pack JSON: 'assets/[yourpackid]/[+++]/jsondefs/[###]/[===]/component.json'</li>"
             + "<li>OBJ Models: 'assets/[yourpackid]/objmodels/[###]/component .obj'</li>" + "<li>OBJ Textures: 'assets/[yourpackid]/textures/[###]/component .png'</li>" + "<li>Item Textures: 'assets/[yourpackid]/textures/items/[###]/component .png'</li>" + "<li>Item JSON: 'assets/[yourpackid]/models/item/[###]/component .json'</li>" + "</ul>" + "The layered structure is similar to the default format, except that when MTS loads a JSON in a sub-folder, it remembers that sub-folder and will load any assets assuming they are also in that sub-folder.  For example, if it finds the file 'jsondefs/vehicles/planes/mc172.json', it will realize that the json was inside the 'planes' sub-folder, and will then look for other assets, such as the model and texture, in such sub-folders.  This allows for a bit more organization in pack files than the default format, while still allowing for common asset folders with the activator/blocker system.  Therefore, the folder structure is as follows:<ul>"
@@ -41,4 +44,17 @@ public class JSONPack {
 
     @JSONDescription("This list contains a list of dependents, of which one of them must be installed for your pack to be functional. If MTS detects that none of the packs in this list are present, it will block access to your creative tab and the crafting GUIs and warn the player that they are missing one of the packs.  Note that this list is a 'one of many', in that you can list multiple packs in here and as long as one is installed, the user can use your pack.  This is done to allow packs without core parts like engines or wheels to ensure that there is another pack that provides these parts, while not locking the player into a specific pack itself.")
     public List<String> dependents;
+
+    /** Definition for one pack-authored creative-inventory side tab. */
+    public static class JSONCustomInventoryTab {
+        @JSONRequired
+        @JSONDescription("Unique name of this side tab.  Items use this exact value in general.customTabGroups.")
+        public String name;
+
+        @JSONDescription("Texture used for the side-tab icon.  Pack-relative paths resolve below assets/[packID]/textures and may omit both the textures/ prefix and .png suffix.  Optional when itemIcon is set.")
+        public String icon;
+
+        @JSONDescription("Optional IV item rendered as this tab's icon using its normal item model, including 3D block and Java-model rendering.  Use a system name for an item in this pack or 'packID:systemName' for another pack.  When valid, this takes priority over icon.")
+        public String itemIcon;
+    }
 }
