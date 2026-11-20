@@ -6,6 +6,7 @@ import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -118,7 +119,7 @@ public class CameraSystem {
 
                 //Now run transforms on this position to get it's proper position.
                 if (switchbox != null) {
-                    switchbox.runSwitchbox(partialTicks, false);
+                    switchbox.runSwitchbox(ComputedVariable.getRenderPartialTicks(partialTicks), false);
                     cameraAdjustedPosition.transform(switchbox.netMatrix);
                 }
 
@@ -141,7 +142,7 @@ public class CameraSystem {
                 //Rotational portion is good.  Finally, add the position of the provider.
                 //This needs to be interpolated to ensure smooth movement on partial ticks.
                 //Custom cameras keep their defined position; collision clipping only applies to third-person views.
-                cameraOffset.set(cameraProvider.activeCameraEntity.prevPosition).interpolate(cameraProvider.activeCameraEntity.position, partialTicks);
+                cameraProvider.activeCameraEntity.getInterpolatedPosition(cameraOffset, partialTicks);
                 cameraAdjustedPosition.add(cameraOffset);
 
                 //Also check night vision.
@@ -169,7 +170,11 @@ public class CameraSystem {
 
             if (cameraMode == CameraMode.FIRST_PERSON) {
                 //First person: use the standard rider eye position without any offset.
-                cameraAdjustedPosition.set(sittingSeat.prevRiderCameraPosition).interpolate(sittingSeat.riderCameraPosition, partialTicks);
+                cameraAdjustedPosition.set(sittingSeat.prevRiderCameraPosition).subtract(sittingSeat.prevPosition);
+                cameraOffset.set(sittingSeat.riderCameraPosition).subtract(sittingSeat.position);
+                cameraAdjustedPosition.interpolate(cameraOffset, partialTicks);
+                sittingSeat.getInterpolatedPosition(cameraOffset, partialTicks);
+                cameraAdjustedPosition.add(cameraOffset);
             } else {
                 if (sittingSeat.vehicleOn != null && sittingSeat.vehicleOn.definition.motorized != null && sittingSeat.vehicleOn.definition.motorized.cameraOffset != null) {
                     //Use the configured vehicle-relative camera anchor.
@@ -178,7 +183,7 @@ public class CameraSystem {
                     cameraAdjustedPosition.add(cameraOffset.set(sittingSeat.vehicleOn.definition.motorized.cameraOffset).rotate(cameraOffsetOrientation));
                 } else {
                     //Without a configured offset, retain the rider-relative camera anchor.
-                    cameraAdjustedPosition.set(sittingSeat.prevPosition).interpolate(sittingSeat.position, partialTicks);
+                    sittingSeat.getInterpolatedPosition(cameraAdjustedPosition, partialTicks);
                     sittingSeat.getInterpolatedOrientation(cameraOffsetOrientation, partialTicks);
                     cameraAdjustedPosition.add(cameraOffset.set(0, (sittingSeat.rider.getEyeHeight() + sittingSeat.rider.getSeatOffset()) * sittingSeat.rider.getVerticalScale(), 0).rotate(cameraOffsetOrientation));
                 }

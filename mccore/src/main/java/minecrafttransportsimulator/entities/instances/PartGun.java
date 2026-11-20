@@ -19,6 +19,7 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONCameraShake;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
@@ -97,6 +98,13 @@ public class PartGun extends APart {
     private int currentMuzzleGroupIndex;
     private final RotationMatrix internalOrientation;
     private final RotationMatrix prevInternalOrientation;
+    private final Point3D renderAimAngles = new Point3D();
+    private final Point3D renderAimStep = new Point3D();
+    private double renderAimStartRate = 1;
+    private final RotationMatrix prevRenderMuzzleReference = new RotationMatrix();
+    private final RotationMatrix renderMuzzleReference = new RotationMatrix();
+    private final RotationMatrix renderMuzzleAim = new RotationMatrix();
+    private final Point3D renderMuzzleOrigin = new Point3D();
     private final List<ItemBullet> loadedBullets = new ArrayList<>();
     private final List<Integer> loadedBulletCounts = new ArrayList<>();
     private final List<ItemBullet> reloadingBullets = new ArrayList<>();
@@ -133,6 +141,12 @@ public class PartGun extends APart {
     private final Point3D cameraControlAngles = new Point3D();
     private UUID cameraControllerSentID;
     private boolean cameraControlActiveThisTick;
+    private final Point3D pendingCameraAim = new Point3D();
+    private final Point3D playerAimStep = new Point3D();
+    private IWrapperEntity playerAimController;
+    private PartSeat playerAimSeat;
+    private JSONCameraObject playerAimCamera;
+    private long lastPlayerAimTick;
     private Point3D controllerRelativeLookVector = new Point3D();
     public IWrapperEntity entityTarget;
     public PartEngine engineTarget;
@@ -167,6 +181,9 @@ public class PartGun extends APart {
 
     //Global data.
     private static final int PITCH_RECOIL_CLAMPING = 80;
+    private static final int PLAYER_AIM_RAMP_TICKS = 4;
+    private static final int CAMERA_AIM_LEAD_TICKS = 4;
+    private static final double PLAYER_AIM_SETTLE_ANGLE = 0.001;
 
     public PartGun(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartGun item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
@@ -289,6 +306,7 @@ public class PartGun extends APart {
             }
         }
         this.prevInternalOrientation = new RotationMatrix().set(internalOrientation);
+        renderAimAngles.set(internalOrientation.angles);
 
         addVariable(this.muzzleVelocityVar = new ComputedVariable(this, "muzzleVelocity"));
         addVariable(this.fireDelayVar = new ComputedVariable(this, "fireDelay"));
@@ -327,6 +345,9 @@ public class PartGun extends APart {
         firedThisTick = false;
         isRunningInCoaxialMode = false;
         prevInternalOrientation.set(internalOrientation);
+        if (world.isClient()) {
+            prevRenderMuzzleReference.set(zeroReferenceOrientation);
+        }
         updateCoaxialReferenceOrientation();
         if (placementDefinition.isCoAxial && partOn instanceof PartGun) {
             synchronizeCoaxialOrientation((PartGun) partOn);
@@ -690,6 +711,18 @@ public class PartGun extends APart {
             clearCameraControl();
         }
 
+        if (world.isClient()) {
+            Point3D angles = internalOrientation.angles;
+            double pitchStep = angles.x - renderAimAngles.x;
+            double yawStep = wrapYawDelta(angles.y - renderAimAngles.y);
+            double movementSquared = pitchStep * pitchStep + yawStep * yawStep;
+            //Use the previous rate along the new turn and keep the curve between the tick poses.
+            double previousRate = renderAimStep.x * pitchStep + renderAimStep.y * yawStep;
+            renderAimStartRate = movementSquared > 0 ? Math.max(0, Math.min(2, previousRate / movementSquared)) : 1;
+            renderAimStep.set(pitchStep, yawStep, 0);
+            renderAimAngles.set(angles);
+        }
+
         //Now run super.  This needed to wait for the gun states to ensure proper states.
         super.update();
         updateCoaxialReferenceOrientation();
@@ -1028,34 +1061,34 @@ public class PartGun extends APart {
             if (placementDefinition.isCoAxial && partOn instanceof PartGun) {
                 return;
             }
-            boolean localCameraControl = world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && lastControllerSeat.activeCameraSwitchbox != null && lastControllerSeat.activeCameraSwitchbox.hasRotationAnimations && isActiveCameraOnGun();
+            boolean localCameraControl = world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && isActiveCameraOnGun();
+            boolean animatedCameraControl = localCameraControl && lastControllerSeat.activeCameraSwitchbox != null && lastControllerSeat.activeCameraSwitchbox.hasRotationAnimations;
             boolean remoteCameraControl = !lastControllerSeat.riderIsClient && cameraControllerID != null && cameraControllerID.equals(controller.getID());
-            if (remoteCameraControl) {
-                controllerRelativeLookVector.set(cameraControlAngles);
-                cameraControlActiveThisTick = true;
-            } else if (localCameraControl && lastControllerSeat.isRiderCameraInputActive) {
-                if (lastControllerSeat.hasHeadTracking) {
+            boolean smoothPlayerAim = controller instanceof IWrapperPlayer && !lastControllerSeat.hasHeadTracking && !remoteCameraControl;
+            boolean cameraMouseAim = smoothPlayerAim && localCameraControl && (!animatedCameraControl || lastControllerSeat.isRiderCameraInputActive);
+            if (smoothPlayerAim) {
+                beginPlayerAim(controller, cameraMouseAim ? lastControllerSeat.activeCamera : null);
+            }
+            if (cameraMouseAim) {
+                handleCameraMouseAim(controller);
+            } else {
+                if (remoteCameraControl) {
+                    controllerRelativeLookVector.set(cameraControlAngles);
+                    cameraControlActiveThisTick = true;
+                } else if (animatedCameraControl && lastControllerSeat.isRiderCameraInputActive) {
                     controllerCameraGunOrientation.setToAngles(lastControllerSeat.headTrackingOrientation);
                     controllerCameraOrientation.set(lastControllerSeat.orientation).multiply(controllerCameraGunOrientation);
+                    controllerRelativeLookVector.computeVectorAngles(controllerCameraOrientation, zeroReferenceOrientation);
                 } else {
-                    //Apply only new input to the gun; camera scale and offset must not steer it on the next tick.
-                    double yawDelta = (controller.getYaw() - lastControllerSeat.riderCameraLastAngles.y) % 360;
-                    if (yawDelta > 180) {
-                        yawDelta -= 360;
-                    } else if (yawDelta < -180) {
-                        yawDelta += 360;
-                    }
-                    controllerCameraGunOrientation.setToAngles(internalOrientation.angles);
-                    controllerCameraOrientation.set(zeroReferenceOrientation).multiply(controllerCameraGunOrientation).convertToAngles();
-                    controllerCameraOrientation.angles.y += yawDelta;
-                    controllerCameraOrientation.angles.x += controller.getPitch() - lastControllerSeat.riderCameraLastAngles.x;
-                    controllerCameraOrientation.updateToAngles();
+                    controllerRelativeLookVector.computeVectorAngles(controller.getOrientation(), zeroReferenceOrientation);
                 }
-                controllerRelativeLookVector.computeVectorAngles(controllerCameraOrientation, zeroReferenceOrientation);
-            } else {
-                controllerRelativeLookVector.computeVectorAngles(controller.getOrientation(), zeroReferenceOrientation);
+                double deltaPitch = controllerRelativeLookVector.x - internalOrientation.angles.x;
+                if (smoothPlayerAim) {
+                    handlePlayerAim(controllerRelativeLookVector.getClampedYDelta(internalOrientation.angles.y), deltaPitch);
+                } else {
+                    handleMovement(controllerRelativeLookVector.y - internalOrientation.angles.y, deltaPitch);
+                }
             }
-            handleMovement(controllerRelativeLookVector.y - internalOrientation.angles.y, controllerRelativeLookVector.x - internalOrientation.angles.x);
             if (localCameraControl) {
                 cameraControlActiveThisTick = true;
                 //Refresh even stationary aim so newly tracking clients receive the control state.
@@ -1091,13 +1124,53 @@ public class PartGun extends APart {
                 }
             }
             //Animated cameras synchronize the rider after input is updated; retain the legacy lock for static gun cameras.
-            if (world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && (lastControllerSeat.activeCameraSwitchbox == null || !lastControllerSeat.activeCameraSwitchbox.hasRotationAnimations) && isActiveCameraOnGun()) {
+            if (localCameraControl && !animatedCameraControl) {
                 lockControllerToActiveCamera(controller);
             }
         }
     }
 
-    /**Receives the physical aim independently of the controller's animated camera orientation.**/
+    private void beginPlayerAim(IWrapperEntity controller, JSONCameraObject camera) {
+        if (playerAimController != controller || playerAimSeat != lastControllerSeat || playerAimCamera != camera || lastPlayerAimTick + 1 != ticksExisted) {
+            pendingCameraAim.set(0, 0, 0);
+            playerAimStep.set(0, 0, 0);
+            playerAimController = controller;
+            playerAimSeat = lastControllerSeat;
+            playerAimCamera = camera;
+        }
+        lastPlayerAimTick = ticksExisted;
+    }
+
+    private void handleCameraMouseAim(IWrapperEntity controller) {
+        //Apply only new input to the gun; camera scale and offset must not steer it on the next tick.
+        double yawInput = wrapYawDelta(controller.getYaw() - lastControllerSeat.riderCameraLastAngles.y);
+        double pitchInput = controller.getPitch() - lastControllerSeat.riderCameraLastAngles.x;
+        if (yawInput == 0 && pitchInput == 0) {
+            handlePlayerAim(0, 0);
+            return;
+        }
+
+        controllerCameraGunOrientation.setToAngles(internalOrientation.angles);
+        controllerCameraOrientation.set(zeroReferenceOrientation).multiply(controllerCameraGunOrientation).convertToAngles();
+        controllerCameraOrientation.angles.y += yawInput;
+        controllerCameraOrientation.angles.x += pitchInput;
+        controllerCameraOrientation.updateToAngles();
+        controllerRelativeLookVector.computeVectorAngles(controllerCameraOrientation, zeroReferenceOrientation);
+
+        double deltaYaw = controllerRelativeLookVector.getClampedYDelta(internalOrientation.angles.y);
+        double deltaPitch = controllerRelativeLookVector.x - internalOrientation.angles.x;
+        //Limit amplification of small mouse movements when projecting them onto a tilted mount.
+        double mouseMovement = Math.hypot(yawInput, pitchInput);
+        double aimMovement = Math.hypot(deltaYaw, deltaPitch);
+        if (aimMovement > 0 && Double.isFinite(aimMovement)) {
+            double scale = Math.min(1, mouseMovement / aimMovement);
+            handlePlayerAim(deltaYaw * scale, deltaPitch * scale);
+        } else {
+            handlePlayerAim(0, 0);
+        }
+    }
+
+    /**Receives the physical aim independently of the controller's camera orientation.**/
     public boolean setCameraControlAngles(UUID controllerID, Point3D angles) {
         if (controllerID == null) {
             return false;
@@ -1157,6 +1230,7 @@ public class PartGun extends APart {
         lastControllerSeat.riderRelativeOrientation.angles.set(controllerCameraRelativeAngles);
         lastControllerSeat.riderRelativeOrientation.updateToAngles();
         controller.setOrientation(controllerCameraOrientation);
+        lastControllerSeat.riderCameraLastAngles.set(controller.getPitch(), controller.getYaw(), 0);
         //Reset deltas after forcing orientation so the next tick doesn't replay the correction.
         controller.getYawDelta();
         controller.getPitchDelta();
@@ -1208,10 +1282,70 @@ public class PartGun extends APart {
         return false;
     }
 
+    private void handlePlayerAim(double deltaYaw, double deltaPitch) {
+        if (playerAimCamera != null) {
+            //Keep unfinished mouse input for the next tick, with a limit on how far it can lead the gun.
+            deltaYaw = limitCameraAimLead(pendingCameraAim.y + deltaYaw, yawSpeed);
+            deltaPitch = limitCameraAimLead(pendingCameraAim.x + deltaPitch, pitchSpeed);
+        }
+        Point3D angles = internalOrientation.angles;
+        if (minYaw != -180 || maxYaw != 180) {
+            deltaYaw = Math.max(minYaw - angles.y, Math.min(maxYaw - angles.y, deltaYaw));
+        }
+        deltaPitch = Math.max(minPitch - angles.x, Math.min(maxPitch - angles.x, deltaPitch));
+
+        handleMovement(getPlayerAimStep(deltaYaw, playerAimStep.y, yawSpeed), getPlayerAimStep(deltaPitch, playerAimStep.x, pitchSpeed));
+        playerAimStep.set(angles.x - prevInternalOrientation.angles.x, angles.y - prevInternalOrientation.angles.y, 0);
+        if (playerAimCamera != null) {
+            pendingCameraAim.set(deltaPitch - playerAimStep.x, deltaYaw - playerAimStep.y, 0);
+        }
+    }
+
+    private static double wrapYawDelta(double delta) {
+        delta %= 360;
+        if (delta > 180) {
+            delta -= 360;
+        } else if (delta < -180) {
+            delta += 360;
+        }
+        return delta;
+    }
+
+    double getRenderAimStartRate() {
+        return renderAimStartRate;
+    }
+
+    static double interpolateAimProgress(double partialTicks, double startRate) {
+        double remaining = 1 - partialTicks;
+        return partialTicks + (startRate - 1) * partialTicks * remaining * remaining;
+    }
+
+    private static double limitCameraAimLead(double delta, double speedLimit) {
+        double maxLead = Math.min(180, Math.max(0, speedLimit) * CAMERA_AIM_LEAD_TICKS);
+        return Math.max(-maxLead, Math.min(maxLead, delta));
+    }
+
+    private static double getPlayerAimStep(double delta, double previousStep, double speedLimit) {
+        if (!Double.isFinite(delta) || !(speedLimit > 0)) {
+            return 0;
+        }
+        double remaining = Math.abs(delta);
+        double speedTowardsTarget = Math.max(0, Math.copySign(1, delta) * previousStep);
+        double requestedSpeed;
+        if (remaining <= PLAYER_AIM_SETTLE_ANGLE) {
+            //Finish the last fraction of a degree without increasing a braking step.
+            requestedSpeed = Math.max(remaining * 0.5, speedTowardsTarget);
+        } else {
+            //Feed back the actual movement to spread small turns across ticks and brake near the target.
+            requestedSpeed = 0.25 * (remaining + speedTowardsTarget);
+        }
+        double accelerationLimit = speedTowardsTarget + speedLimit / PLAYER_AIM_RAMP_TICKS;
+        double nextSpeed = Math.min(speedLimit, Math.min(requestedSpeed, accelerationLimit));
+        return Math.copySign(Math.min(remaining, nextSpeed), delta);
+    }
+
     /**
-     * Helper method to do yaw/pitch movement.
-     * Returns true if the movement was impeded by a clamp.
-     * Only call this ONCE per update loop as it sets prev values.
+     * Applies the requested yaw and pitch changes within the gun's speed and angle limits.
      */
     private void handleMovement(double deltaYaw, double deltaPitch) {
         if (deltaYaw != 0 || deltaPitch != 0) {
@@ -1434,6 +1568,25 @@ public class PartGun extends APart {
      * Used in both spawning the bullet, and in rendering where the muzzle position is.
      */
     public void setBulletSpawn(Point3D bulletPosition, Point3D bulletVelocity, RotationMatrix bulletOrientation, JSONMuzzle muzzle, boolean addSpread) {
+        setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle, addSpread, position, internalOrientation, zeroReferenceOrientation);
+    }
+
+    /**Samples the muzzle for the aiming preview at the same frame time as the model.**/
+    public void setBulletPreviewSpawn(Point3D bulletPosition, Point3D bulletVelocity, RotationMatrix bulletOrientation, JSONMuzzle muzzle, float partialTicks) {
+        if (ticksExisted < 2 || partialTicks >= 1) {
+            setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle, false);
+            return;
+        }
+        double remaining = 1 - interpolateAimProgress(partialTicks, renderAimStartRate);
+        renderMuzzleAim.angles.set(renderAimAngles.x - remaining * renderAimStep.x, renderAimAngles.y - remaining * renderAimStep.y, renderAimAngles.z);
+        renderMuzzleAim.updateToAngles();
+        renderMuzzleReference.interploate(prevRenderMuzzleReference, zeroReferenceOrientation, partialTicks);
+        getInterpolatedPosition(renderMuzzleOrigin, partialTicks);
+        setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle, false, renderMuzzleOrigin, renderMuzzleAim, renderMuzzleReference);
+    }
+
+    private void setBulletSpawn(Point3D bulletPosition, Point3D bulletVelocity, RotationMatrix bulletOrientation, JSONMuzzle muzzle, boolean addSpread,
+                                Point3D origin, RotationMatrix aimOrientation, RotationMatrix referenceOrientation) {
         //Set velocity.
         if (muzzleVelocityVar.currentValue != 0) {
             bulletVelocity.set(0, 0, muzzleVelocityVar.currentValue / 20D);
@@ -1457,7 +1610,7 @@ public class PartGun extends APart {
             if (muzzle.rot != null) {
                 bulletVelocity.rotate(muzzle.rot);
             }
-            bulletVelocity.rotate(internalOrientation).rotate(zeroReferenceOrientation);
+            bulletVelocity.rotate(aimOrientation).rotate(referenceOrientation);
         } else {
             bulletVelocity.set(0, 0, 0);
         }
@@ -1474,16 +1627,16 @@ public class PartGun extends APart {
         //Set position.
         bulletPosition.set(muzzle.pos);
         if (muzzle.center != null) {
-            pitchMuzzleRotation.setToZero().rotateX(internalOrientation.angles.x);
-            yawMuzzleRotation.setToZero().rotateY(internalOrientation.angles.y);
+            pitchMuzzleRotation.setToZero().rotateX(aimOrientation.angles.x);
+            yawMuzzleRotation.setToZero().rotateY(aimOrientation.angles.y);
             bulletPosition.subtract(muzzle.center).rotate(pitchMuzzleRotation).add(muzzle.center).rotate(yawMuzzleRotation);
         } else {
-            bulletPosition.rotate(internalOrientation);
+            bulletPosition.rotate(aimOrientation);
         }
-        bulletPosition.rotate(zeroReferenceOrientation).add(position);
+        bulletPosition.rotate(referenceOrientation).add(origin);
 
         //Set orientation.
-        bulletOrientation.set(zeroReferenceOrientation).multiply(internalOrientation);
+        bulletOrientation.set(referenceOrientation).multiply(aimOrientation);
         if (muzzle.rot != null && !definition.gun.disableMuzzleOrientation) {
             bulletOrientation.multiply(muzzle.rot);
         }
@@ -1634,13 +1787,19 @@ public class PartGun extends APart {
             case ("gun_lockedon_leadangle_y"):
                 return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? getLeadAngleY() : (engineTarget != null ? getLeadAngleY() : 0), false);
             case ("gun_pitch"):
-                return new ComputedVariable(this, variable, partialTicks -> partialTicks != 0 ? prevInternalOrientation.angles.x + (internalOrientation.angles.x - prevInternalOrientation.angles.x) * partialTicks : internalOrientation.angles.x, true);
+                return new ComputedVariable(this, variable, partialTicks -> internalOrientation.angles.x,
+                    partialTicks -> partialTicks >= 1 ? internalOrientation.angles.x : renderAimAngles.x - (1 - interpolateAimProgress(partialTicks, renderAimStartRate)) * renderAimStep.x);
             case ("gun_yaw"):
-                return new ComputedVariable(this, variable, partialTicks -> partialTicks != 0 ? prevInternalOrientation.angles.y + (internalOrientation.angles.y - prevInternalOrientation.angles.y) * partialTicks : internalOrientation.angles.y, true);
+                return new ComputedVariable(this, variable, partialTicks -> internalOrientation.angles.y,
+                    partialTicks -> partialTicks >= 1 ? internalOrientation.angles.y : renderAimAngles.y - (1 - interpolateAimProgress(partialTicks, renderAimStartRate)) * renderAimStep.y);
             case ("gun_pitching"):
                 return new ComputedVariable(this, variable, partialTicks -> Math.abs(prevInternalOrientation.angles.x - internalOrientation.angles.x) > 0.01 ? 1 : 0, false);
             case ("gun_yawing"):
                 return new ComputedVariable(this, variable, partialTicks -> Math.abs(prevInternalOrientation.angles.y - internalOrientation.angles.y) > 0.01 ? 1 : 0, false);
+            case ("gun_pitching_speed"):
+                return new ComputedVariable(this, variable, partialTicks -> Math.abs(internalOrientation.angles.x - prevInternalOrientation.angles.x), false);
+            case ("gun_yawing_speed"):
+                return new ComputedVariable(this, variable, partialTicks -> Math.abs(internalOrientation.angles.getClampedYDelta(prevInternalOrientation.angles.y)), false);
             case ("gun_cooldown"):
                 return new ComputedVariable(this, variable, partialTicks -> cooldownTimeRemaining > 0 ? 1 : 0, false);
             case ("gun_windup_time"):

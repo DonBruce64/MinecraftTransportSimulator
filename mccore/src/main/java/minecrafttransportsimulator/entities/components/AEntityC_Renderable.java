@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.entities.components;
 
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -83,7 +84,8 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
             //Set up matrixes.
             translatedMatrix.resetTransforms();
             if (requiresDeltaUpdates()) {
-                interpolatedPositionHolder.set(prevPosition).interpolate(position, partialTicks).subtract(position);
+                getInterpolatedPosition(interpolatedPositionHolder, partialTicks);
+                interpolatedPositionHolder.subtract(position);
                 translatedMatrix.setTranslation(interpolatedPositionHolder);
             }
             rotatedMatrix.set(translatedMatrix);
@@ -94,7 +96,7 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
 
             //Render the main model.
             if (!disableModelRendering()) {
-                renderModel(rotatedMatrix, blendingEnabled, partialTicks);
+                renderModel(rotatedMatrix, blendingEnabled, ComputedVariable.getRenderPartialTicks(partialTicks));
             }
 
             //End rotation render matrix.

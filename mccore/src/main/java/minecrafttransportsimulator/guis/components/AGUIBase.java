@@ -103,6 +103,10 @@ public abstract class AGUIBase {
         }
     }
 
+    protected void setStates(float partialTicks) {
+        setStates();
+    }
+
     /**
      * Called when this GUI is clicked.  Return true if we clicked something, false if not.
      * In general, the return call will just make a sound, though it might do other things
@@ -157,7 +161,7 @@ public abstract class AGUIBase {
         //First set the states for things in this GUI.
         //Only do this on the normal render pass.
         if (!blendingEnabled) {
-            setStates();
+            setStates(partialTicks);
         }
 
         //If we are light-sensitive, set lighting to our position.

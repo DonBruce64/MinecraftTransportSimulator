@@ -341,8 +341,10 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                 CameraSystem.adjustRiderOrientation(this, riderTempMatrix);
             }
             rider.setOrientation(riderTempMatrix);
-            if (isRiderCameraInputActive) {
+            if (riderIsClient) {
                 riderCameraLastAngles.set(rider.getPitch(), rider.getYaw(), 0);
+            }
+            if (isRiderCameraInputActive) {
                 //Camera transforms must not become mouse input on the next tick.
                 rider.getYawDelta();
                 rider.getPitchDelta();
@@ -429,6 +431,9 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             prevRiderRelativeOrientation.set(riderRelativeOrientation);
             riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
             rider.setOrientation(riderTempMatrix);
+            if (riderIsClient) {
+                riderCameraLastAngles.set(rider.getPitch(), rider.getYaw(), 0);
+            }
             rider.setPosition(position, false);
             //Call getters so it resets to current value, if we don't do this, they'll get flagged for a change in the update call.
             rider.getYawDelta();
@@ -504,6 +509,11 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
      */
     public boolean requiresDeltaUpdates() {
         return false;
+    }
+
+    /**Sets the interpolated world position into the passed-in point.**/
+    public void getInterpolatedPosition(Point3D store, double partialTicks) {
+        store.set(prevPosition).interpolate(position, partialTicks);
     }
 
     /**
