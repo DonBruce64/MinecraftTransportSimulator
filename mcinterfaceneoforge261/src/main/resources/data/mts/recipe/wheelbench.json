@@ -1,0 +1,18 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "   ",
+        "abb",
+        "dcc"
+    ],
+    "key": {
+        "a": "#c:ingots/iron",
+        "b": "#minecraft:planks",
+        "c": "#minecraft:wooden_fences",
+        "d": "minecraft:grindstone"
+    },
+    "result": {
+        "id": "mts:mts.wheelbench"
+    }
+}
+

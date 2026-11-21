@@ -1,0 +1,158 @@
+plugins {
+    id "net.neoforged.moddev" version "2.0.141+"
+}
+
+version = "${project.mc_version}-${project.mod_version}"
+group = project.mod_group
+base.archivesName = project.archive_name
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+// Ensure :mccore is fully configured before we reference its tasks and source sets.
+evaluationDependsOn(':mccore')
+
+neoForge {
+    version = project.neoforge_version
+    runs {
+        client {
+            client()
+            gameDirectory = project.file("run")
+        }
+        server {
+            server()
+            gameDirectory = project.file("runServer")
+        }
+    }
+    mods {
+        mts {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+task preparePackModsClient(type: Jar) {
+    dependsOn { configurations.packSource }
+    archiveFileName = 'immersive-vehicles-official-automobile-pack-OAmP-V3.jar'
+    destinationDirectory = project.file('run/mods')
+    from { zipTree(configurations.packSource.singleFile) }
+    exclude 'META-INF/MANIFEST.MF'
+    manifest {
+        attributes(['FMLModType': 'LIBRARY'])
+    }
+}
+
+task preparePackModsServer(type: Jar) {
+    dependsOn { configurations.packSource }
+    archiveFileName = 'immersive-vehicles-official-automobile-pack-OAmP-V3.jar'
+    destinationDirectory = project.file('runServer/mods')
+    from { zipTree(configurations.packSource.singleFile) }
+    exclude 'META-INF/MANIFEST.MF'
+    manifest {
+        attributes(['FMLModType': 'LIBRARY'])
+    }
+}
+
+repositories {
+    // location of the maven that hosts JEI files since January 2023
+    maven { url = "https://maven.blamejared.com/" }
+    maven { url = "https://api.modrinth.com/maven" }
+    // Cursemaven hosts the Jade API artifact for optional compile-time integration.
+    maven { url = "https://www.cursemaven.com" }
+}
+
+configurations {
+    embed
+    // Use compileOnly so mccore classes are available at compile time but do NOT
+    // appear on the runtime module path. The jar task below unpacks embed into the
+    // fat JAR, so the classes are present at runtime inside the mod JAR itself.
+    // Dev runs get mccore via the 'mcoredep' source set declared above.
+    compileOnly.extendsFrom(embed)
+    // Holds the raw content-pack jar we repack into a NeoForge-acceptable library jar
+    // for the run mods folder.
+    packSource
+}
+
+dependencies {
+    // Embed mccore as fat-jar. Exclude its transitive deps (jorbis, jlayer) from
+    // the runtime module path — they are already embedded as classes inside mccore's JAR.
+    // Without this, JPMS sees duplicate packages (com.jcraft.jorbis etc.) in both the
+    // mts module and the standalone jorbis module, causing a ResolutionException.
+    embed(project(path: ":mccore", configuration: "relocated")) {
+        transitive = false
+    }
+    compileOnly "mezz.jei:jei-${project.mc_version}-neoforge-api:${project.jei_version}"
+    runtimeOnly "mezz.jei:jei-${project.mc_version}-neoforge:${project.jei_version}"
+    compileOnly "curse.maven:jade-324717:${project.jade_file_id}"
+    runtimeOnly "curse.maven:transport-simulator-official-vehicle-set-292217:7933734"
+    packSource "maven.modrinth:immersive-vehicles-official-automobile-pack:OAmP-V3"
+}
+
+jar {
+    from {
+        configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    // Exclude JOrbis/JOgg classes from the fat JAR.
+    // NeoForge 26.1 uses JPMS and the game already includes jorbis as a separate
+    // module on the module path. Having com.jcraft.* packages in both our mod JAR
+    // and the standalone jorbis module causes a split-package ResolutionException.
+    // The classes remain available at runtime via the jorbis module.
+    // NOTE: javazoom (JLayer/MP3) is NOT excluded — it is not provided by NeoForge.
+    exclude "com/jcraft/**"
+    exclude "META-INF/maven/org.jcraft/**"
+    manifest {
+        attributes(["MixinConfigs": "mts.mixins.json",
+                     "Implementation-Version": project.mod_version])
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+}
+
+// Copy mccore compiled classes into the main source set output directory so NeoForge MDG
+// includes them in the 'mts' mod module during dev runs.  The production JAR receives mccore
+// from the 'embed' shadow JAR instead (with javazoom relocated), so we clean the copies
+// before 'jar' runs to avoid duplicate-entry conflicts.
+tasks.register('copyMcoreToMainClasses', Copy) {
+    dependsOn project(':mccore').tasks.named('compileJava')
+    from { project(':mccore').sourceSets.main.output.classesDirs }
+    into { sourceSets.main.java.classesDirectory }
+    outputs.upToDateWhen { false }
+}
+task removeMcoreFromMainClasses(type: Delete) {
+    delete fileTree(sourceSets.main.java.classesDirectory) { include 'minecrafttransportsimulator/**' }
+}
+tasks.register('copyMcoreResourcesToMain', Copy) {
+    dependsOn project(':mccore').tasks.named('processResources')
+    from { project(':mccore').sourceSets.main.output.resourcesDir }
+    into { sourceSets.main.output.resourcesDir }
+}
+task removeMcoreFromMainResources(type: Delete) {
+    delete fileTree(sourceSets.main.output.resourcesDir) {
+        include 'assets/mts/jsondefs/**'
+        include 'assets/mts/language/**'
+        include 'assets/mts/objmodels/**'
+        include 'assets/mts/sounds/**'
+        include 'assets/mts/textures/decors/**'
+        include 'assets/mts/textures/fonts/**'
+        include 'assets/mts/textures/guis/**'
+        include 'assets/mts/textures/particles/**'
+        include 'assets/mts/textures/parts/**'
+        include 'assets/mts/textures/rendering/**'
+        include 'assets/mts/textures/splash/**'
+    }
+}
+tasks.named('jar').configure { dependsOn removeMcoreFromMainClasses, removeMcoreFromMainResources }
+tasks.configureEach { task ->
+    if (task.name == 'runClient' || task.name == 'runServer') {
+        task.dependsOn copyMcoreToMainClasses, copyMcoreResourcesToMain
+    }
+    if (task.name == 'runClient') {
+        task.dependsOn preparePackModsClient
+    }
+    if (task.name == 'runServer') {
+        task.dependsOn preparePackModsServer
+    }
+}
+
