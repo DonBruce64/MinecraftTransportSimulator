@@ -1,6 +1,7 @@
 package mcinterface1211;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +13,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.google.common.collect.Streams;
+import com.mojang.authlib.GameProfile;
 
 import mcinterface1211.mixin.common.BiomeMixin;
 import mcinterface1211.mixin.common.ConcretePowderBlockMixin;
@@ -97,6 +99,8 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.util.FakePlayer;
+import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
@@ -115,6 +119,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
  */
 
 public class WrapperWorld extends AWrapperWorld {
+    private static final GameProfile BLOCK_PLACER_PROFILE = new GameProfile(UUID.nameUUIDFromBytes("mts:block_placer".getBytes(StandardCharsets.UTF_8)), "[MTS]");
     private static final Map<Level, WrapperWorld> worldWrappers = new HashMap<>();
     private final Map<UUID, BuilderEntityExisting> playerServerGunBuilders = new HashMap<>();
     private final Map<UUID, Integer> ticksSincePlayerJoin = new HashMap<>();
@@ -841,13 +846,20 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public boolean placeBlock(Point3D position, IWrapperItemStack stack) {
         BlockPos pos = BlockPos.containing(position.x, position.y, position.z);
-        if (world.isEmptyBlock(pos)) {
+        if (!world.isClientSide && !stack.isEmpty() && world.isEmptyBlock(pos)) {
             ItemStack mcStack = ((WrapperItemStack) stack).stack.copy();
             Item mcItem = mcStack.getItem();
             Block mcBlock = mcItem instanceof BlockItem ? ((BlockItem) mcItem).getBlock() : null;
-            //Some items can't be placed as they check for the player, even though it can be null.
-            if (!mcStack.has(DataComponents.FOOD) && !(mcItem instanceof StandingAndWallBlockItem) && !(mcBlock instanceof PistonBaseBlock) && !(mcBlock instanceof LanternBlock) && !(mcBlock instanceof LadderBlock) && mcStack.useOn(new UseOnContext(world, null, InteractionHand.MAIN_HAND, mcStack, new net.minecraft.world.phys.BlockHitResult(new Vec3(position.x, position.y, position.z), Direction.UP, pos, true))) == InteractionResult.CONSUME) {
-                return true;
+            if (!mcStack.has(DataComponents.FOOD) && !(mcItem instanceof StandingAndWallBlockItem) && !(mcBlock instanceof PistonBaseBlock) && !(mcBlock instanceof LanternBlock) && !(mcBlock instanceof LadderBlock)) {
+                //Modded item handlers may require a player and read the item from their hand.
+                FakePlayer player = FakePlayerFactory.get((ServerLevel) world, BLOCK_PLACER_PROFILE);
+                player.moveTo(position.x, position.y, position.z, 0, 0);
+                player.setItemInHand(InteractionHand.MAIN_HAND, mcStack);
+                try {
+                    return mcStack.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, new net.minecraft.world.phys.BlockHitResult(new Vec3(position.x, position.y, position.z), Direction.UP, pos, true))) == InteractionResult.CONSUME;
+                } finally {
+                    player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+                }
             }
         }
         return false;

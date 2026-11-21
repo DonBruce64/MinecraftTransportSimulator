@@ -8,6 +8,7 @@
 				"client.ClientLevelMixin",
 				"client.CompositeRenderTypeMixin",
 				"client.CompositeStateMixin",
+				"client.CreativeModeInventoryScreenMixin",
 				"client.EmptyTextureStateShardMixin",
 				"client.EntityRendererMixin",
 				"client.HumanoidModelMixin",

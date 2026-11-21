@@ -79,6 +79,7 @@ public class ParticleObject {
     private final AnimationSwitchbox spawningSwitchbox;
     private final JSONParticle definition;
     private final int maxAge;
+    private final float scaleMultiplier;
     private final Point3D initialVelocity;
     private final IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
 
@@ -122,6 +123,7 @@ public class ParticleObject {
         this.attachment = definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED || definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED_Z || definition.spawningOrientation == ParticleSpawningOrientation.WORLD_ATTACHED ? new AttachmentState(particleSpawning) : null;
         this.spawningSwitchbox = spawningSwitchbox;
         this.maxAge = Math.max(1, generateMaxAge());
+        this.scaleMultiplier = definition.scaleRandomness == 0 ? 1F : Math.max(0F, 1F + definition.scaleRandomness * (2F * particleRandom.nextFloat() - 1F));
         this.boundingBox = definition.ignoreCollision ? null : new BoundingBox(position, definition.hitboxSize / 2D);
 
         RotationMatrix positionOrientation = null;
@@ -695,6 +697,7 @@ public class ParticleObject {
         } else {
             helperScale.set(1, 1, 1);
         }
+        helperScale.scale(scaleMultiplier);
         if (definition.fadeInScaleTime > 0 && definition.fadeInScaleTime >= ticksExisted) {
             helperScale.scale(1 - ((definition.fadeInScaleTime - ticksExisted) / (float) definition.fadeInScaleTime));
         }

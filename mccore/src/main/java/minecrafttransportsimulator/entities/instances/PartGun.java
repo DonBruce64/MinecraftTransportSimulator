@@ -115,6 +115,7 @@ public class PartGun extends APart {
     public boolean isHandHeldGunEquipped;
     public boolean isHandHeldGunReloadRequested;
     public boolean isRunningInCoaxialMode;
+    private boolean isFiringActual;
     private int camOffset;
     private int cooldownTimeRemaining;
     private int reloadDelayRemaining;
@@ -145,6 +146,7 @@ public class PartGun extends APart {
     private final Point3D bulletVelocityRender = new Point3D();
     private final RotationMatrix bulletOrientationRender = new RotationMatrix();
     private final List<PartSeat> seatsControllingGun = new ArrayList<>();
+    private final List<PartGun> coaxialGuns = new ArrayList<>();
 
     //Temp helper variables for calculations
     private final Point3D targetVector = new Point3D();
@@ -325,6 +327,10 @@ public class PartGun extends APart {
         firedThisTick = false;
         isRunningInCoaxialMode = false;
         prevInternalOrientation.set(internalOrientation);
+        updateCoaxialReferenceOrientation();
+        if (placementDefinition.isCoAxial && partOn instanceof PartGun) {
+            synchronizeCoaxialOrientation((PartGun) partOn);
+        }
         if (currentBullet != null && !currentBullet.isValid) {
             currentBullet = null;
         }
@@ -351,37 +357,21 @@ public class PartGun extends APart {
                 }
             }
             if (currentController == null) {
-                //If we aren't being controlled, check if we have any coaxial guns.
-                //If we do, and they have a controller, then we use that as our controller.
-                //This allows them to control this gun without being the actual controller for firing.
-                if (!parts.isEmpty()) {
-                    for (APart part : parts) {
-                        if (part instanceof PartGun && part.placementDefinition.isCoAxial) {
-                            currentController = ((PartGun) part).getGunController();
-                            if (currentController != null) {
-                                //Check if the coaxial is controlled or not.
-                                lastController = currentController;
-                                lastControllerSeat = (PartSeat) lastController.getEntityRiding();
-                                if (part.cachedItem == lastControllerSeat.activeGunItem && (!definition.gun.fireSolo || lastControllerSeat.gunGroups.get(part.cachedItem).get(lastControllerSeat.gunIndex) == part)) {
-                                    state = state.promote(GunState.CONTROLLED);
-                                    isRunningInCoaxialMode = true;
-                                    break;
-                                }
-                            }
-                        }
+                //Coaxial guns share aiming control, but only the selected gun may fire.
+                for (PartGun gun : coaxialGuns) {
+                    if (!gun.isActiveVar.isActive || gun.isSpare) {
+                        continue;
                     }
-                }
-
-                //Conversely, if we are a coaxial gun, and our parent is being controlled, we need to be controlled by it. 
-                if (placementDefinition.isCoAxial && entityOn instanceof PartGun) {
-                    currentController = ((PartGun) entityOn).getGunController();
-                    if (currentController != null) {
-                        //Check if the coaxial is controlled or not.
-                        lastController = currentController;
-                        lastControllerSeat = (PartSeat) lastController.getEntityRiding();
-                        if (entityOn.cachedItem == lastControllerSeat.activeGunItem && (!definition.gun.fireSolo || lastControllerSeat.gunGroups.get(entityOn.cachedItem).get(lastControllerSeat.gunIndex) == entityOn)) {
+                    IWrapperEntity coaxialController = gun.getGunController();
+                    if (coaxialController != null) {
+                        PartSeat coaxialSeat = (PartSeat) coaxialController.getEntityRiding();
+                        if (gun.cachedItem == coaxialSeat.activeGunItem && (!gun.definition.gun.fireSolo || coaxialSeat.gunGroups.get(gun.cachedItem).get(coaxialSeat.gunIndex) == gun)) {
+                            currentController = coaxialController;
+                            lastController = coaxialController;
+                            lastControllerSeat = coaxialSeat;
                             state = state.promote(GunState.CONTROLLED);
                             isRunningInCoaxialMode = true;
+                            break;
                         }
                     }
                 }
@@ -457,6 +447,8 @@ public class PartGun extends APart {
             //spawning and ensures that they spawn every tick on quick-firing guns.  Hits are registered on both sides, but
             //hit processing is only done on the server; clients just de-spawn the bullet and wait for packets.
             //Because of this, there is no linking between client and server bullets, and therefore they do not handle NBT or UUIDs.
+            boolean serverIsPrimaryController = lastLoadedBullet != null && (lastLoadedBullet.definition.bullet.isLongRange || !(lastController instanceof IWrapperPlayer));
+            boolean hasBulletsToFire = loadedBulletCount > 0 || (world.isClient() && serverIsPrimaryController && bulletsPresentOnServer);
             if (state.isAtLeast(GunState.FIRING_REQUESTED)) {
                 if (ableToFireVar.isActive) {
                     //Get current group and use it to determine firing offset.
@@ -484,8 +476,7 @@ public class PartGun extends APart {
                     //The only exception is if the server is the controller, in that case fire until we are told to stop.
                     //This can happen if the gun fires quickly and bullet counts get de-synced with on/off states.
                     boolean cycledGun = false;
-                    boolean serverIsPrimaryController = lastLoadedBullet != null && (lastLoadedBullet.definition.bullet.isLongRange || !(lastController instanceof IWrapperPlayer));
-                    if (loadedBulletCount > 0 || (world.isClient() && serverIsPrimaryController && bulletsPresentOnServer)) {
+                    if (hasBulletsToFire) {
                         state = state.promote(GunState.FIRING_CURRENTLY);
 
                         //If we are in our cam, fire the bullets.
@@ -596,6 +587,12 @@ public class PartGun extends APart {
                 firedSinceRequested = false;
             }
 
+            //Keep actual firing active between shots, but only after a shot starts the current burst.
+            isFiringActual = firedThisTick || (isFiringActual && state.isAtLeast(GunState.FIRING_REQUESTED)
+                && hasBulletsToFire && !isReloading && !isSemiAutoVar.isActive
+                && windupTimeCurrent == definition.gun.windupTime
+                && (ableToFireVar.isActive || cooldownTimeRemaining > 0));
+
             //Handle reload delay and recoil.
             if (state.isAtLeast(GunState.FIRING_CURRENTLY) || (cooldownTimeRemaining != 0 && !isSemiAutoVar.isActive)) {
                 reloadDelayRemaining = definition.gun.reloadDelay;
@@ -618,6 +615,7 @@ public class PartGun extends APart {
         } else {
             //Inactive gun, set as such and set to default position if we have one.
             state = GunState.INACTIVE;
+            isFiringActual = false;
             entityTarget = null;
             engineTarget = null;
             updateTargetRegistration();
@@ -694,6 +692,7 @@ public class PartGun extends APart {
 
         //Now run super.  This needed to wait for the gun states to ensure proper states.
         super.update();
+        updateCoaxialReferenceOrientation();
 
         //If we have a controller seat on us, adjust the player's facing to account for our movement.
         //If we don't, we'll just rotate forever.
@@ -723,6 +722,25 @@ public class PartGun extends APart {
         for (APart part : parts) {
             if (part instanceof PartSeat) {
                 seatsControllingGun.add((PartSeat) part);
+            }
+        }
+
+        coaxialGuns.clear();
+        for (APart part : parts) {
+            if (part instanceof PartGun && part.placementDefinition.isCoAxial) {
+                coaxialGuns.add((PartGun) part);
+            }
+        }
+        if (placementDefinition.isCoAxial && partOn != null) {
+            if (partOn instanceof PartGun) {
+                coaxialGuns.add((PartGun) partOn);
+            } else {
+                //A non-gun turret is aimed through its child guns' movement variables.
+                for (APart part : partOn.parts) {
+                    if (part != this && part instanceof PartGun && part.placementDefinition.isCoAxial) {
+                        coaxialGuns.add((PartGun) part);
+                    }
+                }
             }
         }
 
@@ -774,6 +792,47 @@ public class PartGun extends APart {
                         break;
                 }
             }
+        }
+    }
+
+    /**
+     * Guns on a non-gun coaxial mount inherit its animated orientation for aiming and firing.
+     * A gun that drives the mount keeps its unanimated reference to avoid rotation feedback.
+     */
+    private void updateCoaxialReferenceOrientation() {
+        if (placementDefinition.isCoAxial && partOn != null && !(partOn instanceof PartGun)) {
+            if (partOn.definition.generic.movementAnimations != null) {
+                for (JSONAnimationDefinition animation : partOn.definition.generic.movementAnimations) {
+                    if (animation.animationType == AnimationComponentType.ROTATION && partOn.getOrCreateVariable(animation.variable).entity == this) {
+                        return;
+                    }
+                }
+            }
+            zeroReferenceOrientation.set(partOn.orientation);
+            if (placementDefinition.rot != null) {
+                zeroReferenceOrientation.multiply(placementDefinition.rot);
+            }
+        }
+    }
+
+    /**
+     * Coaxial guns on a gun share its physical movement, including while selected or uncontrolled.
+     * Applying a second slew rate would let a moving turret leave its coaxial guns behind.
+     */
+    private void synchronizeCoaxialOrientation(PartGun parentGun) {
+        zeroReferenceOrientation.set(parentGun.zeroReferenceOrientation);
+        if (placementDefinition.rot != null) {
+            zeroReferenceOrientation.multiply(placementDefinition.rot);
+        }
+        controllerCameraGunOrientation.setToAngles(parentGun.internalOrientation.angles);
+        controllerCameraOrientation.set(parentGun.zeroReferenceOrientation).multiply(controllerCameraGunOrientation);
+        controllerRelativeLookVector.computeVectorAngles(controllerCameraOrientation, zeroReferenceOrientation);
+        internalOrientation.angles.x = Math.max(minPitch, Math.min(maxPitch, controllerRelativeLookVector.x));
+        internalOrientation.angles.y = Math.max(minYaw, Math.min(maxYaw, controllerRelativeLookVector.y));
+        if (internalOrientation.angles.y - prevInternalOrientation.angles.y > 180) {
+            prevInternalOrientation.angles.y += 360;
+        } else if (internalOrientation.angles.y - prevInternalOrientation.angles.y < -180) {
+            prevInternalOrientation.angles.y -= 360;
         }
     }
 
@@ -965,6 +1024,10 @@ public class PartGun extends APart {
 
         //Get the delta between our orientation and the player's orientation.
         if (lastControllerSeat != null) {
+            //The parent aims this shared mount and handles its rider/camera rotation once.
+            if (placementDefinition.isCoAxial && partOn instanceof PartGun) {
+                return;
+            }
             boolean localCameraControl = world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && lastControllerSeat.activeCameraSwitchbox != null && lastControllerSeat.activeCameraSwitchbox.hasRotationAnimations && isActiveCameraOnGun();
             boolean remoteCameraControl = !lastControllerSeat.riderIsClient && cameraControllerID != null && cameraControllerID.equals(controller.getID());
             if (remoteCameraControl) {
@@ -1542,6 +1605,8 @@ public class PartGun extends APart {
                 return new ComputedVariable(this, variable, partialTicks -> state.isAtLeast(GunState.CONTROLLED) ? 1 : 0, false);
             case ("gun_firing"):
                 return new ComputedVariable(this, variable, partialTicks -> state.isAtLeast(GunState.FIRING_REQUESTED) ? 1 : 0, false);
+            case ("gun_firing_actual"):
+                return new ComputedVariable(this, variable, partialTicks -> isFiringActual ? 1 : 0, false);
             case ("gun_fired"):
                 return new ComputedVariable(this, variable, partialTicks -> firedThisTick ? 1 : 0, false);
             case ("gun_muzzleflash"):

@@ -24,6 +24,12 @@ public abstract class AJSONItem extends AJSONBase {
         @JSONDescription("Set to true to hide this item on creative tabs.")
         public boolean hideOnCreativeTab;
 
+        @JSONDescription("Optional custom creative-inventory side-tab assignment.  May be one exact tab name or a list of names to show this item in multiple tabs.  Add 'default' to the list to also show it in the normal pack tab.  Missing, blank, duplicate, or unknown-only assignments place the item in the default tab.  A customTabGroups value on a specific definition overrides this general value.")
+        public Object customTabGroups;
+
+        @JSONDescription("If true, using a paint gun on this object will not open the repainting GUI and its definition cannot be changed by a repaint request.")
+        public boolean disableRepaint;
+
         @JSONDescription("The name of this content.  Will be displayed in item form.  Note that if the content is a type that has a set of definitions, then this name is ignored and the appropriate definition name is used instead.")
         public String name;
 
