@@ -237,6 +237,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             if (towedByConnection == null || !towedByConnection.hitchConnection.mounted) {
                 performGroundOperations();
             } else {
+                skidSteerActive = false;
                 slipping = false;
             }
             world.beginProfiling("TotalMovement", false);
@@ -245,6 +246,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 adjustControlSurfaces();
             }
             world.endProfiling();
+        } else {
+            skidSteerActive = false;
         }
         world.endProfiling();
     }
@@ -613,13 +616,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         skidSteerActive = false;
         double steeringAngle = getSteeringAngle() * 45;
         if (steeringAngle != 0) {
-            double turningDistance = definition.motorized.hasPermanentSkidSteer ? 1 : groundDeviceCollective.getTurningWheelbase();
+            boolean permanentSkidSteer = definition.motorized.hasPermanentSkidSteer;
+            double turningDistance = permanentSkidSteer ? 1 : groundDeviceCollective.getTurningWheelbase();
             if (turningDistance > 0) {
                 //If we are vehicle that can do skid-steer, and that's active, do so now.
-                if (!parkingBrakeVar.isActive && (definition.motorized.hasPermanentSkidSteer || (hasSkidSteerVar.isActive && groundDeviceCollective.isReady() && groundVelocity < 0.05))) {
-                    boolean foundNeutralEngine = false;
-                    boolean leftWheelGrounded = definition.motorized.hasPermanentSkidSteer;
-                    boolean rightWheelGrounded = definition.motorized.hasPermanentSkidSteer;
+                if (!parkingBrakeVar.isActive && (permanentSkidSteer || (hasSkidSteerVar.isActive && groundDeviceCollective.isReady() && groundVelocity < 0.05))) {
+                    boolean foundSkidSteerEngine = false;
+                    boolean leftWheelGrounded = permanentSkidSteer;
+                    boolean rightWheelGrounded = permanentSkidSteer;
                     for (APart part : parts) {
                         if (part instanceof PartGroundDevice) {
                             if (groundDeviceCollective.groundedGroundDevices.contains(part)) {
@@ -630,12 +634,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                                 }
                             }
                         } else if (part instanceof PartEngine) {
-                            if (((PartEngine) part).currentGearVar.currentValue == 0 && ((PartEngine) part).running) {
-                                foundNeutralEngine = true;
+                            PartEngine engine = (PartEngine) part;
+                            double currentGear = engine.currentGearVar.currentValue;
+                            if (engine.running && (permanentSkidSteer ? currentGear == 0 : currentGear != 0)) {
+                                foundSkidSteerEngine = true;
                             }
                         }
                     }
-                    skidSteerActive = foundNeutralEngine && leftWheelGrounded && rightWheelGrounded;
+                    skidSteerActive = foundSkidSteerEngine && leftWheelGrounded && rightWheelGrounded;
 
                     //If skidSteer is active, do it now.
                     if (skidSteerActive) {
