@@ -6,6 +6,7 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 
 /**
  * Base class for entities that are rendered in the world in 3D.
@@ -101,6 +102,11 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
             //Render holoboxes.
             if (blendingEnabled) {
                 renderHolographicBoxes(translatedMatrix);
+            }
+
+            //A shader pack's shadow pass draws the model only.
+            if (DynamicLightSystem.isDrawingShadowPass()) {
+                return;
             }
 
             //Render bounding boxes.

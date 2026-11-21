@@ -77,6 +77,8 @@ public class GUIComponentPartSlotScanner extends AGUIComponent {
     }
 
     public void updateTarget(IWrapperPlayer player, EntityInteractResult interactResult, Point3D startPosition, Point3D endPosition) {
+        //The same reach as the markers (IconRange), so the scanner never targets a slot whose marker is not drawn.
+        double reachSquared = GUIComponentPartSlotMarkers.getIconReachSquared();
         if (player.isSpectator() || !player.isHoldingItemType(ItemComponentType.SCANNER)
                 || interactResult == null || !(interactResult.entity instanceof AEntityF_Multipart)) {
             clearTarget();
@@ -95,7 +97,7 @@ public class GUIComponentPartSlotScanner extends AGUIComponent {
         double closestDistance = Double.MAX_VALUE;
         for (Entry<BoundingBox, JSONPartDefinition> slotEntry : multipart.activeClientPartSlotBoxes.entrySet()) {
             BoundingBox box = slotEntry.getKey();
-            if (slotEntry.getValue().isPermanent || GUIComponentPartSlotMarkers.getDistanceSquaredToBox(startPosition, box) >= GUIComponentPartSlotMarkers.SCANNER_REACH_SQUARED) {
+            if (slotEntry.getValue().isPermanent || GUIComponentPartSlotMarkers.getDistanceSquaredToBox(startPosition, box) >= reachSquared) {
                 continue;
             }
             BoundingBoxHitResult hit = box.getIntersection(startPosition, endPosition);
@@ -113,7 +115,7 @@ public class GUIComponentPartSlotScanner extends AGUIComponent {
             //An occupied slot still has a marker, even though it has no compatible-part preview.
             if (multipart instanceof APart && !((APart) multipart).placementDefinition.isPermanent
                     && interactResult.box == multipart.boundingBox
-                    && GUIComponentPartSlotMarkers.getDistanceSquaredToBox(startPosition, multipart.boundingBox) < GUIComponentPartSlotMarkers.SCANNER_REACH_SQUARED) {
+                    && GUIComponentPartSlotMarkers.getDistanceSquaredToBox(startPosition, multipart.boundingBox) < reachSquared) {
                 targetEntity = multipart;
                 targetBox = multipart.boundingBox;
             }

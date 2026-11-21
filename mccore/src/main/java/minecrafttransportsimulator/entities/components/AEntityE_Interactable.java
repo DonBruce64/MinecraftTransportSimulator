@@ -431,6 +431,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     @Override
     protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
         super.renderModel(transform, blendingEnabled, partialTicks);
+        if (minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem.isDrawingShadowPass()) {
+            return;
+        }
 
         //Renders all instruments on the entity.  Uses the instrument's render code.
         //We only apply the appropriate translation and rotation.
