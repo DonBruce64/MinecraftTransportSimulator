@@ -22,10 +22,11 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 /**
  * Runs the dynamic lights (light components marked {@code isDynamicLight} or given a {@code lightPreset}, on models
  * through {@link DynamicLightOwner} and on particles through {@link #submitLight}) once a frame: collects every owner's lit lamps, culls and ranks them for the light pass, fills the beams and coronas, keeps the block grid
- * current, and hands the frame to {@link DynamicLightRenderer}.  Under a shader pack the
- * deferred pass cannot draw (the pack replaces the pipeline it reads), nor on a context it cannot run on, so the lamps raise block light
- * through {@link DynamicLightField} instead, and {@link RenderableModelObject} draws a simple cone and
- * flare.  Everything is client-side and derived from synced
+ * current, and hands the frame to {@link DynamicLightRenderer}.  Under an Iris or Oculus shader pack the light pass
+ * draws after the pack's final pass ({@link #drawsAfterShaderPack}): it needs only the finished image and the scene
+ * depth in the main target.  Under OptiFine's, with {@code DynL_ShaderFB} on, or on a context the pass cannot run on,
+ * the lamps raise block light through {@link DynamicLightField} instead, and {@link RenderableModelObject} draws a
+ * simple cone and flare.  Everything is client-side and derived from synced
  * variables.  Render thread only, except {@link #blockLightAt}, which mesher threads call.
  */
 public final class DynamicLightSystem {
@@ -33,13 +34,16 @@ public final class DynamicLightSystem {
     public enum Mode {
         /** Dynamic components draw the regular beam and flare. */
         OFF,
-        /** The deferred light pass lights the world: no shader pack. */
+        /** The deferred light pass lights the world: no shader pack, or an Iris/Oculus one (drawn after its final pass). */
         DEFERRED,
-        /** A shader pack is active, or the deferred pass cannot run on this context: block light, cone mesh and flare billboard. */
+        /**
+         * An OptiFine pack, or any pack with {@code DynL_ShaderFB} on, or the deferred pass cannot run on this context:
+         * block light, cone mesh and flare billboard.
+         */
         FALLBACK
     }
 
-    /** Merge distance (blocks) of point lights before scoring. */
+    /** Merge distance (blocks) of particle point lights before scoring; model lamps never merge. */
     private static final float MERGE_DISTANCE = 1.5F;
     /** Budget and corona rank of particle lights: below every lamp, so particles never push out headlights. */
     public static final float PARTICLE_PRIORITY = 0.25F;
@@ -91,6 +95,23 @@ public final class DynamicLightSystem {
     private static Mode mode = Mode.OFF;
     /** Whether a shader pack was active at the last {@link #renderFrame}. */
     private static boolean shaderPack;
+    /** Whether that pack was an Iris or Oculus one. */
+    private static boolean irisPack;
+    /** Whether the version's adapter draws the light frame after the pack's final pass; see {@link #enableShaderPackLightPass}. */
+    private static boolean packLightPass;
+    /** Set by the adapter around the shader pack's shadow pass: the scene draws geometry only, see {@link #isDrawingShadowPass}. */
+    private static boolean shadowPassDrawing;
+    /** A frame saved by {@link #renderFrame} for {@link #renderPendingFrame}, and its arguments (the arrays are copies). */
+    private static boolean framePending;
+    private static float pendingPartialTicks;
+    private static DynamicLightFrustum pendingFrustum;
+    private static double pendingX;
+    private static double pendingY;
+    private static double pendingZ;
+    private static final float[] pendingLeft = new float[3];
+    private static final float[] pendingUp = new float[3];
+    private static final float[] pendingView = new float[16];
+    private static final float[] pendingProjection = new float[16];
     private static AWrapperWorld lastWorld;
     /** Whether the field's lamps are in the world's meshes, read by mesher threads. */
     private static volatile boolean fieldActive;
@@ -98,6 +119,7 @@ public final class DynamicLightSystem {
     private static boolean irisResolved;
     private static Object irisApi;
     private static Method irisInUse;
+    private static Method irisShadowPass;
     private static boolean optifineResolved;
     private static Field optifineLoaded;
 
@@ -148,6 +170,10 @@ public final class DynamicLightSystem {
     /**
      * Builds and draws this frame's dynamic lights.  Call once per frame from the world render, after the
      * solid entity pass and before IV's blended pass, also while dynamic lights are off (it then only resets).
+     * When {@link #drawsAfterShaderPack} is true it only saves its arguments (the arrays are copied, the frustum is
+     * kept): the pack's final pass has not run yet and would paint over the light.  The adapter then calls
+     * {@link #renderPendingFrame} once that pass is done and before the hand is drawn, and
+     * {@link #dropPendingFrame} when a new world render starts first.
      *
      * @param frustum the camera frustum
      * @param left    the camera's left vector (unit, world space)
@@ -156,6 +182,56 @@ public final class DynamicLightSystem {
      * @param projection the world render's projection (16 floats, column-major)
      */
     public static void renderFrame(float partialTicks, DynamicLightFrustum frustum, double cameraX, double cameraY, double cameraZ, float[] left, float[] up, float[] view, float[] projection) {
+        if (drawsAfterShaderPack()) {
+            pendingPartialTicks = partialTicks;
+            pendingFrustum = frustum;
+            pendingX = cameraX;
+            pendingY = cameraY;
+            pendingZ = cameraZ;
+            System.arraycopy(left, 0, pendingLeft, 0, 3);
+            System.arraycopy(up, 0, pendingUp, 0, 3);
+            System.arraycopy(view, 0, pendingView, 0, 16);
+            System.arraycopy(projection, 0, pendingProjection, 0, 16);
+            framePending = true;
+            return;
+        }
+        drawFrame(partialTicks, frustum, cameraX, cameraY, cameraZ, left, up, view, projection);
+    }
+
+    /** Whether {@link #renderFrame} saved a frame that {@link #renderPendingFrame} has not drawn yet. */
+    public static boolean hasPendingFrame() {
+        return framePending;
+    }
+
+    /**
+     * Draws the frame {@link #renderFrame} saved, if there is one.  Call it after the shader pack's final pass.  The
+     * frame is cleared first, so it is gone even if drawing throws.
+     */
+    public static void renderPendingFrame() {
+        if (!framePending) {
+            return;
+        }
+        framePending = false;
+        DynamicLightFrustum frustum = pendingFrustum;
+        pendingFrustum = null;
+        drawFrame(pendingPartialTicks, frustum, pendingX, pendingY, pendingZ, pendingLeft, pendingUp, pendingView, pendingProjection);
+    }
+
+    /**
+     * Forgets a saved frame that never reached {@link #renderPendingFrame} (a nested world render, a thrown frame).
+     *
+     * @return whether there was one, so the adapter frees what it kept open for it
+     */
+    public static boolean dropPendingFrame() {
+        if (!framePending) {
+            return false;
+        }
+        framePending = false;
+        pendingFrustum = null;
+        return true;
+    }
+
+    private static void drawFrame(float partialTicks, DynamicLightFrustum frustum, double cameraX, double cameraY, double cameraZ, float[] left, float[] up, float[] view, float[] projection) {
         AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
         try {
             if (world != lastWorld) {
@@ -164,13 +240,14 @@ public final class DynamicLightSystem {
                 voxels.reset();
                 releaseField();
             }
-            shaderPack = world != null && isShaderPackActive();
-            Mode newMode = world == null ? Mode.OFF : computeMode();
+            irisPack = world != null && isIrisPackActive();
+            shaderPack = irisPack || (world != null && isOptifinePackActive());
+            Mode newMode = world == null ? Mode.OFF : computeMode(shaderPack, irisPack);
             if (newMode != Mode.FALLBACK) {
                 releaseField();
             }
             mode = newMode;
-            frame.clear(Math.min(DynamicLightFrame.CAPACITY, Math.max(0, ConfigSystem.client.renderingSettings.DynL_MaxLights.value)));
+            frame.clear(ConfigSystem.client.renderingSettings.DynL_MaxLights.getRangedInt());
             if (newMode == Mode.OFF) {
                 return;
             }
@@ -217,7 +294,7 @@ public final class DynamicLightSystem {
                     InterfaceManager.renderingInterface.markLightSectionsDirty(field.boxBuffer(), count);
                 }
             } else {
-                int cap = Math.min(DynamicLightFrame.CAPACITY, Math.max(0, ConfigSystem.client.renderingSettings.DynL_MaxLights.value));
+                int cap = ConfigSystem.client.renderingSettings.DynL_MaxLights.getRangedInt();
                 budget.select(submitted, cameraX, cameraY, cameraZ, frustum, cap, MERGE_DISTANCE, frame.lights);
                 //The beams of the lights kept, so a beam never stands in the air without its light on the ground.
                 for (DynamicLightEmitter e : frame.lights) {
@@ -239,16 +316,20 @@ public final class DynamicLightSystem {
      * Adds one light for this frame from something with no model object (a particle's {@code light}): the component's
      * cone, reach, corona and intensity over its preset, at world {@code x, y, z} aimed along the unit {@code dx, dy, dz}
      * (zero: a point light), in {@code color} at {@code brightness} (times the component's intensity).  Call it while
-     * the solid pass draws, before {@link #renderFrame}.  Each call is its own light: the budget then merges a burst's point lights within {@link #MERGE_DISTANCE} into one (added intensity,
+     * the solid pass draws, before {@link #renderFrame}.  Each call is its own light: the budget then merges a burst's point lights within {@link #MERGE_DISTANCE} into one (particle lights only) (added intensity,
      * no cap).  At most {@link #PARTICLE_MAX} a frame.
      */
     public static void submitLight(JSONLightBlendableComponent component, double x, double y, double z, float dx, float dy, float dz, ColorRGB color, float brightness, float priority) {
         if (mode == Mode.OFF || !(brightness > 0) || particleLights.size() >= PARTICLE_MAX) {
             return;
         }
+        //An Iris shadow pass draws the particles again from the sun: not a second light.
+        if (shadowPassDrawing) {
+            return;
+        }
         DynamicLightAim.Beam beam = particleBeams.computeIfAbsent(component, c -> DynamicLightAim.authored(c, DynamicLightAim.Preset.of(c.lightPreset)));
         DynamicLightSource source = obtainParticleSource();
-        source.key = (1L << 61) | particleLights.size();
+        source.key = DynamicLightEmitter.PARTICLE_KEY | particleLights.size();
         source.setBeam(beam);
         if (dx * dx + dy * dy + dz * dz > 1e-6F && beam.angle > 0) {
             source.dx = dx;
@@ -442,19 +523,45 @@ public final class DynamicLightSystem {
         }
     }
 
-    private static Mode computeMode() {
+    private static Mode computeMode(boolean pack, boolean iris) {
         if (!ConfigSystem.client.renderingSettings.dynamicLights.value) {
             return Mode.OFF;
         }
-        if (shaderPack) {
-            return ConfigSystem.client.renderingSettings.DynL_ShaderFB.value ? Mode.FALLBACK : Mode.OFF;
+        boolean canDraw = InterfaceManager.renderingInterface.getDynamicLightGL() != null && !DynamicLightRenderer.hasFailed();
+        if (pack) {
+            if (ConfigSystem.client.renderingSettings.DynL_ShaderFB.value) {
+                return Mode.FALLBACK;
+            }
+            //The light pass reads only the main target's colour and depth, which Iris leaves finished after its final
+            //pass.  OptiFine's pipeline is not checked: it keeps the old choice, nothing without the fallback.
+            return iris && packLightPass && canDraw ? Mode.DEFERRED : Mode.OFF;
         }
         //A context the passes cannot run on (no GL 3.2 nor the GL 2.1 extensions), or whose shaders did not build,
         //still lights the world the way a shader pack frame does.
-        if (InterfaceManager.renderingInterface.getDynamicLightGL() == null || DynamicLightRenderer.hasFailed()) {
-            return Mode.FALLBACK;
+        return canDraw ? Mode.DEFERRED : Mode.FALLBACK;
+    }
+
+    /**
+     * A version's adapter calls this once if it can draw the light frame after an Iris or Oculus pack's final pass
+     * ({@link #drawsAfterShaderPack}, then {@link #renderFrame} from a hook that runs after the pack).  Without it a
+     * pack gets the old choice (the fallback with {@code DynL_ShaderFB}, else no dynamic lights), because drawing before
+     * the final pass would be painted over.
+     */
+    public static void enableShaderPackLightPass() {
+        packLightPass = true;
+    }
+
+    /**
+     * Whether this frame's light pass must be drawn after the shader pack's final pass rather than after IV's solid
+     * pass: an Iris/Oculus pack is active and the pass would run (dynamic lights on, {@code DynL_ShaderFB} off, a
+     * context that can draw it).  {@link #renderFrame} asks it itself and then saves the frame for
+     * {@link #renderPendingFrame}; the adapter asks it only for logging.
+     */
+    public static boolean drawsAfterShaderPack() {
+        if (InterfaceManager.clientInterface.getClientWorld() == null || !isIrisPackActive()) {
+            return false;
         }
-        return Mode.DEFERRED;
+        return computeMode(true, true) == Mode.DEFERRED;
     }
 
     /** Takes the field's lamps out of the world's meshes. */
@@ -495,33 +602,88 @@ public final class DynamicLightSystem {
      * Reflection only, resolved once; an absent or failing mod counts as no pack.
      */
     public static boolean isShaderPackActive() {
-        if (!irisResolved) {
-            irisResolved = true;
-            for (String name : new String[] { "net.irisshaders.iris.api.v0.IrisApi", "net.coderbot.iris.api.v0.IrisApi" }) {
-                try {
-                    Class<?> api = findModClass(name);
-                    irisInUse = api.getMethod("isShaderPackInUse");
-                    irisApi = api.getMethod("getInstance").invoke(null);
-                    break;
-                } catch (ClassNotFoundException absent) {
-                    irisInUse = null;
-                } catch (Throwable t) {
-                    irisInUse = null;
-                    InterfaceManager.coreInterface.logError("Iris shader-pack probe failed; treating as no shader pack: " + t);
-                    break;
-                }
-            }
-        }
+        return isIrisPackActive() || isOptifinePackActive();
+    }
+
+    /** Whether an Iris or Oculus shader pack draws the world right now (Iris API v0 {@code isShaderPackInUse}). */
+    public static boolean isIrisPackActive() {
+        resolveIris();
         if (irisInUse != null) {
             try {
-                if ((Boolean) irisInUse.invoke(irisApi)) {
-                    return true;
-                }
+                return (Boolean) irisInUse.invoke(irisApi);
             } catch (Throwable t) {
                 irisInUse = null;
+                irisShadowPass = null;
                 InterfaceManager.coreInterface.logError("Iris shader-pack probe failed; treating as no shader pack: " + t);
             }
         }
+        return false;
+    }
+
+    /** The adapter marks the span in which an Iris/Oculus shadow pass draws IV's scene (one rule: {@link #isDrawingShadowPass}). */
+    public static void setShadowPass(boolean drawing) {
+        shadowPassDrawing = drawing;
+    }
+
+    /**
+     * True while IV's scene is being drawn into a shader pack's shadow map.  The pass is a second draw of the same
+     * frame, so it draws geometry only: no sounds, particle spawns, light submissions, text, instruments, bounding
+     * boxes or other per-frame bookkeeping, which the main draw of the frame already does once.
+     */
+    public static boolean isDrawingShadowPass() {
+        return shadowPassDrawing;
+    }
+
+    /**
+     * Whether an Iris or Oculus pack is drawing its shadow map right now (Iris API v0 {@code isRenderingShadowPass},
+     * present in Oculus 1.20.1 and Iris 1.7 and later): the world is being drawn again from the sun into the shadow
+     * target, with the sun's projection on the render system.  False otherwise, and where the API is absent.  Call it
+     * from the render thread; the first call of either probe resolves the API for good.
+     */
+    public static boolean isShaderShadowPass() {
+        resolveIris();
+        if (irisShadowPass != null) {
+            try {
+                return (Boolean) irisShadowPass.invoke(irisApi);
+            } catch (Throwable t) {
+                irisShadowPass = null;
+                InterfaceManager.coreInterface.logError("Iris shadow-pass probe failed; treating as no shadow pass: " + t);
+            }
+        }
+        return false;
+    }
+
+    private static void resolveIris() {
+        if (irisResolved) {
+            return;
+        }
+        irisResolved = true;
+        for (String name : new String[] { "net.irisshaders.iris.api.v0.IrisApi", "net.coderbot.iris.api.v0.IrisApi" }) {
+            try {
+                Class<?> api = findModClass(name);
+                irisInUse = api.getMethod("isShaderPackInUse");
+                irisApi = api.getMethod("getInstance").invoke(null);
+                try {
+                    irisShadowPass = api.getMethod("isRenderingShadowPass");
+                } catch (NoSuchMethodException old) {
+                    irisShadowPass = null;
+                }
+                break;
+            } catch (ClassNotFoundException absent) {
+                irisInUse = null;
+            } catch (Throwable t) {
+                irisInUse = null;
+                InterfaceManager.coreInterface.logError("Iris shader-pack probe failed; treating as no shader pack: " + t);
+                break;
+            }
+        }
+    }
+
+    /**
+     * OptiFine's pack, through {@code Shaders.shaderPackLoaded}.  Its {@code Shaders.isShadowPass} exists too but is
+     * not used: nothing here has checked what OptiFine puts on the render system in its shadow pass.
+     */
+    private static boolean isOptifinePackActive() {
         if (!optifineResolved) {
             optifineResolved = true;
             try {

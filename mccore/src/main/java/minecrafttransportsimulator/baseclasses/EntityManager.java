@@ -3,6 +3,7 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,6 +28,7 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.systems.CameraSystem;
 
 /**
@@ -47,6 +49,15 @@ public abstract class EntityManager {
     private final ConcurrentHashMap<UUID, PartGun> gunMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, Map<Integer, EntityBullet>> bulletMap = new ConcurrentHashMap<>();
     
+    /**
+     * Packets for an entity this world doesn't have yet, kept in arrival order per entity UUID until the entity is added.
+     * Only filled while {@link AWrapperWorld#isReplayPlayback()}, see {@link #deferPacket}.
+     */
+    private final Map<UUID, List<DeferredPacket>> deferredPackets = new HashMap<>();
+    private static final int MAX_DEFERRED_PACKETS_PER_ENTITY = 4096;
+    /** A deferred packet this old is dropped: the entity it was for isn't coming (it is out of the replay's view). */
+    private static final long MAX_DEFERRED_PACKET_AGE_MILLIS = 15000;
+
     private static final byte hotloadCountdownPreset = 20;
     private static byte hotloadCountdown;
     private static byte hotloadStep;
@@ -115,6 +126,65 @@ public abstract class EntityManager {
     @SuppressWarnings("unchecked")
     public <EntityType extends AEntityA_Base> EntityType getEntity(UUID uniqueUUID) {
         return (EntityType) trackedEntityMap.get(uniqueUUID);
+    }
+
+    /**
+     * Keeps a packet for an entity that isn't in this world yet.  {@link APacketEntity} does this only on a replay
+     * playback ({@link AWrapperWorld#isReplayPlayback()}), where the packet may have beaten its entity.  Delivered by
+     * {@link #handleDeferredPackets()} once the entity exists.  Main thread only, like the packet handling.
+     */
+    public void deferPacket(UUID entityUUID, APacketEntity<?> packet) {
+        List<DeferredPacket> packets = deferredPackets.get(entityUUID);
+        if (packets == null) {
+            packets = new ArrayList<>();
+            deferredPackets.put(entityUUID, packets);
+        } else if (packets.size() >= MAX_DEFERRED_PACKETS_PER_ENTITY) {
+            packets.remove(0);
+        }
+        packets.add(new DeferredPacket(packet));
+    }
+
+    /**
+     * Handles the deferred packets of every entity that exists by now, in arrival order, and drops those that waited
+     * too long.  Delivering one can add entities (a part change) whose own packets are waiting, so this repeats until
+     * nothing is ready.  Called when an entity is built and every client tick, also while a replay is paused.
+     */
+    public void handleDeferredPackets() {
+        if (deferredPackets.isEmpty()) {
+            return;
+        }
+        long oldest = System.currentTimeMillis() - MAX_DEFERRED_PACKET_AGE_MILLIS;
+        List<List<DeferredPacket>> ready = new ArrayList<>();
+        do {
+            ready.clear();
+            Iterator<Map.Entry<UUID, List<DeferredPacket>>> iterator = deferredPackets.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<UUID, List<DeferredPacket>> entry = iterator.next();
+                if (trackedEntityMap.containsKey(entry.getKey())) {
+                    ready.add(entry.getValue());
+                    iterator.remove();
+                } else {
+                    entry.getValue().removeIf(deferred -> deferred.time < oldest);
+                    if (entry.getValue().isEmpty()) {
+                        iterator.remove();
+                    }
+                }
+            }
+            for (List<DeferredPacket> packets : ready) {
+                for (DeferredPacket deferred : packets) {
+                    deferred.packet.handle(getWorld());
+                }
+            }
+        } while (!ready.isEmpty());
+    }
+
+    private static final class DeferredPacket {
+        private final APacketEntity<?> packet;
+        private final long time = System.currentTimeMillis();
+
+        private DeferredPacket(APacketEntity<?> packet) {
+            this.packet = packet;
+        }
     }
 
     /**

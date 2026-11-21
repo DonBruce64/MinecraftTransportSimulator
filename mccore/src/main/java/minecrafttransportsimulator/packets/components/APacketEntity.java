@@ -36,6 +36,10 @@ public abstract class APacketEntity<EntityType extends AEntityA_Base> extends AP
     @Override
     public void handle(AWrapperWorld world) {
         EntityType entity = world.getEntity(uniqueUUID);
+        if (entity == null && world.isClient() && world.isReplayPlayback()) {
+            //A replay can deliver this before the entity, see AWrapperWorld#isReplayPlayback.
+            world.deferPacket(uniqueUUID, this);
+        }
         if (entity != null && handle(world, entity) && !world.isClient()) {
             InterfaceManager.packetInterface.sendToAllClients(this);
             if (entity instanceof ATileEntityBase) {

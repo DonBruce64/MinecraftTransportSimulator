@@ -24,19 +24,16 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
 import minecrafttransportsimulator.rendering.RenderableVertices;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
- * Screen-space markers for part slots.  Markers shrink and fade with distance, while
- * interaction reach continues to follow the slot's actual world-space hitbox.
+ * Screen-space markers for part slots.  Markers shrink and fade with distance up to the {@code IconRange}
+ * client config; interaction reach continues to follow the slot's actual world-space hitbox.
  */
 public class GUIComponentPartSlotMarkers extends AGUIComponent {
     private static final int FLOATS_PER_VERTEX = 8;
     private static final int VERTICES_PER_QUAD = 6;
-    private static final double SCANNER_REACH = 5.0D;
-    static final double SCANNER_REACH_SQUARED = SCANNER_REACH * SCANNER_REACH;
-    private static final double INTERACTION_REACH = 3.5D;
-    private static final double INTERACTION_REACH_SQUARED = INTERACTION_REACH * INTERACTION_REACH;
     private static final double MARKER_RADIUS = 6.0D;
     private static final double SCANNER_HOVER_SCALE = 1.4D;
     private static final double MARKER_FADE_START = 1.5D;
@@ -122,7 +119,7 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
             return;
         }
 
-        double reachSquared = holdingScanner ? SCANNER_REACH_SQUARED : INTERACTION_REACH_SQUARED;
+        double reachSquared = getIconReachSquared();
 
         //Empty slots retain their placement hitboxes in this map even when they are unavailable.
         if (!holdingRemovalTool) {
@@ -276,8 +273,19 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         RenderText.drawText(markerName, null, labelPosition, ColorRGB.WHITE, TextAlignment.CENTERED, 0.75F * alpha, true, wrapWidth, true, gui.worldLightValue, alpha);
     }
 
+    /**
+     * Squared distance from the eye within which a marker is drawn and the scanner may target its slot
+     * ({@code IconRange}, blocks).  0 or less means no marker at all, since the distance test is {@code >=}.
+     */
+    static double getIconReachSquared() {
+        double reach = ConfigSystem.client.controlSettings.IconRange.getRangedInt();
+        return reach * reach;
+    }
+
     private static float getMarkerScale(double distance, double reach) {
-        double fadeProgress = Math.max(0.0D, Math.min(1.0D, (distance - MARKER_FADE_START) / (reach - MARKER_FADE_START)));
+        //A short reach shortens the full-size zone with it, so the fade never divides by zero.
+        double fadeStart = Math.min(MARKER_FADE_START, reach / 2.0D);
+        double fadeProgress = Math.max(0.0D, Math.min(1.0D, (distance - fadeStart) / (reach - fadeStart)));
         return (float) (1.0D - fadeProgress * fadeProgress * (3.0D - 2.0D * fadeProgress));
     }
 

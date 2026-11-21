@@ -132,22 +132,35 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
             }
         } else {
             //If we have NBT, and haven't loaded it, do so now.
-            if (!loadedFromSavedNBT && loadFromSavedNBT) {
-                WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
-                try {
-                    WrapperNBT data = new WrapperNBT(lastLoadedNBT);
-                    entity = entityMap.get(lastLoadedNBT.getString("entityid")).restoreEntityFromData(worldWrapper, data);
-                    entity.world.addEntity(entity);
-                    if (entity instanceof AEntityF_Multipart) {
-                        ((AEntityF_Multipart<?>) entity).addPartsPostAddition(null, data);
-                    }
-                    loadedFromSavedNBT = true;
-                    lastLoadedNBT = null;
-                } catch (Exception e) {
-                    InterfaceManager.coreInterface.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
-                    InterfaceManager.coreInterface.logError(e.getMessage());
-                    setDead();
+            loadEntity();
+        }
+    }
+
+    @Override
+    protected void onStateReceived() {
+        loadEntity();
+    }
+
+    /**
+     * Builds the mccore entity from the loaded NBT, if there is some that wasn't used yet.  Servers do it on the first tick,
+     * clients as soon as the state arrives.
+     */
+    private void loadEntity() {
+        if (entity == null && !loadedFromSavedNBT && loadFromSavedNBT) {
+            WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
+            try {
+                WrapperNBT data = new WrapperNBT(lastLoadedNBT);
+                entity = entityMap.get(lastLoadedNBT.getString("entityid")).restoreEntityFromData(worldWrapper, data);
+                entity.world.addEntity(entity);
+                if (entity instanceof AEntityF_Multipart) {
+                    ((AEntityF_Multipart<?>) entity).addPartsPostAddition(null, data);
                 }
+                loadedFromSavedNBT = true;
+                lastLoadedNBT = null;
+            } catch (Exception e) {
+                InterfaceManager.coreInterface.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
+                InterfaceManager.coreInterface.logError(e.getMessage());
+                setDead();
             }
         }
     }
