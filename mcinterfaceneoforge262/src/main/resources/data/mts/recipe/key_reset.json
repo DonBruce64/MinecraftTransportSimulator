@@ -1,0 +1,9 @@
+{
+    "type": "minecraft:crafting_shapeless",
+    "ingredients": [
+        "mts:mts.key"
+    ],
+    "result": {
+        "id": "mts:mts.key"
+    }
+}
