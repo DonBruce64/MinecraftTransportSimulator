@@ -8,6 +8,7 @@
 				"common.EntityMixin"
 		],
     "client": [
+        "client.GlStateManagerMixin",
         "client.RenderInfoInvokerMixin",
         "client.ParticleManagerMixin",
 				"client.ClientPlayNetHandlerMixin",

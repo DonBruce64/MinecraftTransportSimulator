@@ -918,10 +918,12 @@ public class InterfaceRender implements IInterfaceRender {
      * the object brighter based on the object's alpha value.  More alpha means more bright.
      */
     private static final RenderState.TransparencyState BRIGHTNESS_TRANSPARENCY = new RenderState.TransparencyState("brightness_transparency", () -> {
+        BrightnessBlending.setActive(!renderingGUI && DynamicLightSystem.isShaderPackColorPass());
         RenderSystem.enableBlend();
         RenderSystem.depthMask(false);
         RenderSystem.blendFunc(GlStateManager.SourceFactor.DST_COLOR, GlStateManager.DestFactor.SRC_ALPHA);
     }, () -> {
+        BrightnessBlending.setActive(false);
         RenderSystem.disableBlend();
         RenderSystem.depthMask(true);
         RenderSystem.defaultBlendFunc();

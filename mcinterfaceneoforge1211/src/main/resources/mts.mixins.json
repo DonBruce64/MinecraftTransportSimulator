@@ -19,6 +19,7 @@
         "client.MultiPackResourceManagerMixin",
         "client.OptionInstanceMixin",
         "client.ParticleEngineMixin",
+        "client.VertexBufferMixin",
         "client.VillagerModelMixin"
     ],
     "mixins": [

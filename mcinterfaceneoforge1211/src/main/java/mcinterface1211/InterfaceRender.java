@@ -265,7 +265,7 @@ public class InterfaceRender implements IInterfaceRender {
             
                 //Shader packs extend entity vertices.  Rebuild when toggling packs changes
                 //the layout, but keep the cache across main and shadow passes of one pack.
-                VertexFormat shaderFormat = getShader(data.lightingMode.disableTextureShadows, data.lightingMode.disableWorldLighting, data.isTranslucent || data.enableBrightBlending, false).getVertexFormat();
+                VertexFormat shaderFormat = getShader(data.lightingMode.disableTextureShadows, data.lightingMode.disableWorldLighting, data.isTranslucent || data.enableBrightBlending, data.writeDepth, false).getVertexFormat();
                 if (changedSinceLastRender || bufferData.shaderFormat != shaderFormat) {
                     bufferData.isReady = false;
                 }
@@ -454,10 +454,11 @@ public class InterfaceRender implements IInterfaceRender {
         }
     }
 
-    private static ShaderInstance getShader(boolean noShadows, boolean fullBright, boolean translucent, boolean gui) {
+    private static ShaderInstance getShader(boolean noShadows, boolean fullBright, boolean translucent, boolean writeDepth, boolean gui) {
         if (!gui) {
             ShaderInstance shader;
-            if (noShadows && fullBright) {
+            //Depth-writing translucent surfaces use alpha blending with shader packs, even when lit.
+            if (noShadows && fullBright && !(translucent && writeDepth)) {
                 shader = translucent ? GameRenderer.getRendertypeEntityTranslucentEmissiveShader() : GameRenderer.getRendertypeEyesShader();
             } else if (translucent) {
                 //Shader packs give translucent geometry its own fog and compositing pass.
@@ -471,7 +472,8 @@ public class InterfaceRender implements IInterfaceRender {
                 return shader;
             }
         }
-        return noShadows ? (fullBright ? entityLightsShader : entityCutoutNoshadowsShader) : (translucent ? GameRenderer.getRendertypeEntitySolidShader() : GameRenderer.getRendertypeEntityCutoutShader());
+        //A transparent texel must be discarded before it can write depth.
+        return noShadows ? (fullBright ? entityLightsShader : entityCutoutNoshadowsShader) : (translucent && !writeDepth ? GameRenderer.getRendertypeEntitySolidShader() : GameRenderer.getRendertypeEntityCutoutShader());
     }
 
     private static class CustomRenderType extends RenderType {
@@ -489,8 +491,9 @@ public class InterfaceRender implements IInterfaceRender {
             final boolean noShadows = data.lightingMode.disableTextureShadows;
             final boolean fullBright = data.lightingMode.disableWorldLighting;
             final boolean translucent = data.isTranslucent || data.enableBrightBlending;
+            final boolean writeDepth = data.writeDepth;
             final boolean gui = renderingGUI;
-            stateBuilder.setShaderState(new RenderStateShard.ShaderStateShard(() -> getShader(noShadows, fullBright, translucent, gui)));
+            stateBuilder.setShaderState(new RenderStateShard.ShaderStateShard(() -> getShader(noShadows, fullBright, translucent, writeDepth, gui)));
 
             //Set transparency.
             if (data.enableBrightBlending) {
@@ -1001,10 +1004,12 @@ public class InterfaceRender implements IInterfaceRender {
      * the object brighter based on the object's alpha value.  More alpha means more bright.
      */
     private static final RenderStateShard.TransparencyStateShard BRIGHTNESS_TRANSPARENCY = new RenderStateShard.TransparencyStateShard("brightness_transparency", () -> {
+        BrightnessBlending.setActive(!renderingGUI && DynamicLightSystem.isShaderPackColorPass());
         RenderSystem.enableBlend();
         RenderSystem.depthMask(false);
         RenderSystem.blendFunc(GlStateManager.SourceFactor.DST_COLOR, GlStateManager.DestFactor.SRC_ALPHA);
     }, () -> {
+        BrightnessBlending.setActive(false);
         RenderSystem.disableBlend();
         RenderSystem.depthMask(true);
         RenderSystem.defaultBlendFunc();

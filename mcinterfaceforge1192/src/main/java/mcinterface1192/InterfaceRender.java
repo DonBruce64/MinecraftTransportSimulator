@@ -268,7 +268,7 @@ public class InterfaceRender implements IInterfaceRender {
                 BufferData bufferData = buffers.computeIfAbsent(data, k -> new BufferData(renderType, data));
             
                 //Shader packs change the vertex layout, including when toggled without changing the model.
-                VertexFormat shaderFormat = getShader(data.lightingMode.disableTextureShadows, data.lightingMode.disableWorldLighting, data.isTranslucent || data.enableBrightBlending, false, false, null).getVertexFormat();
+                VertexFormat shaderFormat = getShader(data.lightingMode.disableTextureShadows, data.lightingMode.disableWorldLighting, data.isTranslucent || data.enableBrightBlending, data.writeDepth, false, false, null).getVertexFormat();
                 //Reset buffer if it's not ready.
                 if (changedSinceLastRender || bufferData.format != shaderFormat) {
                     bufferData.builder.clear();
@@ -480,11 +480,12 @@ public class InterfaceRender implements IInterfaceRender {
         }
     }
 
-    private static ShaderInstance getShader(boolean noShadows, boolean fullBright, boolean translucent, boolean particles, boolean gui, RenderStateShard.TransparencyStateShard transparency) {
+    private static ShaderInstance getShader(boolean noShadows, boolean fullBright, boolean translucent, boolean writeDepth, boolean particles, boolean gui, RenderStateShard.TransparencyStateShard transparency) {
         if (!gui) {
             //Resolve each draw so shader pack reloads do not leave a suppressed custom shader cached.
             ShaderInstance nativeShader;
-            if (noShadows && fullBright) {
+            //Depth-writing translucent surfaces use alpha blending with shader packs, even when lit.
+            if (noShadows && fullBright && !(translucent && writeDepth)) {
                 nativeShader = translucent ? GameRenderer.getRendertypeEntityTranslucentEmissiveShader() : GameRenderer.getRendertypeEyesShader();
             } else if (translucent) {
                 nativeShader = GameRenderer.getRendertypeEntityTranslucentShader();
@@ -500,7 +501,8 @@ public class InterfaceRender implements IInterfaceRender {
             shader.transparency = transparency;
             return shader;
         }
-        return noShadows ? (fullBright ? entityLightsShader : entityCutoutNoshadowsShader) : (translucent ? GameRenderer.getRendertypeEntitySolidShader() : GameRenderer.getRendertypeEntityCutoutShader());
+        //A transparent texel must be discarded before it can write depth.
+        return noShadows ? (fullBright ? entityLightsShader : entityCutoutNoshadowsShader) : (translucent && !writeDepth ? GameRenderer.getRendertypeEntitySolidShader() : GameRenderer.getRendertypeEntityCutoutShader());
     }
 
     private static class CustomRenderType extends RenderType {
@@ -516,11 +518,12 @@ public class InterfaceRender implements IInterfaceRender {
             final boolean disableTextureShadows = data.lightingMode.disableTextureShadows;
             final boolean disableWorldLighting = data.lightingMode.disableWorldLighting;
             final boolean translucent = data.isTranslucent || data.enableBrightBlending;
+            final boolean writeDepth = data.writeDepth;
             final boolean particles = renderingParticles;
             final boolean gui = renderingGUI;
             final RenderStateShard.TransparencyStateShard transparency = data.enableBrightBlending ? BRIGHTNESS_TRANSPARENCY : data.isTranslucent ? (particles ? TRANSLUCENT_TRANSPARENCY : data.writeDepth ? DEPTH_WRITING_TRANSLUCENT_TRANSPARENCY : PROPER_TRANSLUCENT_TRANSPARENCY) : NO_TRANSPARENCY;
             stateBuilder.setTransparencyState(transparency);
-            stateBuilder.setShaderState(new RenderStateShard.ShaderStateShard(() -> getShader(disableTextureShadows, disableWorldLighting, translucent, particles, gui, transparency)));
+            stateBuilder.setShaderState(new RenderStateShard.ShaderStateShard(() -> getShader(disableTextureShadows, disableWorldLighting, translucent, writeDepth, particles, gui, transparency)));
 
             //Texture is just based on what is specified.
             stateBuilder.setTextureState(data.texture != null ? getTexture(data.texture) : NO_TEXTURE);
@@ -1018,10 +1021,12 @@ public class InterfaceRender implements IInterfaceRender {
      * the object brighter based on the object's alpha value.  More alpha means more bright.
      */
     private static final RenderStateShard.TransparencyStateShard BRIGHTNESS_TRANSPARENCY = new RenderStateShard.TransparencyStateShard("brightness_transparency", () -> {
+        BrightnessBlending.setActive(!renderingGUI && DynamicLightSystem.isShaderPackColorPass());
         RenderSystem.enableBlend();
         RenderSystem.depthMask(false);
         RenderSystem.blendFunc(GlStateManager.SourceFactor.DST_COLOR, GlStateManager.DestFactor.SRC_ALPHA);
     }, () -> {
+        BrightnessBlending.setActive(false);
         RenderSystem.disableBlend();
         RenderSystem.depthMask(true);
         RenderSystem.defaultBlendFunc();

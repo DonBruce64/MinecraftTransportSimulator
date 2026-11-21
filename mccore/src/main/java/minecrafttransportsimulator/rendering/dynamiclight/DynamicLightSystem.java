@@ -98,8 +98,10 @@ public final class DynamicLightSystem {
     private static boolean irisResolved;
     private static Object irisApi;
     private static Method irisInUse;
+    private static Method irisShadowPass;
     private static boolean optifineResolved;
     private static Field optifineLoaded;
+    private static Field optifineShadowPass;
 
     private DynamicLightSystem() {
     }
@@ -503,6 +505,11 @@ public final class DynamicLightSystem {
                     Class<?> api = findModClass(name);
                     irisInUse = api.getMethod("isShaderPackInUse");
                     irisApi = api.getMethod("getInstance").invoke(null);
+                    try {
+                        irisShadowPass = api.getMethod("isRenderingShadowPass");
+                    } catch (NoSuchMethodException absent) {
+                        irisShadowPass = null;
+                    }
                     break;
                 } catch (ClassNotFoundException absent) {
                     irisInUse = null;
@@ -526,7 +533,13 @@ public final class DynamicLightSystem {
         if (!optifineResolved) {
             optifineResolved = true;
             try {
-                optifineLoaded = findModClass("net.optifine.shaders.Shaders").getField("shaderPackLoaded");
+                Class<?> shaders = findModClass("net.optifine.shaders.Shaders");
+                optifineLoaded = shaders.getField("shaderPackLoaded");
+                try {
+                    optifineShadowPass = shaders.getField("isShadowPass");
+                } catch (NoSuchFieldException absent) {
+                    optifineShadowPass = null;
+                }
             } catch (Throwable absent) {
                 optifineLoaded = null;
             }
@@ -539,6 +552,20 @@ public final class DynamicLightSystem {
             }
         }
         return false;
+    }
+
+    /** Whether a shader pack is drawing color, outside its shadow map pass. */
+    public static boolean isShaderPackColorPass() {
+        if (!isShaderPackActive()) {
+            return false;
+        }
+        try {
+            boolean irisShadow = irisShadowPass != null && (Boolean) irisShadowPass.invoke(irisApi);
+            boolean optifineShadow = optifineShadowPass != null && optifineShadowPass.getBoolean(null);
+            return !irisShadow && !optifineShadow;
+        } catch (ReflectiveOperationException unreadable) {
+            return false;
+        }
     }
 
     /**

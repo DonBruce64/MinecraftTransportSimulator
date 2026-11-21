@@ -4,6 +4,7 @@
     "package": "mcinterface1192.mixin",
     "compatibilityLevel": "JAVA_17",
 		"client": [
+				"client.GlStateManagerMixin",
 				"client.CameraMixin",
 				"client.ClientLevelMixin",
 				"client.CompositeRenderTypeMixin",
