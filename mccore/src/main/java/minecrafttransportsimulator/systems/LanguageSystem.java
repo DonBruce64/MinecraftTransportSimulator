@@ -344,6 +344,8 @@ public class LanguageSystem {
 
     public static final LanguageEntry GUI_PACKMISSING_TITLE = new LanguageEntry("gui.packmissing.title", "!ERROR!");
     public static final LanguageEntry GUI_PACKMISSING_TEXT = new LanguageEntry("gui.packmissing.text", "MTS has detected that it has been started without a content pack.  This will result in NO vehicles being present!  If you do NOT have a content pack yet installed, please see the Curse page for this mod for a link to one.  If you DID download a pack ensure that it is the same place as all your other mods.  If the pack is in that location, and you are still seeing this message, ensure you are running the correct pack version.");
+    public static final LanguageEntry GUI_TARGET_TRACKING = new LanguageEntry("gui.target.tracking", "TRACKING");
+    public static final LanguageEntry GUI_TARGET_LOCKED = new LanguageEntry("gui.target.locked", "LOCKED");
 
     public static final LanguageEntry INTERACT_KEY_LOCK = new LanguageEntry("interact.key.lock", "Vehicle locked!");
     public static final LanguageEntry INTERACT_KEY_UNLOCK = new LanguageEntry("interact.key.unlock", "Vehicle unlocked!");
