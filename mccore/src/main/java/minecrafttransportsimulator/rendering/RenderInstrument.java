@@ -118,6 +118,8 @@ public final class RenderInstrument {
                         } else {
                             renderable.clearTranslucentOverride();
                         }
+                        //World instruments must cover particles behind their textured surfaces.
+                        renderable.setDepthWriting(!onGUI && renderable.isTranslucent);
                         if (renderLit) {
                             renderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
                         } else {

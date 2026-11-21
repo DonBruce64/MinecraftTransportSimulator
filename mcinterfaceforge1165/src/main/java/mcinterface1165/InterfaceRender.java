@@ -105,11 +105,12 @@ public class InterfaceRender implements IInterfaceRender {
 
     private static RenderState.TextureState MISSING_STATE;
     private static RenderState.TextureState BLOCK_STATE;
-    private static MatrixStack matrixStack;
+    static MatrixStack matrixStack;
     public static Matrix4f projectionMatrix;
-    private static IRenderTypeBuffer renderBuffer;
+    static IRenderTypeBuffer renderBuffer;
     public static Point3D renderCameraOffset = new Point3D();
     private static boolean renderingGUI;
+    static boolean renderingParticles;
     private static float[] matrixConvertArray = new float[16];
 
     @Override
@@ -151,6 +152,9 @@ public class InterfaceRender implements IInterfaceRender {
     
     @Override
     public void renderVertices(RenderableData data, boolean changedSinceLastRender) {
+        if (renderingParticles && BuilderParticle.queueTranslucent(data)) {
+            return;
+        }
         matrixStack.pushPose();
         Matrix4f matrix4f = convertMatrix4f(data.transform);
         MatrixStack.Entry stackEntry = matrixStack.last();
@@ -166,9 +170,9 @@ public class InterfaceRender implements IInterfaceRender {
             //Rewind buffer for next read.
             data.vertexObject.vertices.rewind();
         } else {
-            String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending + data.writeDepth;
+            String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending + data.writeDepth + renderingParticles;
             final RenderType renderType;
-            if (data.vertexObject.cacheVertices && !renderingGUI && ConfigSystem.client.renderingSettings.renderingMode.value != 2) {
+            if (data.vertexObject.cacheVertices && !renderingGUI && !renderingParticles && ConfigSystem.client.renderingSettings.renderingMode.value != 2) {
             	//Get the render type and data buffer for this entity.
                 renderType = renderTypes.computeIfAbsent(typeID, k -> CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 2097152, true, data.isTranslucent, CustomRenderType.createForObject(data).createCompositeState(false)));
                 BufferData buffer = buffers.computeIfAbsent(data, k -> new BufferData(renderType, data));
@@ -219,7 +223,7 @@ public class InterfaceRender implements IInterfaceRender {
                 }
                 renders.add(new RenderData(stackEntry.pose(), buffer));
             } else {
-                renderType = renderTypes.computeIfAbsent(typeID, k -> CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 256, true, data.isTranslucent, CustomRenderType.createForObject(data).createCompositeState(false)));
+                renderType = renderTypes.computeIfAbsent(typeID, k -> CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 256, true, data.isTranslucent && !renderingParticles, CustomRenderType.createForObject(data).createCompositeState(false)));
                 IVertexBuilder buffer = renderBuffer.getBuffer(renderType);
                 
                 //Now populate the state we requested.
@@ -807,7 +811,7 @@ public class InterfaceRender implements IInterfaceRender {
 
             stateBuilder.setTextureState(data.texture != null ? getTexture(data.texture) : NO_TEXTURE);
             //Transparency is also blend function, so we need to override that with a custom one if we are doing bright blending.
-            stateBuilder.setTransparencyState(data.enableBrightBlending ? BRIGHTNESS_TRANSPARENCY : (data.isTranslucent ? (data.writeDepth ? DEPTH_WRITING_TRANSLUCENT_TRANSPARENCY : PROPER_TRANSLUCENT_TRANSPARENCY) : RenderType.NO_TRANSPARENCY));
+            stateBuilder.setTransparencyState(data.enableBrightBlending ? BRIGHTNESS_TRANSPARENCY : (data.isTranslucent ? (renderingParticles ? TRANSLUCENT_TRANSPARENCY : data.writeDepth ? DEPTH_WRITING_TRANSLUCENT_TRANSPARENCY : PROPER_TRANSLUCENT_TRANSPARENCY) : RenderType.NO_TRANSPARENCY));
             //Diffuse lighting is the ambient lighting that auto-shades models.
             stateBuilder.setDiffuseLightingState(data.lightingMode.disableTextureShadows ? NO_DIFFUSE_LIGHTING : DIFFUSE_LIGHTING);
             //Always smooth shading.
@@ -826,8 +830,12 @@ public class InterfaceRender implements IInterfaceRender {
             //stateBuilder.setFogState(NO_FOG);
             //No layering.
             //stateBuilder.setLayeringState(NO_LAYERING);
-            //Target is always main.
-            //stateBuilder.setOutputState(MAIN_TARGET);
+            if (renderingParticles) {
+                stateBuilder.setOutputState(PARTICLES_TARGET);
+                if (data.isTranslucent || data.enableBrightBlending) {
+                    stateBuilder.setWriteMaskState(COLOR_WRITE);
+                }
+            }
             //Default texture is fine.
             //stateBuilder.setTexturingState(DEFAULT_TEXTURING);
             //Not sure what this does, but it should be fine as-is?
@@ -910,10 +918,12 @@ public class InterfaceRender implements IInterfaceRender {
      * the object brighter based on the object's alpha value.  More alpha means more bright.
      */
     private static final RenderState.TransparencyState BRIGHTNESS_TRANSPARENCY = new RenderState.TransparencyState("brightness_transparency", () -> {
+        BrightnessBlending.setActive(!renderingGUI && DynamicLightSystem.isShaderPackColorPass());
         RenderSystem.enableBlend();
         RenderSystem.depthMask(false);
         RenderSystem.blendFunc(GlStateManager.SourceFactor.DST_COLOR, GlStateManager.DestFactor.SRC_ALPHA);
     }, () -> {
+        BrightnessBlending.setActive(false);
         RenderSystem.disableBlend();
         RenderSystem.depthMask(true);
         RenderSystem.defaultBlendFunc();

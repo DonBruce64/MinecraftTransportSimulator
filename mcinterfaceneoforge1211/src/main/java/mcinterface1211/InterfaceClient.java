@@ -22,6 +22,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.particles.ParticleObject;
 import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
@@ -107,6 +108,14 @@ public class InterfaceClient implements IInterfaceClient {
         preloadIndex = end;
         if (preloadIndex >= modelsToPreload.size()) {
             InterfaceManager.coreInterface.logError("MTS model preload complete: " + modelsToPreload.size() + " models cached.");
+        }
+    }
+
+    @Override
+    public void spawnParticle(ParticleObject particle) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (particle.isValid && minecraft.level != null && particle.world == WrapperWorld.getWrapperFor(minecraft.level)) {
+            minecraft.particleEngine.add(new WrapperParticle(minecraft.level, particle));
         }
     }
 

@@ -69,10 +69,10 @@ public abstract class LevelRendererMixin {
     }
 
     /**
-     * Need this to render translucent things at the right time.  MC doesn't properly support this natively.
-     * Instead, it tries to render translucent things with the regular things and fouls the depth buffer.
+     * Render blended models and lights before translucent terrain and particles.
+     * Drawing at TAIL would overlay nearer particles, which do not write depth.
      */
-    @Inject(method = "renderLevel", at = @At(value = "TAIL"))
+    @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderType;translucent()Lnet/minecraft/client/renderer/RenderType;"))
     public void inject_renderLevelBlended(DeltaTracker pDeltaTracker, boolean pDrawBlockOutline, Camera pCamera, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pModelViewMatrix, Matrix4f pProjection, CallbackInfo ci) {
         float pPartialTicks = pDeltaTracker.getGameTimeDeltaPartialTick(false);
         MultiBufferSource.BufferSource irendertypebuffer$impl = renderBuffers.bufferSource();
@@ -82,13 +82,11 @@ public abstract class LevelRendererMixin {
         InterfaceRender.matrixStack = new PoseStack();
         InterfaceRender.renderBuffer = irendertypebuffer$impl;
 
-        //In 1.21+, the view matrix (frustumMatrix) has already been popped from RenderSystem's
-        //model-view stack by the time TAIL fires. We need to re-apply it so our rendering
-        //has the correct camera transform.
-        org.joml.Matrix4fStack matrix4fstack = com.mojang.blaze3d.systems.RenderSystem.getModelViewStack();
-        matrix4fstack.pushMatrix();
-        matrix4fstack.mul(pModelViewMatrix);
-        com.mojang.blaze3d.systems.RenderSystem.applyModelViewMatrix();
+        //The camera view is already applied at this stage.  Fabulous's preceding depth
+        //copy unbinds the framebuffer; bright blending must use the main scene as its destination.
+        if (Minecraft.useShaderTransparency()) {
+            Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+        }
 
         if (ConfigSystem.settings.general.forceRenderLastSolid.value) {
             InterfaceRender.doRenderCall(false, pPartialTicks);
@@ -98,10 +96,6 @@ public abstract class LevelRendererMixin {
         InterfaceRender.doRenderCall(true, pPartialTicks);
         //Need to end batch after drawing translucents, otherwise they'll get other matrices applied.
         irendertypebuffer$impl.endBatch();
-
-        //Pop the view matrix we pushed.
-        matrix4fstack.popMatrix();
-        com.mojang.blaze3d.systems.RenderSystem.applyModelViewMatrix();
     }
 
     /**

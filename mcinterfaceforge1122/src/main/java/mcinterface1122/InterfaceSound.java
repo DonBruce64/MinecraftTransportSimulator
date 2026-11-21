@@ -270,7 +270,7 @@ public class InterfaceSound implements IInterfaceSound {
                 //Set properties and bind data buffer to source.
                 AL10.alGetError();
                 AL10.alSourcei(sound.sourceIndex, AL10.AL_LOOPING, sound.soundDef != null && sound.soundDef.looping ? AL10.AL_TRUE : AL10.AL_FALSE);
-                AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.entity.position.x, (float) sound.entity.position.y, (float) sound.entity.position.z);
+                AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.position.x, (float) sound.position.y, (float) sound.position.z);
                 AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, dataBufferPointer);
 
                 //Done setting up buffer.  Queue sound to start playing.

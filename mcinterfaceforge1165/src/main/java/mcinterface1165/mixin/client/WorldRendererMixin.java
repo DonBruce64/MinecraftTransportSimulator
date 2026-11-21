@@ -45,11 +45,15 @@ public abstract class WorldRendererMixin {
     }
 
     /**
-     * Need this to render translucent things at the right time.  MC doesn't properly support this natively.
-     * Instead, it tries to render translucent things with the regular things and fouls the depth buffer.
+     * Render blended models and lights before translucent terrain and particles.
+     * Drawing at TAIL would overlay nearer particles, which do not write depth.
      */
-    @Inject(method = "renderLevel", at = @At(value = "TAIL"))
+    @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderType;translucent()Lnet/minecraft/client/renderer/RenderType;"))
     public void inject_renderLevelBlended(MatrixStack pMatrixStack, float pPartialTicks, long pFinishTimeNano, boolean pDrawBlockOutline, ActiveRenderInfo pActiveRenderInfo, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pProjection, CallbackInfo ci) {
+        //Fabulous's preceding depth copy unbinds the framebuffer; bright blending needs the main scene.
+        if (Minecraft.useShaderTransparency()) {
+            Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+        }
         InterfaceRender.projectionMatrix = pProjection;
         IRenderTypeBuffer.Impl irendertypebuffer$impl = renderBuffers.bufferSource();
         //Set camera offset point for later.
