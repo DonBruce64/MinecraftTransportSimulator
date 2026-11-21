@@ -21,6 +21,10 @@ config = "mts.mixins.json"
 [[mixins]]
 config = "mts-sodium.mixins.json"
 
+# Optional: plugin applies it only if Flasback is installed.
+[[mixins]]
+config = "mts-flashback.mixins.json"
+
 [[dependencies.mts]]
     modId = "neoforge"
     type = "required"

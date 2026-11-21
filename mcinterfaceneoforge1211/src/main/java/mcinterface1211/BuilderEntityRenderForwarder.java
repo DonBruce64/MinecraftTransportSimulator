@@ -37,6 +37,13 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
     @Override
     public void baseTick() {
         super.baseTick();
+        if (level().isClientSide && FlashbackCompat.isReplayClient()) {
+            //Set the Render Forwarder only for the Replay Viewer
+            if (!FlashbackCompat.isLocalRenderForwarder(this)) {
+                discard();
+            }
+            return;
+        }
         if (playerFollowing != null && playerFollowing.level() == this.level() && playerFollowing.isAlive()) {
             //Need to move the fake entity forwards to account for the partial ticks interpolation MC does.
             //If we don't do this, and we move faster than 1 block per tick, we'll get flickering.

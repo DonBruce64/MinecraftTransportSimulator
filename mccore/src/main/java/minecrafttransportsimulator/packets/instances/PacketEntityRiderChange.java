@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
 /**
@@ -50,6 +51,9 @@ public class PacketEntityRiderChange extends APacketEntityInteract<AEntityB_Exis
 
     @Override
     protected boolean handle(AWrapperWorld world, AEntityB_Existing entity, IWrapperEntity rider) {
+        if (world.isClient() && InterfaceManager.clientInterface.isReplayPlayback()) {
+            return false;
+        }
         if (mount) {
             entity.setRider(rider, facesForwards);
         } else {

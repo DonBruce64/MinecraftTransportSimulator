@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.neoforged.neoforge.client.event.sound.SoundEngineLoadEvent;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.openal.AL10;
 import org.lwjgl.openal.ALC;
@@ -31,6 +32,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import org.lwjgl.openal.ALC10;
 
 /**
  * Interface for the sound system.  This is responsible for playing sound from vehicles/interactions.
@@ -152,16 +154,17 @@ public class InterfaceSound implements IInterfaceSound {
             }
 
             if (state == AL10.AL_PLAYING) {
-                if (sound.stopSound) {
+                if (sound.stopSound || FlashbackCompat.isReplayFrozen()) {
                     AL10.alSourceStop(sound.sourceIndex);
                 } else {
                     //Update position and volume, and block rolloff.
                     sound.updatePosition();
                     AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.position.x, (float) sound.position.y, (float) sound.position.z);
+                    boolean replayMuted = FlashbackCompat.isVehicleMuted(sound.entity);
                     if (sound.radio == null) {
-                        AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume * ConfigSystem.client.controlSettings.soundVolume.value);
+                        AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, replayMuted ? 0F : sound.volume * ConfigSystem.client.controlSettings.soundVolume.value);
                     } else {
-                        AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume * ConfigSystem.client.controlSettings.radioVolume.value);
+                        AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, replayMuted ? 0F : sound.volume * ConfigSystem.client.controlSettings.radioVolume.value);
                     }
                     AL10.alSourcef(sound.sourceIndex, AL10.AL_ROLLOFF_FACTOR, 0);
 
@@ -469,5 +472,27 @@ public class InterfaceSound implements IInterfaceSound {
             isSystemPaused = false;
             update();
         }
+    }
+
+    public static void resetForNewAudioDevice() {
+        InterfaceManager.coreInterface.logError("IV ADUIO RESET ctx=" + ALC10.alcGetCurrentContext());
+        for (SoundInstance sound : playingSounds) {
+            sound.entity.sounds.remove(sound);
+        }
+        for (SoundInstance sound : queuedSounds) {
+            sound.entity.sounds.remove(sound);
+        }
+        playingSounds.clear();
+        queuedSounds.clear();
+        pausedRadioSounds.clear();
+        dataSourceBuffers.clear();
+        sourceGetFailures = 0;
+        postedSoundWarning = false;
+        isSystemPaused = false;
+    }
+
+    @SubscribeEvent
+    public static void onSoundEngineLoad(SoundEngineLoadEvent event) {
+        InterfaceSound.resetForNewAudioDevice();
     }
 }
