@@ -2,6 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.guis.instances.GUIBooklet;
+import minecrafttransportsimulator.guis.instances.GUIVehiclePhone;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -43,10 +44,15 @@ public class PacketGUIRequest extends APacketPlayer {
         switch (guiRequested) {
             case BOOKLET:
                 new GUIBooklet(item);
+                break;
+            case PHONE:
+                new GUIVehiclePhone(item, player);
+                break;
         }
     }
 
     public enum GUIType {
-        BOOKLET
+        BOOKLET,
+        PHONE
     }
 }

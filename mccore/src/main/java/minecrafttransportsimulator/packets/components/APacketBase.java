@@ -61,6 +61,7 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnect
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlNotification;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePhoneAction;
 import minecrafttransportsimulator.packets.instances.PacketVehicleDeployment;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePacking;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
@@ -307,6 +308,7 @@ public abstract class APacketBase {
         //Vehicle packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleControlNotification.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehiclePhoneAction.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleDeployment.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehiclePacking.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
