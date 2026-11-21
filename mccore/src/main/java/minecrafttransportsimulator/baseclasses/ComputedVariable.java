@@ -28,12 +28,15 @@ public class ComputedVariable {
     public AEntityD_Definable<?> entity;
     private ComputedVariableOperator function;
     private boolean changesOnPartialTicks;
+    private boolean interpolatesOnPartialTicks;
     private boolean randomVariable;
     private boolean isConstant;
     private boolean shouldSaveToNBT;
     private boolean changed;
     public boolean shouldReset = true;
     private long lastTickChecked;
+    private long lastInterpolationTick;
+    private double previousValue;
     /**The current value of this variable.  Only change by calling one of the functions in this class.**/
     public double currentValue;
     /**True if {@link #currentValue} is greater than 1, false otherwise.  Used for quicker boolean operations.**/
@@ -68,10 +71,22 @@ public class ComputedVariable {
 
     /**Constructor for variables with no logic, and instead saved state.**/
     public ComputedVariable(AEntityD_Definable<?> entity, String variable, IWrapperNBT data) {
+        this(entity, variable, false, data);
+    }
+
+    /**
+     * Constructor for variables with no logic, and instead saved state.  When
+     * {@code interpolatesOnPartialTicks} is true, render-time lookups return a value
+     * between the prior and current tick without changing the stored current value.
+     */
+    public ComputedVariable(AEntityD_Definable<?> entity, String variable, boolean interpolatesOnPartialTicks, IWrapperNBT data) {
         this(entity, variable, null, false);
+        this.interpolatesOnPartialTicks = interpolatesOnPartialTicks;
         if(data != null) {
             setInternal(data.getDouble(variableKey), true);
         }
+        this.previousValue = currentValue;
+        this.lastInterpolationTick = entity.ticksExisted;
         this.shouldSaveToNBT = true;
         this.shouldReset = false;
     }
@@ -109,6 +124,10 @@ public class ComputedVariable {
 
     /**Helper to set the value, does other functions as well to maintain state.**/
     private final boolean setInternal(double value, boolean bypassChangeChecks) {
+        if (interpolatesOnPartialTicks && lastInterpolationTick != entity.ticksExisted) {
+            previousValue = currentValue;
+            lastInterpolationTick = entity.ticksExisted;
+        }
         if (currentValue != value || bypassChangeChecks) {
             currentValue = value;
             isActive = currentValue > 0;
@@ -130,6 +149,9 @@ public class ComputedVariable {
         this.function = other.function;
         this.isConstant = other.isConstant;
         this.changesOnPartialTicks = other.changesOnPartialTicks;
+        this.interpolatesOnPartialTicks = other.interpolatesOnPartialTicks;
+        this.previousValue = other.previousValue;
+        this.lastInterpolationTick = other.lastInterpolationTick;
         this.randomVariable = other.randomVariable;
         setInternal(other.currentValue, true);
     }
@@ -139,7 +161,8 @@ public class ComputedVariable {
     }
 
     /**
-     * Computes the value of this variable, updating {@link #currentValue}, and returning it.
+     * Computes the value of this variable, updating {@link #currentValue}.  Interpolated
+     * state variables return their render-time value without replacing {@link #currentValue}.
      */
     public final double computeValue(float partialTicks) {
         if (function != null) {
@@ -150,7 +173,7 @@ public class ComputedVariable {
                 lastTickChecked = entity.ticksExisted;
             }
         }
-        return currentValue;
+        return interpolatesOnPartialTicks && partialTicks != 0 ? previousValue + (currentValue - previousValue) * partialTicks : currentValue;
     }
 
     private final double computeInvertedValue(float partialTicks) {
