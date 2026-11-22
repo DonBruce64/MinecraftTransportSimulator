@@ -36,8 +36,7 @@ public class EntityFluidTank extends AEntityA_Base {
         }
         //Older code could assign the empty fluid to a tank without adding any volume.
         //Normalize such saved tanks so they can accept fluid again.
-        if (fluidLevel <= 0) {
-            fluidLevel = 0;
+        if (fluidLevel == 0 && !currentFluid.isEmpty()) {
             currentFluid = "";
             currentFluidMod = "";
         }
@@ -109,7 +108,7 @@ public class EntityFluidTank extends AEntityA_Base {
         //A zero-volume fill must never assign a fluid type to an empty tank.
         //Fluid container APIs represent empty containers with an empty fluid stack,
         //so callers may legitimately ask to fill zero units.
-        if (maxAmount <= 0) {
+        if (maxAmount == 0) {
             return 0;
         }
         if (currentFluid.isEmpty() || (currentFluid.equals(fluid) && (currentFluidMod.equals(fluidMod) || fluidMod.equals(WILDCARD_FLUID_MOD)))) {
