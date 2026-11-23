@@ -79,6 +79,7 @@ public final class InterfaceLoader {
 
     @EventHandler
     public void init(FMLInitializationEvent event) {
+        VehicleStatistics.initialize();
         //Init networking interface.  This will register packets as well.
         InterfacePacket.init();
 

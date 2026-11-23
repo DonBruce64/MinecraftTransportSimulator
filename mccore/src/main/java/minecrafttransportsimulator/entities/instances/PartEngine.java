@@ -21,6 +21,7 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
+import minecrafttransportsimulator.systems.VehicleStat;
 
 public class PartEngine extends APart {
     public static final String ELECTRICITY_FUEL = "electricity";
@@ -401,6 +402,7 @@ public class PartEngine extends APart {
             }
 
             //Do common running tasks.
+            boolean ranThisTick = running;
             if (running) {
 
                 //If we aren't creative, add hours.
@@ -460,6 +462,7 @@ public class PartEngine extends APart {
             }
 
             //Do running logic.
+            double rocketFuelBurned = 0;
             switch (definition.engine.type) {
                 case NORMAL: {
                     if (running) {
@@ -538,7 +541,9 @@ public class PartEngine extends APart {
                 case ROCKET: {
                     if (running) {
                         //Remove fuel, and if we don't have any, turn ourselves off.
-                        rocketFuelUsed += getTotalFuelConsumption();
+                        double fuelConsumption = getTotalFuelConsumption();
+                        rocketFuelBurned = Math.min(fuelConsumption, definition.engine.rocketFuel - rocketFuelUsed);
+                        rocketFuelUsed += fuelConsumption;
                         if (!isActiveVar.isActive || rocketFuelUsed >= definition.engine.rocketFuel) {
                             running = false;
                         }
@@ -598,6 +603,19 @@ public class PartEngine extends APart {
                         }
                     }
                     break;
+                }
+            }
+
+            if (!world.isClient() && ranThisTick) {
+                double fuelBurned = definition.engine.type == EngineType.NORMAL ? fuelFlow : rocketFuelBurned;
+                for (APart part : vehicleOn.allParts) {
+                    if (part.placementDefinition.isController && part.rider instanceof IWrapperPlayer && part.rider.isValid()) {
+                        IWrapperPlayer player = (IWrapperPlayer) part.rider;
+                        player.addVehicleStat(VehicleStat.ENGINE_HOURS, 1);
+                        if (fuelBurned > 0) {
+                            player.addVehicleStat(VehicleStat.FUEL_BURNED, fuelBurned);
+                        }
+                    }
                 }
             }
 

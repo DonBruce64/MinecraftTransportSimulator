@@ -102,6 +102,7 @@ public class InterfaceLoader {
         ABuilderEntityBase.ENTITIES.register(context.getModEventBus());
         CREATIVE_TABS.register(context.getModEventBus());
         MENUS.register(context.getModEventBus());
+        VehicleStatistics.REGISTER.register(context.getModEventBus());
 
         //Need to do pack parsing first, since that generates items which have to be registered prior to any other events.
         boolean isClient = FMLEnvironment.dist.isClient();
@@ -274,6 +275,7 @@ public class InterfaceLoader {
     }
 
     public void onPostConstruction(FMLLoadCompleteEvent event) {
+        event.enqueueWork(VehicleStatistics::initialize);
         if (FMLEnvironment.dist.isClient()) {
             //Put all liquids into the config file for use by modpack makers.
             ConfigSystem.settings.fuel.lastLoadedFluids = InterfaceManager.clientInterface.getAllFluidNames();

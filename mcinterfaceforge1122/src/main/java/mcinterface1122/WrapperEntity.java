@@ -16,6 +16,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.VehicleStat;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
@@ -443,7 +444,18 @@ public class WrapperEntity implements IWrapperEntity {
         if (ConfigSystem.settings.damage.creativePlayerDamage.value) {
             newSource.setDamageAllowedInCreativeMode();
         }
+        IWrapperPlayer attacker = damage.entityResponsible instanceof IWrapperPlayer ? (IWrapperPlayer) damage.entityResponsible : null;
+        EntityLivingBase target = attacker != null && entity instanceof EntityLivingBase && !getWorld().isClient()
+                ? (EntityLivingBase) entity : null;
+        float healthBefore = target != null ? target.getHealth() : 0;
         entity.attackEntityFrom(newSource, (float) damage.amount);
+        if (target != null) {
+            float healthAfter = target.getHealth();
+            attacker.addDamageDealt(healthBefore - healthAfter);
+            if (healthBefore > 0 && target instanceof EntityLiving && healthAfter <= 0 && damage.isWheelDamage()) {
+                attacker.addVehicleStat(VehicleStat.MOBS_RUN_OVER, 1);
+            }
+        }
 
         if (damage.effects != null) {
             damage.effects.forEach(effect -> addPotionEffect(effect));

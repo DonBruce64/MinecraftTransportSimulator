@@ -8,6 +8,7 @@ import minecrafttransportsimulator.items.instances.ItemPartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -152,7 +153,7 @@ public final class PartInteractable extends APart {
     public void attack(Damage damage) {
         super.attack(damage);
         if (!damage.isWater && damage.amount > 25 && (!outOfHealth || definition.generic.destroyable)) {
-            destroy(damage.box);
+            destroy(damage.box, damage.entityResponsible);
         }
     }
 
@@ -169,11 +170,20 @@ public final class PartInteractable extends APart {
 
     @Override
     public void destroy(BoundingBox box) {
+        destroy(box, null);
+    }
+
+    @Override
+    protected void destroy(BoundingBox box, IWrapperEntity responsible) {
         double explosivePower = getExplosiveContribution();
         if (explosivePower > 0 && isValid) {
             super.destroy(box);
             if (!definition.interactable.hasBlowoutPanels) {
-                masterEntity.destroy(masterEntity.boundingBox);
+                if (vehicleOn != null) {
+                    vehicleOn.destroyBy(vehicleOn.boundingBox, responsible);
+                } else {
+                    masterEntity.destroy(masterEntity.boundingBox);
+                }
                 if (ConfigSystem.settings.damage.vehicleExplosions.value) {
                     world.spawnExplosion(position, explosivePower, ConfigSystem.settings.damage.vehicleBlockBreaking.value, ConfigSystem.settings.damage.vehicleBlockBreaking.value);
                 } else {

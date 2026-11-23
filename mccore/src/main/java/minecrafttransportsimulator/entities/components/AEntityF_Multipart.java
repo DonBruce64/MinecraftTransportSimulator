@@ -349,7 +349,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 if (world.isClient()) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitCollision(hitEntity, hitEntry.box, actualDamage));
                 } else {
-                    hitEntity.damageCollisionBox(hitEntry.box, actualDamage);
+                    hitEntity.damageCollisionBox(hitEntry.box, actualDamage, damage.entityResponsible);
                 }
                 hitOperationalHitbox = true;
             }
@@ -458,12 +458,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 
     @Override
-    public void damageCollisionBox(BoundingBox box, double damageAmount) {
+    public void damageCollisionBox(BoundingBox box, double damageAmount, IWrapperEntity responsible) {
         APart part = getPartWithBox(box);
         if (part != null) {
-            part.damageCollisionBox(box, damageAmount);
+            part.damageCollisionBox(box, damageAmount, responsible);
         } else {
-            super.damageCollisionBox(box, damageAmount);
+            super.damageCollisionBox(box, damageAmount, responsible);
         }
     }
 

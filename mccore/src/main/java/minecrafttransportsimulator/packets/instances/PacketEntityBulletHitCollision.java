@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteractHitbox;
 
 /**
@@ -28,6 +29,17 @@ public class PacketEntityBulletHitCollision extends APacketEntityInteractHitbox 
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
         buf.writeDouble(amount);
+    }
+
+    @Override
+    public void handleFromClient(AWrapperWorld world, IWrapperPlayer sendingPlayer) {
+        AEntityE_Interactable<?> entity = getEntity(world);
+        if (entity != null) {
+            BoundingBox hitBox = getHitBox(entity);
+            if (hitBox != null && hitBox.groupDef != null && hitBox.groupDef.health > 0) {
+                entity.damageCollisionBox(hitBox, amount, sendingPlayer);
+            }
+        }
     }
 
     @Override
