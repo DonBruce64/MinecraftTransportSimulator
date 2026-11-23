@@ -1287,13 +1287,13 @@ public final class ControlSystem {
         if (aircraft.getArcadeFlightOverrideKey() != null && ConfigSystem.client.controlSettings.showTutorial.value) {
             //First time this player flies this aircraft with this default, tell them what controls they have.
             //If they already saw the other default's notice, the aircraft has changed modes.
-            //With showDefaultAircraftControlsMessageEveryTime, "first time" is per ride instead.
+            //With ShowDfCtrl, "first time" is per ride instead.
             boolean arcadeDefault = aircraft.isArcadeFlightDefault();
             //Saved on the vehicle per player, so each newly-placed aircraft shows each player the notice once per default.
             String noticePrefix = "arcadeNoticeShown_";
             String noticeSuffix = "_" + clientPlayer.getID();
             ComputedVariable noticeVar = aircraft.getOrCreateVariable(noticePrefix + (arcadeDefault ? "arcade" : "standard") + noticeSuffix);
-            boolean showEveryTime = ConfigSystem.client.controlSettings.showDefaultAircraftControlsMessageEveryTime.value;
+            boolean showEveryTime = ConfigSystem.client.controlSettings.ShowDfCtrl.value;
             boolean shownBefore = showEveryTime ? (arcadeDefault ? arcadeNoticeShownThisRide : standardNoticeShownThisRide) : noticeVar.isActive;
             if (!shownBefore) {
                 if (!noticeVar.isActive) {

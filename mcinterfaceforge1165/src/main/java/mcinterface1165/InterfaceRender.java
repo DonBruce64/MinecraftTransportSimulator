@@ -294,20 +294,53 @@ public class InterfaceRender implements IInterfaceRender {
 
     /**
      * Called at the start of the world render: forgets the last frame's shadow body captures, which a frame without
-     * a light pass never consumed.
+     * a light pass never consumed, and a light frame saved last time that never reached its after-the-pack hook (a
+     * nested world render, a thrown frame).
      */
     public static void startDynamicLightFrame() {
+        if (DynamicLightSystem.dropPendingFrame()) {
+            closeRemovedRenders();
+        }
         DynamicLightShadowAtlas.frameEnd();
     }
 
     /**
+     * Draws the light frame the core saved, if there is one: called by {@code GameRendererMixin} right after
+     * {@code WorldRenderer.renderLevel} returns, so the shader pack's final pass has finished, and before the hand clears
+     * the depth.  Frees the buffers removed during the frame afterwards.
+     */
+    public static void renderPendingDynamicLightFrame() {
+        if (DynamicLightSystem.hasPendingFrame()) {
+            boolean alphaTest = disableAlphaTest();
+            try {
+                DynamicLightSystem.renderPendingFrame();
+            } finally {
+                restoreAlphaTest(alphaTest);
+                closeRemovedRenders();
+            }
+        }
+    }
+
+    /**
+     * The camera rotation of the light frame being drawn, for a body capture to give a foreign entity renderer the pose
+     * of the entity pass ({@code InterfaceDynamicLightingGL#captureLiving}).
+     */
+    static Matrix4f frameView() {
+        return frameView;
+    }
+
+    /**
      * Builds and draws this frame's dynamic lights; call after the solid passes and before IV's blended pass.
-     * {@code pose} is the world render's camera rotation, {@code projection} its projection.  1.16.5 keeps no frustum
-     * or camera side vectors to borrow, so the frustum is rebuilt from the same two matrices and the left vector is
-     * the camera's up crossed with its look direction.
+     * {@code pose} is the world render's camera rotation, {@code projection} its projection.  The camera and the matrices
+     * are converted to plain values here; under an Oculus pack ({@link DynamicLightSystem#drawsAfterShaderPack}) the core
+     * only saves them, and {@link #renderPendingDynamicLightFrame} draws the frame once the pack's final pass is done.
+     * <p>
+     * 1.16.5 keeps no frustum or camera side vectors to borrow, so the frustum is rebuilt from the same two matrices and
+     * the left vector is the camera's up crossed with its look direction.
      */
     @SuppressWarnings("deprecation")
     public static void renderDynamicLightFrame(Matrix4f pose, Matrix4f projection, ActiveRenderInfo camera, float partialTicks) {
+        frameView.set(pose);
         Vector3d position = camera.getPosition();
         ClippingHelper frustum = new ClippingHelper(pose, projection);
         frustum.prepare(position.x, position.y, position.z);
@@ -323,16 +356,29 @@ public class InterfaceRender implements IInterfaceRender {
         toColumnMajor(pose, dynamicLightView);
         toColumnMajor(projection, dynamicLightProjection);
 
-        //The passes draw with their own programs, but 1.16.5's fixed-function alpha test still discards their zero-alpha
-        //fragments: off for the frame, then back to what MC had.
-        boolean alphaTest = GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
-        RenderSystem.disableAlphaTest();
+        boolean alphaTest = disableAlphaTest();
         try {
             DynamicLightSystem.renderFrame(partialTicks, test, position.x, position.y, position.z, dynamicLightLeft, dynamicLightUp, dynamicLightView, dynamicLightProjection);
         } finally {
-            if (alphaTest) {
-                RenderSystem.enableAlphaTest();
-            }
+            restoreAlphaTest(alphaTest);
+        }
+    }
+
+    /**
+     * The passes draw with their own programs, but 1.16.5's fixed-function alpha test still discards their zero-alpha
+     * fragments: off for the frame, then back to what MC had.  Returns whether it was on.
+     */
+    @SuppressWarnings("deprecation")
+    private static boolean disableAlphaTest() {
+        boolean alphaTest = GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
+        RenderSystem.disableAlphaTest();
+        return alphaTest;
+    }
+
+    @SuppressWarnings("deprecation")
+    private static void restoreAlphaTest(boolean alphaTest) {
+        if (alphaTest) {
+            RenderSystem.enableAlphaTest();
         }
     }
 
@@ -344,6 +390,11 @@ public class InterfaceRender implements IInterfaceRender {
         matrixStaging.get(out, 0, 16);
     }
 
+    static {
+        //GameRendererMixin draws the saved frame after an Oculus pack's final pass.
+        DynamicLightSystem.enableShaderPackLightPass();
+    }
+    private static final Matrix4f frameView = new Matrix4f();
     private static final FloatBuffer matrixStaging = BufferUtils.createFloatBuffer(16);
     private static final float[] dynamicLightLeft = new float[3];
     private static final float[] dynamicLightUp = new float[3];
@@ -687,7 +738,9 @@ public class InterfaceRender implements IInterfaceRender {
 
             @Override
             public void render(BuilderEntityRenderForwarder builder, float entityYaw, float partialTicks, MatrixStack stack, IRenderTypeBuffer buffer, int packedLight) {
-                if (builder.playerFollowing == Minecraft.getInstance().player && !ConfigSystem.settings.general.forceRenderLastSolid.value) {
+                //Draws the scene for the local player, during entity rendering; with forceRenderLastSolid WorldRendererMixin does that
+                //instead, except in an Oculus shadow pass, which only the entity loop reaches (the forwarder is not a spectator then).
+                if (builder.playerFollowing == Minecraft.getInstance().player && (!ConfigSystem.settings.general.forceRenderLastSolid.value || DynamicLightSystem.isShaderShadowPass())) {
                     //Set camera offset point for later.
                     renderCameraOffset.set(MathHelper.lerp(partialTicks, builder.xOld, builder.getX()), MathHelper.lerp(partialTicks, builder.yOld, builder.getY()), MathHelper.lerp(partialTicks, builder.zOld, builder.getZ()));
 
@@ -704,6 +757,16 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     public static void doRenderCall(MatrixStack stack, IRenderTypeBuffer buffer, boolean blendingEnabled, float partialTicks) {
+        //An Oculus shadow pass draws the scene a second time in the frame: geometry only, see DynamicLightSystem.isDrawingShadowPass.
+        DynamicLightSystem.setShadowPass(DynamicLightSystem.isShaderShadowPass());
+        try {
+            drawScene(stack, buffer, blendingEnabled, partialTicks);
+        } finally {
+            DynamicLightSystem.setShadowPass(false);
+        }
+    }
+
+    private static void drawScene(MatrixStack stack, IRenderTypeBuffer buffer, boolean blendingEnabled, float partialTicks) {
         matrixStack = stack;
         renderBuffer = buffer;
         AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
@@ -711,7 +774,8 @@ public class InterfaceRender implements IInterfaceRender {
         if (allEntities != null) {
             world.beginProfiling("MTSRendering_Setup", true);
 
-            boolean captureBodies = !blendingEnabled && DynamicLightSystem.getMode() == DynamicLightSystem.Mode.DEFERRED && ConfigSystem.client.renderingSettings.DynL_shadows.value;
+            //An Oculus shadow pass draws the scene again from the sun: those buffers are not shadow casters for the light pass.
+            boolean captureBodies = !blendingEnabled && DynamicLightSystem.getMode() == DynamicLightSystem.Mode.DEFERRED && ConfigSystem.client.renderingSettings.DynL_shadows.value && !DynamicLightSystem.isShaderShadowPass();
 
             //NOTE: this operation occurs on a ConcurrentLinkedQueue.  Therefore, updates will
             //not occur one after another.  Sanitize your inputs!
@@ -747,6 +811,8 @@ public class InterfaceRender implements IInterfaceRender {
      */
     private static void renderBuffers(boolean closeRemoved) {
         //Call order is CRITICAL and will lead to random JME faults with no stacktrace if modified!
+        //No projection to pick here, unlike 1.20.1: buffers draw through the fixed-function matrices, so in an Oculus shadow
+        //pass they take the sun's projection that Oculus loads on the GL projection stack (IrisRenderSystem.setupProjectionMatrix).
         for (Entry<RenderType, List<RenderData>> renderEntry : queuedRenders.entrySet()) {
             RenderType renderType = renderEntry.getKey();
             List<RenderData> datas = renderEntry.getValue();
@@ -770,7 +836,14 @@ public class InterfaceRender implements IInterfaceRender {
             }
         }
         VertexBuffer.unbind();
-        if (closeRemoved && !removedRenders.isEmpty()) {
+        //A light frame saved for after the shader pack still draws the solid pass's buffers as shadow bodies.
+        if (closeRemoved && !DynamicLightSystem.hasPendingFrame()) {
+            closeRemovedRenders();
+        }
+    }
+
+    private static void closeRemovedRenders() {
+        if (!removedRenders.isEmpty()) {
             removedRenders.forEach(render -> render.buffer.close());
             removedRenders.clear();
         }

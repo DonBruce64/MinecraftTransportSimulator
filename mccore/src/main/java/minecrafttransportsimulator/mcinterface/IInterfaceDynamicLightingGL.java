@@ -118,8 +118,16 @@ public interface IInterfaceDynamicLightingGL {
      * ({@link DynamicLightBody#addQuadCorner}, {@link DynamicLightBody#addTriangleCorner}), camera-relative, each with
      * its render type's texture and alpha cut: {@link DynamicLightBody#CUT_CUTOUT} for a solid (cutout) type,
      * {@link DynamicLightBody#CUT_BLENDED} for one that blends by alpha, and no corners for the other blended types
-     * (additive eyes, glint, swirls: they hide nothing).  A renderer that fails outside its normal pass simply leaves
-     * no corners.
+     * (additive eyes, glint, swirls: they hide nothing).  A renderer that throws leaves no corners.
+     * <p>
+     * Contract: the capture is invisible to everything else.  The entity's renderer is a foreign one (any mod's) run
+     * outside the entity pass, and some draw on their own (their own vertex buffers, straight into whatever
+     * framebuffer is bound) instead of through the consumers handed to them.  Whatever it draws or clears must land
+     * nowhere (not the main target, not a shadow tile, not a target of its own that stays bound), and the GL state it
+     * changes (framebuffer, viewport, scissor, masks, depth, blend, cull, program, vertex array, active texture unit)
+     * must be as it was when the call returns, also when it throws.  The renderer sees the same pose as in the entity
+     * pass (the view the world render gave, then the entity's offset from the camera), so a mod that keeps
+     * what it draws (a muzzle position, say) keeps the right one.
      */
     void captureLiving(DynamicLightBody body, double cameraX, double cameraY, double cameraZ, float partialTicks);
 

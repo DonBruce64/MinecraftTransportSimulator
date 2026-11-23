@@ -58,7 +58,8 @@ public abstract class WorldRendererMixin {
         if (ConfigSystem.settings.general.forceRenderLastSolid.value) {
             InterfaceRender.doRenderCall(pMatrixStack, irendertypebuffer$impl, false, pPartialTicks);
         }
-        //Dynamic lights go over the finished world and IV's solid pass, under IV's blended pass.
+        //Dynamic lights go over the finished world and IV's solid pass, under IV's blended pass.  Under an Oculus pack
+        //this only saves the frame: GameRendererMixin draws it after the pack's final pass.
         InterfaceRender.renderDynamicLightFrame(pMatrixStack.last().pose(), pProjection, pActiveRenderInfo, pPartialTicks);
         InterfaceRender.doRenderCall(pMatrixStack, irendertypebuffer$impl, true, pPartialTicks);
     }
