@@ -12,11 +12,13 @@ import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect.PotionDefaults;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleMotorized;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -171,11 +173,21 @@ public class CameraSystem {
                 //First person: use the standard rider eye position without any offset.
                 cameraAdjustedPosition.set(sittingSeat.prevRiderCameraPosition).interpolate(sittingSeat.riderCameraPosition, partialTicks);
             } else {
-                if (sittingSeat.vehicleOn != null && sittingSeat.vehicleOn.definition.motorized != null && sittingSeat.vehicleOn.definition.motorized.cameraOffset != null) {
+                EntityVehicleF_Physics vehicle = sittingSeat.vehicleOn;
+                VehicleMotorized motorized = vehicle != null ? vehicle.definition.motorized : null;
+                Point3D vehicleCameraOffset = null;
+                if (motorized != null) {
+                    vehicleCameraOffset = motorized.cameraOffset;
+                    if (motorized.arcadeCameraOffset != null && vehicle.isArcadeFlightActive()) {
+                        vehicleCameraOffset = motorized.arcadeCameraOffset;
+                    }
+                }
+
+                if (vehicleCameraOffset != null) {
                     //Use the configured vehicle-relative camera anchor.
-                    cameraAdjustedPosition.set(sittingSeat.vehicleOn.prevPosition).interpolate(sittingSeat.vehicleOn.position, partialTicks);
-                    sittingSeat.vehicleOn.getInterpolatedOrientation(cameraOffsetOrientation, partialTicks);
-                    cameraAdjustedPosition.add(cameraOffset.set(sittingSeat.vehicleOn.definition.motorized.cameraOffset).rotate(cameraOffsetOrientation));
+                    cameraAdjustedPosition.set(vehicle.prevPosition).interpolate(vehicle.position, partialTicks);
+                    vehicle.getInterpolatedOrientation(cameraOffsetOrientation, partialTicks);
+                    cameraAdjustedPosition.add(cameraOffset.set(vehicleCameraOffset).rotate(cameraOffsetOrientation));
                 } else {
                     //Without a configured offset, retain the rider-relative camera anchor.
                     cameraAdjustedPosition.set(sittingSeat.prevPosition).interpolate(sittingSeat.position, partialTicks);
@@ -186,7 +198,7 @@ public class CameraSystem {
                 int cameraZoomRequired = 4 - InterfaceManager.clientInterface.getCameraDefaultZoom() + sittingSeat.zoomLevel;
                 cameraOffset.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -cameraZoomRequired : cameraZoomRequired).rotate(cameraRotation);
                 cameraAdjustedPosition.add(cameraOffset);
-                applyCameraCollision(player, cameraCollisionStart, cameraAdjustedPosition, sittingSeat.vehicleOn);
+                applyCameraCollision(player, cameraCollisionStart, cameraAdjustedPosition, vehicle);
             }
             return true;
         } else {
