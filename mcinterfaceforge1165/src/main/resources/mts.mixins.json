@@ -15,6 +15,7 @@
 				"client.SimpleReloadableResourceManagerMixin",
 				"client.BipedModelMixin",
 				"client.ModelRendererMixin",
+				"client.EntityRendererManagerAccessor",
 				"client.LivingRendererAccessor",
 				"client.PlayerRendererMixin",
 				"client.VillagerModelMixin",

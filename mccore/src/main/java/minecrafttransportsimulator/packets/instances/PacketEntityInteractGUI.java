@@ -33,13 +33,19 @@ public class PacketEntityInteractGUI extends APacketEntityInteract<AEntityD_Defi
     }
 
     @Override
-    public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity, IWrapperPlayer player) {
-        if (opened) {
-            entity.playersInteracting.add(player);
-        } else {
-            entity.playersInteracting.remove(player);
+    public void handleFromClient(AWrapperWorld world, IWrapperPlayer sendingPlayer) {
+        AEntityD_Definable<?> entity = getEntity(world);
+        if (entity != null) {
+            new PacketEntityInteractGUI(entity, sendingPlayer, opened).handle(world);
         }
-        PlayerAnimationSystem.recordPlayerInteraction(entity, player.getID());
+    }
+
+    @Override
+    public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity, IWrapperPlayer player) {
+        boolean changed = opened ? entity.playersInteracting.add(player) : entity.playersInteracting.remove(player);
+        if (changed) {
+            PlayerAnimationSystem.recordPlayerInteraction(entity, player.getID());
+        }
         return true;
     }
 }

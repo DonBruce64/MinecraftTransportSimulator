@@ -81,11 +81,12 @@ resolution of one-shot and linger timing.
 
 `initiatingPlayerOnly` attribution covers synchronized variable changes,
 clickable actions, GUI interaction, and custom keypresses. Direct variables are
-matched exactly. Short-lived derived values, including variable-modifier
-outputs, `player_interacting`, and clutch-shift pulses, inherit the recent
-authenticated interaction on the same vehicle. Automatic and server-originated
-changes have no initiating player. Once an actor-only entry starts, an automatic
-release retains that actor for its configured `lingerDuration`.
+matched to their entity and variable. Short-lived derived values, including
+variable-modifier outputs, `player_interacting`, and clutch-shift pulses, can
+inherit the recent authenticated interaction on the same vehicle. When several
+actions happen together, direct variables provide more precise attribution.
+An automatic release retains the player who started the animation for its
+configured `lingerDuration`.
 
 ## Grip override parameters
 
@@ -102,13 +103,10 @@ release retains that actor for its configured `lingerDuration`.
 
 ## Load-time validation
 
-When the pack loads, each entry is checked and an invalid one is logged (with
-the pack ID, system name, and entry number) and dropped, while the rest of the
-vehicle loads normally. An entry is invalid if it has both or neither of
-`seatSlot` and `range`, or if its `applyAfter` (or the `applyAfter` of a grip
-override) is not an `objectName` in `rendering.animatedObjects`. Defining
-`rendering.playerAnimations` on anything other than a vehicle is logged as an
-error and the list is cleared.
+On pack load and hotload, entries with conflicting or missing seat and range
+selectors, invalid ranges, or unknown `applyAfter` names are logged and skipped.
+This includes `applyAfter` on grip overrides. The rest of the vehicle loads
+normally. Entries defined on any other pack item are logged and cleared.
 
 Schema errors are not covered by this and fail the whole vehicle, as they do for
 any other field: a `limb` value that is not one of the four lowercase names, a

@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.rendering;
 
+import static minecrafttransportsimulator.jsondefs.JSONPlayerAnimation.DEFAULT_DURATION;
+import static minecrafttransportsimulator.jsondefs.JSONPlayerAnimation.JSONPlayerGripOverride.INHERIT_DURATION;
+
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.IdentityHashMap;
@@ -9,6 +12,7 @@ import java.util.UUID;
 import java.util.WeakHashMap;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
@@ -36,7 +40,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * single client thread, so the scratch objects below are shared.
  */
 public final class PlayerAnimationSystem {
-    private static final int DEFAULT_TRANSITION_TICKS = 10;
     /** Vanilla's player renderer uniformly scales the model after posing it. */
     private static final double PLAYER_MODEL_SCALE = 15D / 16D;
     /** Vanilla translates the model by -1.501 before flipping its Y axis. */
@@ -191,13 +194,13 @@ public final class PlayerAnimationSystem {
      * to the part's owning vehicle so vehicle-level player animations can use
      * the same attribution path.  The next {@link #updateVehicle} consumes it.
      */
-    public static void recordVariableInteraction(AEntityD_Definable<?> source, String variableKey, UUID playerID) {
-        if (source == null || variableKey == null || playerID == null || !source.world.isClient()) {
+    public static void recordVariableInteraction(AEntityD_Definable<?> source, ComputedVariable variable, UUID playerID) {
+        if (source == null || variable == null || playerID == null || !source.world.isClient()) {
             return;
         }
         VehicleAnimationState state = getStateForInteraction(source);
         if (state != null) {
-            state.recordVariableInteraction(variableKey, playerID);
+            state.recordVariableInteraction(variable, playerID);
         }
     }
 
@@ -315,7 +318,7 @@ public final class PlayerAnimationSystem {
             List<JSONPlayerAnimation> definitions = vehicleState.definitions;
             for (int i = 0; i < definitions.size(); ++i) {
                 JSONPlayerAnimation definition = definitions.get(i);
-                if (definition.limb != limb || definition.seatSlot != null || definition.range == null || definition.range <= 0 || !vehicleState.isEntrySelected(definition, player)) {
+                if (definition.limb != limb || definition.seatSlot != null || definition.range <= 0 || !vehicleState.isEntrySelected(definition, player)) {
                     continue;
                 }
                 SelectedTarget candidate = vehicleState.getSelectedTarget(definition, partialTicks);
@@ -549,14 +552,6 @@ public final class PlayerAnimationSystem {
         return entity != null ? entity.ticksExisted + partialTicks : Double.NaN;
     }
 
-    private static int getDuration(Integer duration) {
-        return duration != null ? Math.max(0, duration) : DEFAULT_TRANSITION_TICKS;
-    }
-
-    private static int getLingerDuration(Integer lingerDuration) {
-        return lingerDuration != null ? Math.max(0, lingerDuration) : 0;
-    }
-
     private static boolean playerTweaksEnabled() {
         return ConfigSystem.client != null && ConfigSystem.client.renderingSettings.playerTweaks.value;
     }
@@ -618,7 +613,7 @@ public final class PlayerAnimationSystem {
         private double transitionStart;
         private double lastRenderTime;
         private double startBlend;
-        private int transitionDuration = DEFAULT_TRANSITION_TICKS;
+        private int transitionDuration = DEFAULT_DURATION;
         private boolean releasing;
         private boolean exterior;
 
@@ -638,7 +633,7 @@ public final class PlayerAnimationSystem {
             transitionStart = 0;
             lastRenderTime = 0;
             startBlend = 0;
-            transitionDuration = DEFAULT_TRANSITION_TICKS;
+            transitionDuration = DEFAULT_DURATION;
             releasing = false;
             exterior = false;
         }
@@ -727,6 +722,7 @@ public final class PlayerAnimationSystem {
         private double maxExteriorRange;
         private final Map<JSONPlayerAnimation, AnimationSwitchbox> entrySwitchboxes = new IdentityHashMap<>();
         private final Map<JSONPlayerGripOverride, AnimationSwitchbox> overrideSwitchboxes = new IdentityHashMap<>();
+        private final List<JSONPlayerAnimation> actorDefinitions = new ArrayList<>();
         private final Map<JSONPlayerAnimation, TriggerState> entryTriggers = new IdentityHashMap<>();
         private final Map<JSONPlayerGripOverride, TriggerState> overrideTriggers = new IdentityHashMap<>();
         private final Map<JSONPlayerAnimation, Boolean> selectedEntries = new IdentityHashMap<>();
@@ -741,7 +737,7 @@ public final class PlayerAnimationSystem {
             this.definitions = definitions;
             boolean exterior = false;
             for (JSONPlayerAnimation definition : definitions) {
-                boolean exteriorEntry = definition.seatSlot == null && definition.range != null && definition.range > 0;
+                boolean exteriorEntry = definition.seatSlot == null && definition.range > 0;
                 exterior |= exteriorEntry;
                 if (exteriorEntry) {
                     maxExteriorRange = Math.max(maxExteriorRange, definition.range);
@@ -756,6 +752,9 @@ public final class PlayerAnimationSystem {
                         }
                     }
                 }
+                if (definition.initiatingPlayerOnly) {
+                    actorDefinitions.add(definition);
+                }
                 entryTriggers.put(definition, new TriggerState());
                 addTarget(definition, definition, definition.applyAfter, definition.pos, definition.limbScale, definition.duration);
                 if (definition.activeAnimations != null) {
@@ -764,7 +763,7 @@ public final class PlayerAnimationSystem {
                 if (definition.gripOverrides != null) {
                     for (JSONPlayerGripOverride override : definition.gripOverrides) {
                         overrideTriggers.put(override, new TriggerState());
-                        addTarget(override, override, override.applyAfter != null ? override.applyAfter : definition.applyAfter, override.pos, override.limbScale != null ? override.limbScale : definition.limbScale, override.duration != null ? override.duration : definition.duration);
+                        addTarget(override, override, override.applyAfter != null ? override.applyAfter : definition.applyAfter, override.pos, override.limbScale != null ? override.limbScale : definition.limbScale, override.duration != INHERIT_DURATION ? override.duration : definition.duration);
                         if (override.activeAnimations != null) {
                             overrideSwitchboxes.put(override, new AnimationSwitchbox(vehicle, override.activeAnimations, null));
                         }
@@ -774,9 +773,9 @@ public final class PlayerAnimationSystem {
             this.hasExteriorEntries = exterior;
         }
 
-        private void addTarget(Object key, Object selectionKey, String applyAfter, Point3D position, Point3D limbScale, Integer duration) {
+        private void addTarget(Object key, Object selectionKey, String applyAfter, Point3D position, Point3D limbScale, int duration) {
             if (applyAfter != null && position != null) {
-                targets.put(key, new SelectedTarget(selectionKey, applyAfter, position, limbScale != null ? limbScale : DEFAULT_LIMB_SCALE, getDuration(duration)));
+                targets.put(key, new SelectedTarget(selectionKey, applyAfter, position, limbScale != null ? limbScale : DEFAULT_LIMB_SCALE, Math.max(0, duration)));
             }
         }
 
@@ -787,7 +786,7 @@ public final class PlayerAnimationSystem {
             for (JSONPlayerAnimation definition : definitions) {
                 AnimationSwitchbox switchbox = entrySwitchboxes.get(definition);
                 boolean active = switchbox == null || switchbox.runSwitchbox(0, false);
-                selectedEntries.put(definition, entryTriggers.get(definition).update(active, definition.oneShot, definition.triggerOnChange, getDuration(definition.duration), getLingerDuration(definition.lingerDuration), time, definition.initiatingPlayerOnly ? recentActor : null));
+                selectedEntries.put(definition, entryTriggers.get(definition).update(active, definition.oneShot, definition.triggerOnChange, Math.max(0, definition.duration), Math.max(0, definition.lingerDuration), time, definition.initiatingPlayerOnly ? recentActor : null));
 
                 if (definition.gripOverrides != null) {
                     for (JSONPlayerGripOverride override : definition.gripOverrides) {
@@ -797,8 +796,8 @@ public final class PlayerAnimationSystem {
                         }
                         AnimationSwitchbox overrideSwitchbox = overrideSwitchboxes.get(override);
                         boolean overrideActive = overrideSwitchbox == null || overrideSwitchbox.runSwitchbox(0, false);
-                        int duration = getDuration(override.duration != null ? override.duration : definition.duration);
-                        int linger = getLingerDuration(override.lingerDuration != null ? override.lingerDuration : definition.lingerDuration);
+                        int duration = Math.max(0, override.duration != INHERIT_DURATION ? override.duration : definition.duration);
+                        int linger = Math.max(0, override.lingerDuration != INHERIT_DURATION ? override.lingerDuration : definition.lingerDuration);
                         boolean oneShot = override.oneShot != null ? override.oneShot : definition.oneShot;
                         boolean triggerOnChange = override.triggerOnChange != null ? override.triggerOnChange : definition.triggerOnChange;
                         selectedOverrides.put(override, overrideTriggers.get(override).update(overrideActive, oneShot, triggerOnChange, duration, linger, time, null));
@@ -807,18 +806,20 @@ public final class PlayerAnimationSystem {
             }
         }
 
-        private void recordVariableInteraction(String variableKey, UUID playerID) {
+        private void recordVariableInteraction(ComputedVariable variable, UUID playerID) {
             recordPlayerInteraction(playerID);
-            for (JSONPlayerAnimation definition : definitions) {
-                if (definition.initiatingPlayerOnly && referencesVariable(definition.activeAnimations, variableKey)) {
+            for (JSONPlayerAnimation definition : actorDefinitions) {
+                if (referencesVariable(definition.activeAnimations, variable)) {
                     entryTriggers.get(definition).recordPlayerInteraction(playerID);
                 }
             }
         }
 
         private void recordPlayerInteraction(UUID playerID) {
-            recentPlayerID = playerID;
-            recentInteractionTick = vehicle.ticksExisted;
+            if (!actorDefinitions.isEmpty()) {
+                recentPlayerID = playerID;
+                recentInteractionTick = vehicle.ticksExisted;
+            }
         }
 
         private boolean isEntrySelected(JSONPlayerAnimation definition, IWrapperEntity player) {
@@ -852,21 +853,24 @@ public final class PlayerAnimationSystem {
             return null;
         }
 
-        private static boolean referencesVariable(List<JSONAnimationDefinition> animations, String changedVariable) {
+        private boolean referencesVariable(List<JSONAnimationDefinition> animations, ComputedVariable changedVariable) {
             if (animations == null) {
                 return false;
             }
-            String normalizedChangedVariable = normalizeVariable(changedVariable);
             for (JSONAnimationDefinition animation : animations) {
-                if (animation.variable != null && normalizeVariable(animation.variable).equals(normalizedChangedVariable)) {
-                    return true;
+                if (animation.variable != null) {
+                    ComputedVariable watchedVariable = vehicle.getOrCreateVariable(normalizeVariable(animation.variable));
+                    if (watchedVariable.entity == changedVariable.entity
+                            && watchedVariable.variableKey.equals(normalizeVariable(changedVariable.variableKey))) {
+                        return true;
+                    }
                 }
             }
             return false;
         }
 
         private static String normalizeVariable(String variable) {
-            return variable.startsWith("!") ? variable.substring(1) : variable;
+            return variable.startsWith(ComputedVariable.INVERTED_PREFIX) ? variable.substring(ComputedVariable.INVERTED_PREFIX.length()) : variable;
         }
     }
 }

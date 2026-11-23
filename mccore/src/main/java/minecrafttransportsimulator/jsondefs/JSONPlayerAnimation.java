@@ -1,6 +1,12 @@
 package minecrafttransportsimulator.jsondefs;
 
+import java.io.IOException;
 import java.util.List;
+
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.JsonAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
@@ -13,6 +19,8 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
  * {@link minecrafttransportsimulator.packloading.PackParser#validatePlayerAnimations} are dropped at load.
  */
 public class JSONPlayerAnimation {
+    public static final int DEFAULT_DURATION = 10;
+
     @JSONRequired
     @JSONDescription("The player limb controlled by this entry. Valid values are armleft, armright, legleft, and legright.")
     public PlayerLimb limb;
@@ -32,16 +40,17 @@ public class JSONPlayerAnimation {
     public Point3D limbScale;
 
     @JSONDescription("For an exterior animation, the maximum distance in blocks between the animated target and the center of the player's torso. Omit seatSlot and set this to a positive value; exactly one of seatSlot and range must be set. Only the targeted limb is overridden while the player remains in range.")
-    public Double range;
+    public double range;
 
     @JSONDescription("Normal MTS active animations controlling whether this target may be selected. Entries in playerAnimations are checked from first to last, so earlier active entries override later entries for the same limb and seat.")
     public List<JSONAnimationDefinition> activeAnimations;
 
     @JSONDescription("Transition time in ticks when this target is selected or released. If omitted, this defaults to 10. Set to 0 for an immediate transition.")
-    public Integer duration;
+    @JsonAdapter(ExplicitDurationAdapter.class)
+    public int duration = DEFAULT_DURATION;
 
     @JSONDescription("How many ticks the limb remains attached after this entry stops being active. Defaults to 0. For oneShot entries, this is the time spent resting on the target after the reach transition completes.")
-    public Integer lingerDuration;
+    public int lingerDuration;
 
     @JSONDescription("If true, this entry triggers once when its activeAnimations change from inactive to active. It reaches the target over duration, remains there for lingerDuration, and then returns even if the controlling variable stays active. The trigger re-arms after activeAnimations become inactive.")
     public boolean oneShot;
@@ -49,7 +58,7 @@ public class JSONPlayerAnimation {
     @JSONDescription("Only used with oneShot. If true, the one-shot fires whenever activeAnimations change in either direction, allowing one entry to handle both states of a toggle such as opening and closing a door. Initial loading does not count as a change.")
     public boolean triggerOnChange;
 
-    @JSONDescription("If true, this entry is selected only for the player whose client-issued variable change, clickable action, GUI interaction, or custom keypress caused its activeAnimations to change. Direct variable references are matched exactly, while short-lived derived variables such as variable-modifier outputs, player_interacting, and clutch-shift pulses inherit the recent authenticated interaction on the same vehicle. Use this for shared controls such as a parking brake that either controller may operate but only the actual operator should reach for. Server-driven or automatic changes have no initiating player and will not play this entry. Defaults to false, which preserves the normal behavior where every applicable occupied seat may animate.")
+    @JSONDescription("If true, this entry is selected only for the player whose client-issued variable change, clickable action, GUI interaction, or custom keypress caused its activeAnimations to change. Direct variable references are matched exactly, while short-lived derived variables such as variable-modifier outputs, player_interacting, and clutch-shift pulses can inherit the recent authenticated interaction on the same vehicle. Use this for shared controls such as a parking brake that either controller may operate but only the actual operator should reach for. An activation without a matching or recent interaction has no initiating player. Defaults to false, which preserves the normal behavior where every applicable occupied seat may animate.")
     public boolean initiatingPlayerOnly;
 
     @JSONDescription("Optional ordered attachment overrides. The first active override replaces pos (and applyAfter when supplied), allowing a hand or foot to change grip based on additional variables.")
@@ -61,6 +70,8 @@ public class JSONPlayerAnimation {
     }
 
     public static class JSONPlayerGripOverride {
+        public static final int INHERIT_DURATION = -1;
+
         @JSONDescription("An optional replacement objectName from rendering.animatedObjects. If omitted, the parent player-animation applyAfter is used.")
         public String applyAfter;
 
@@ -75,16 +86,46 @@ public class JSONPlayerAnimation {
         public List<JSONAnimationDefinition> activeAnimations;
 
         @JSONDescription("Optional transition time for this grip change. If omitted, the parent entry's duration is used.")
-        public Integer duration;
+        @JsonAdapter(ExplicitDurationAdapter.class)
+        public int duration = INHERIT_DURATION;
 
         @JSONDescription("Optional linger time for this grip. If omitted, the parent entry's lingerDuration is used.")
-        public Integer lingerDuration;
+        @JsonAdapter(ExplicitDurationAdapter.class)
+        public int lingerDuration = INHERIT_DURATION;
 
         @JSONDescription("Optional one-shot setting for this grip. If omitted, the parent entry's oneShot setting is used.")
+        @JsonAdapter(GripBooleanAdapter.class)
         public Boolean oneShot;
 
         @JSONDescription("Optional trigger-on-change setting for this grip. If omitted, the parent entry's triggerOnChange setting is used.")
+        @JsonAdapter(GripBooleanAdapter.class)
         public Boolean triggerOnChange;
+    }
+
+    /** Retains zero when exported, since a missing field can have a nonzero default. */
+    private static class ExplicitDurationAdapter extends TypeAdapter<Integer> {
+        @Override
+        public Integer read(JsonReader reader) throws IOException {
+            return reader.nextInt();
+        }
+
+        @Override
+        public void write(JsonWriter writer, Integer value) throws IOException {
+            writer.value(value);
+        }
+    }
+
+    /** Retains explicit false values when exported, since null inherits the parent setting. */
+    private static class GripBooleanAdapter extends TypeAdapter<Boolean> {
+        @Override
+        public Boolean read(JsonReader reader) throws IOException {
+            return reader.nextBoolean();
+        }
+
+        @Override
+        public void write(JsonWriter writer, Boolean value) throws IOException {
+            writer.value(value);
+        }
     }
 
     public enum PlayerLimb {

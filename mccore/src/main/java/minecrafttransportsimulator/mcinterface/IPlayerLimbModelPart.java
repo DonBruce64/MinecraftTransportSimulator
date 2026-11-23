@@ -1,7 +1,7 @@
-package minecrafttransportsimulator.rendering;
+package minecrafttransportsimulator.mcinterface;
 
 /**
- * Implemented on Minecraft limb model parts by each version interface. The
+ * Implemented on Minecraft limb model parts by the version interfaces that use mixins. The
  * additional scale is applied along the limb's local length axis after its
  * pivot translation and rotation, so the shoulder/hip remains fixed.
  */

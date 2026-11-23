@@ -13,6 +13,7 @@
         "client.HumanoidModelMixin",
         "client.LevelRendererMixin",
         "client.ListenerMixin",
+        "client.EntityRenderDispatcherAccessor",
         "client.LivingEntityRendererAccessor",
         "client.LivingEntityRendererMixin",
         "client.MinecraftMixin",

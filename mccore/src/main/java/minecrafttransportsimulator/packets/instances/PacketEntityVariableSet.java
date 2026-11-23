@@ -1,14 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.UUID;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.packets.components.APacketEntity;
-import minecrafttransportsimulator.rendering.PlayerAnimationSystem;
 
 /**
  * Packet used to set variable states.  Sent from clients to servers to
@@ -21,54 +14,12 @@ import minecrafttransportsimulator.rendering.PlayerAnimationSystem;
  *
  * @author don_bruce
  */
-public class PacketEntityVariableSet extends APacketEntity<AEntityD_Definable<?>> {
-    private final String variableKey;
-    private final double variableValue;
-    private UUID initiatingPlayerID;
-
+public class PacketEntityVariableSet extends APacketEntityVariable {
     public PacketEntityVariableSet(ComputedVariable variable, double variableValue) {
-        this(variable, variableValue, null);
-    }
-
-    public PacketEntityVariableSet(ComputedVariable variable, double variableValue, UUID initiatingPlayerID) {
-        super(variable.entity);
-        this.variableKey = variable.variableKey;
-        this.variableValue = variableValue;
-        this.initiatingPlayerID = initiatingPlayerID;
+        super(variable, Operation.SET, variableValue, 0, 0);
     }
 
     public PacketEntityVariableSet(ByteBuf buf) {
-        super(buf);
-        this.variableKey = readStringFromBuffer(buf);
-        this.variableValue = buf.readDouble();
-        this.initiatingPlayerID = buf.readBoolean() ? readUUIDFromBuffer(buf) : null;
-    }
-
-    @Override
-    public void writeToBuffer(ByteBuf buf) {
-        super.writeToBuffer(buf);
-        writeStringToBuffer(variableKey, buf);
-        buf.writeDouble(variableValue);
-        buf.writeBoolean(initiatingPlayerID != null);
-        if (initiatingPlayerID != null) {
-            writeUUIDToBuffer(initiatingPlayerID, buf);
-        }
-    }
-
-    @Override
-    public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity) {
-        ComputedVariable variable = entity.getOrCreateVariable(variableKey);
-        double previousValue = variable.currentValue;
-        variable.setTo(variableValue, false);
-        if (variable.currentValue != previousValue) {
-            PlayerAnimationSystem.recordVariableInteraction(entity, variableKey, initiatingPlayerID);
-        }
-        return true;
-    }
-
-    @Override
-    public void handleFromClient(AWrapperWorld world, IWrapperPlayer sendingPlayer) {
-        initiatingPlayerID = sendingPlayer.getID();
-        super.handleFromClient(world, sendingPlayer);
+        super(buf, Operation.SET);
     }
 }

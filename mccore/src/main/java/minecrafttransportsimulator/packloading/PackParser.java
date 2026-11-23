@@ -576,7 +576,10 @@ public final class PackParser {
 
     private static String getPlayerAnimationError(JSONPlayerAnimation animation, JSONRendering rendering) {
         boolean hasSeatSlot = animation.seatSlot != null && !animation.seatSlot.isEmpty();
-        boolean hasRange = animation.range != null && animation.range > 0;
+        boolean hasRange = animation.range > 0;
+        if (!Double.isFinite(animation.range) || animation.range < 0) {
+            return "range must be a finite positive number for exterior animations.";
+        }
         if (hasSeatSlot == hasRange) {
             return hasSeatSlot ? "it has both seatSlot and range.  Use seatSlot for seated animations and range for exterior ones." : "it has neither seatSlot nor a range above 0.  Use seatSlot for seated animations and range for exterior ones.";
         }

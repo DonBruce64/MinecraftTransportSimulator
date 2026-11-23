@@ -8,105 +8,105 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-import minecrafttransportsimulator.rendering.IPlayerLimbModelPart;
+import minecrafttransportsimulator.mcinterface.IPlayerLimbModelPart;
 import net.minecraft.client.renderer.model.ModelRenderer;
 
 @Mixin(ModelRenderer.class)
 public abstract class ModelRendererMixin implements IPlayerLimbModelPart {
     @Unique
-    private float mts$playerLimbLengthScale = 1;
+    private float mtsPlayerLimbLengthScale = 1;
     @Unique
-    private float mts$playerLimbProximalOffset;
+    private float mtsPlayerLimbProximalOffset;
     @Unique
-    private float mts$playerLimbScaleX = 1;
+    private float mtsPlayerLimbScaleX = 1;
     @Unique
-    private float mts$playerLimbScaleY = 1;
+    private float mtsPlayerLimbScaleY = 1;
     @Unique
-    private float mts$playerLimbScaleZ = 1;
+    private float mtsPlayerLimbScaleZ = 1;
     @Unique
-    private float mts$playerLimbScaleAnchorX;
+    private float mtsPlayerLimbScaleAnchorX;
     @Unique
-    private float mts$playerLimbScaleAnchorY;
+    private float mtsPlayerLimbScaleAnchorY;
 
     @Override
     public void setPlayerLimbLengthScale(float scale) {
-        mts$playerLimbLengthScale = scale;
+        mtsPlayerLimbLengthScale = scale;
     }
 
     @Override
     public float getPlayerLimbLengthScale() {
-        return mts$playerLimbLengthScale;
+        return mtsPlayerLimbLengthScale;
     }
 
     @Override
     public void setPlayerLimbScale(float scaleX, float scaleY, float scaleZ) {
-        mts$playerLimbScaleX = scaleX;
-        mts$playerLimbScaleY = scaleY;
-        mts$playerLimbScaleZ = scaleZ;
+        mtsPlayerLimbScaleX = scaleX;
+        mtsPlayerLimbScaleY = scaleY;
+        mtsPlayerLimbScaleZ = scaleZ;
     }
 
     @Override
     public float getPlayerLimbScaleX() {
-        return mts$playerLimbScaleX;
+        return mtsPlayerLimbScaleX;
     }
 
     @Override
     public float getPlayerLimbScaleY() {
-        return mts$playerLimbScaleY;
+        return mtsPlayerLimbScaleY;
     }
 
     @Override
     public float getPlayerLimbScaleZ() {
-        return mts$playerLimbScaleZ;
+        return mtsPlayerLimbScaleZ;
     }
 
     @Override
     public void setPlayerLimbScaleAnchor(float anchorX, float anchorY) {
-        mts$playerLimbScaleAnchorX = anchorX;
-        mts$playerLimbScaleAnchorY = anchorY;
+        mtsPlayerLimbScaleAnchorX = anchorX;
+        mtsPlayerLimbScaleAnchorY = anchorY;
     }
 
     @Override
     public float getPlayerLimbScaleAnchorX() {
-        return mts$playerLimbScaleAnchorX;
+        return mtsPlayerLimbScaleAnchorX;
     }
 
     @Override
     public float getPlayerLimbScaleAnchorY() {
-        return mts$playerLimbScaleAnchorY;
+        return mtsPlayerLimbScaleAnchorY;
     }
 
     @Override
     public void setPlayerLimbProximalOffset(float offset) {
-        mts$playerLimbProximalOffset = offset;
+        mtsPlayerLimbProximalOffset = offset;
     }
 
     @Override
     public float getPlayerLimbProximalOffset() {
-        return mts$playerLimbProximalOffset;
+        return mtsPlayerLimbProximalOffset;
     }
 
     @Inject(method = "translateAndRotate", at = @At("TAIL"))
     private void inject_translateAndRotate(MatrixStack matrixStack, CallbackInfo ci) {
-        if (mts$playerLimbLengthScale != 1) {
-            matrixStack.translate(0, mts$playerLimbProximalOffset * (mts$playerLimbLengthScale - 1), 0);
-            matrixStack.scale(1, mts$playerLimbLengthScale, 1);
+        if (mtsPlayerLimbLengthScale != 1) {
+            matrixStack.translate(0, mtsPlayerLimbProximalOffset * (mtsPlayerLimbLengthScale - 1), 0);
+            matrixStack.scale(1, mtsPlayerLimbLengthScale, 1);
         }
-        if (mts$playerLimbScaleX != 1 || mts$playerLimbScaleY != 1 || mts$playerLimbScaleZ != 1) {
-            matrixStack.translate(mts$playerLimbScaleAnchorX, mts$playerLimbScaleAnchorY, 0);
-            matrixStack.scale(mts$playerLimbScaleX, mts$playerLimbScaleY, mts$playerLimbScaleZ);
-            matrixStack.translate(-mts$playerLimbScaleAnchorX, -mts$playerLimbScaleAnchorY, 0);
+        if (mtsPlayerLimbScaleX != 1 || mtsPlayerLimbScaleY != 1 || mtsPlayerLimbScaleZ != 1) {
+            matrixStack.translate(mtsPlayerLimbScaleAnchorX, mtsPlayerLimbScaleAnchorY, 0);
+            matrixStack.scale(mtsPlayerLimbScaleX, mtsPlayerLimbScaleY, mtsPlayerLimbScaleZ);
+            matrixStack.translate(-mtsPlayerLimbScaleAnchorX, -mtsPlayerLimbScaleAnchorY, 0);
         }
     }
 
     @Inject(method = "copyFrom", at = @At("TAIL"))
     private void inject_copyFrom(ModelRenderer source, CallbackInfo ci) {
-        mts$playerLimbLengthScale = ((IPlayerLimbModelPart) (Object) source).getPlayerLimbLengthScale();
-        mts$playerLimbProximalOffset = ((IPlayerLimbModelPart) (Object) source).getPlayerLimbProximalOffset();
-        mts$playerLimbScaleX = ((IPlayerLimbModelPart) (Object) source).getPlayerLimbScaleX();
-        mts$playerLimbScaleY = ((IPlayerLimbModelPart) (Object) source).getPlayerLimbScaleY();
-        mts$playerLimbScaleZ = ((IPlayerLimbModelPart) (Object) source).getPlayerLimbScaleZ();
-        mts$playerLimbScaleAnchorX = ((IPlayerLimbModelPart) (Object) source).getPlayerLimbScaleAnchorX();
-        mts$playerLimbScaleAnchorY = ((IPlayerLimbModelPart) (Object) source).getPlayerLimbScaleAnchorY();
+        mtsPlayerLimbLengthScale = ((IPlayerLimbModelPart) (Object) source).getPlayerLimbLengthScale();
+        mtsPlayerLimbProximalOffset = ((IPlayerLimbModelPart) (Object) source).getPlayerLimbProximalOffset();
+        mtsPlayerLimbScaleX = ((IPlayerLimbModelPart) (Object) source).getPlayerLimbScaleX();
+        mtsPlayerLimbScaleY = ((IPlayerLimbModelPart) (Object) source).getPlayerLimbScaleY();
+        mtsPlayerLimbScaleZ = ((IPlayerLimbModelPart) (Object) source).getPlayerLimbScaleZ();
+        mtsPlayerLimbScaleAnchorX = ((IPlayerLimbModelPart) (Object) source).getPlayerLimbScaleAnchorX();
+        mtsPlayerLimbScaleAnchorY = ((IPlayerLimbModelPart) (Object) source).getPlayerLimbScaleAnchorY();
     }
 }

@@ -8,6 +8,7 @@ import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.platform.Window;
 
+import mcinterface1211.mixin.client.EntityRenderDispatcherAccessor;
 import mcinterface1211.mixin.client.LivingEntityRendererAccessor;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -245,7 +246,6 @@ public class InterfaceEventsEntityRendering {
             return;
         }
 
-        firstPersonRenderedLimbs = activeLimbs;
         Vec3 cameraPosition = event.getCamera().getPosition();
         double renderX = Mth.lerp(partialTicks, player.xOld, player.getX()) - cameraPosition.x;
         double renderY = Mth.lerp(partialTicks, player.yOld, player.getY()) - cameraPosition.y;
@@ -255,18 +255,20 @@ public class InterfaceEventsEntityRendering {
         int packedLight = minecraft.getEntityRenderDispatcher().getPackedLightCoords(player, partialTicks);
         LivingEntityRendererAccessor layerAccessor = (LivingEntityRendererAccessor) (Object) minecraft.getEntityRenderDispatcher().getRenderer(player);
         List<?> renderedLayers = layerAccessor.get_layers();
+        boolean renderShadow = ((EntityRenderDispatcherAccessor) (Object) minecraft.getEntityRenderDispatcher()).get_shouldRenderShadow();
 
-        renderingFirstPersonBody = true;
-        layerAccessor.set_layers(Collections.emptyList());
-        minecraft.getEntityRenderDispatcher().setRenderShadow(false);
         try {
+            firstPersonRenderedLimbs = activeLimbs;
+            renderingFirstPersonBody = true;
+            layerAccessor.set_layers(Collections.emptyList());
+            minecraft.getEntityRenderDispatcher().setRenderShadow(false);
             minecraft.getEntityRenderDispatcher().render(player, renderX, renderY, renderZ, renderYaw, partialTicks, event.getPoseStack(), buffer, packedLight);
-            buffer.endBatch();
         } finally {
             layerAccessor.set_layers(renderedLayers);
-            minecraft.getEntityRenderDispatcher().setRenderShadow(true);
+            minecraft.getEntityRenderDispatcher().setRenderShadow(renderShadow);
             renderingFirstPersonBody = false;
             firstPersonRenderedLimbs = EnumSet.noneOf(PlayerLimb.class);
         }
+        buffer.endBatch();
     }
 }

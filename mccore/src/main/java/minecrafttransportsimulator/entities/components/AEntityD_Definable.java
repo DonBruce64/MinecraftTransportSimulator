@@ -49,6 +49,9 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.DurationDelayClock;
@@ -1395,31 +1398,31 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * metadata for vehicle player animations.
      */
     public void performAction(JSONAction action, boolean conditionsTrue, UUID initiatingPlayerID) {
+        if (!conditionsTrue && action.action != JSONAction.ActionType.BUTTON) {
+            return;
+        }
+
+        ComputedVariable variable = getOrCreateVariable(action.variable);
+        double previousValue = variable.currentValue;
         switch (action.action) {
-            case BUTTON: {
-                if (conditionsTrue) {
-                    getOrCreateVariable(action.variable).setTo(action.value, true, initiatingPlayerID);
-                } else {
-                    getOrCreateVariable(action.variable).setTo(0, true, initiatingPlayerID);
-                }
-                break;
-            }
-            case INCREMENT:
-                if (conditionsTrue) {
-                    getOrCreateVariable(action.variable).increment(action.value, action.clampMin, action.clampMax, true, initiatingPlayerID);
-                }
-                break;
+            case BUTTON:
             case SET:
-                if (conditionsTrue) {
-                    getOrCreateVariable(action.variable).setTo(action.value, true, initiatingPlayerID);
+                variable.setTo(conditionsTrue ? action.value : 0, false);
+                if (variable.currentValue != previousValue) {
+                    new PacketEntityVariableSet(variable, variable.currentValue).sendToClients(variable.entity, initiatingPlayerID);
                 }
                 break;
-            case TOGGLE: {
-                if (conditionsTrue) {
-                    getOrCreateVariable(action.variable).toggle(true, initiatingPlayerID);
+            case INCREMENT:
+                if (variable.increment(action.value, action.clampMin, action.clampMax, false)) {
+                    new PacketEntityVariableIncrement(variable, variable.currentValue - previousValue, action.clampMin, action.clampMax).sendToClients(variable.entity, initiatingPlayerID);
                 }
                 break;
-            }
+            case TOGGLE:
+                variable.toggle(false);
+                if (variable.currentValue != previousValue) {
+                    new PacketEntityVariableToggle(variable).sendToClients(variable.entity, initiatingPlayerID);
+                }
+                break;
         }
     }
 

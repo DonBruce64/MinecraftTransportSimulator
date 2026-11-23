@@ -12,7 +12,7 @@ import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.jsondefs.JSONPlayerAnimation.PlayerLimb;
-import minecrafttransportsimulator.rendering.IPlayerLimbModelPart;
+import minecrafttransportsimulator.mcinterface.IPlayerLimbModelPart;
 import minecrafttransportsimulator.rendering.PlayerAnimationSystem;
 import minecrafttransportsimulator.rendering.PlayerAnimationSystem.PlayerLimbPose;
 import minecrafttransportsimulator.systems.ConfigSystem;
