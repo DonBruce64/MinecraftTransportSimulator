@@ -170,6 +170,11 @@ public class InterfaceRender implements IInterfaceRender {
 
         GL11.glPushMatrix();
         applyTransformOpenGL(data.transform);
+        //Vanilla discards alpha at or below 0.1 in the blended pass.  The outline texture is solid.
+        boolean restoreAlphaTest = data.vertexObject.isOutline && data.alpha <= 0.1F && GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
+        if (restoreAlphaTest) {
+            GL11.glDisable(GL11.GL_ALPHA_TEST);
+        }
         if (data.vertexObject.cacheVertices && ConfigSystem.client.renderingSettings.renderingMode.value != 2) {
         	//Add entity to the rendering mapping once rendered.
             objectMap.computeIfAbsent(data.vertexObject, k -> new HashSet<>()).add(data);
@@ -195,6 +200,9 @@ public class InterfaceRender implements IInterfaceRender {
                 readModelView();
                 DynamicLightShadowAtlas.captureVertices(data.vertexObject.vertices, dynamicLightPose, texture);
             }
+        }
+        if (restoreAlphaTest) {
+            GL11.glEnable(GL11.GL_ALPHA_TEST);
         }
         GL11.glPopMatrix();
 

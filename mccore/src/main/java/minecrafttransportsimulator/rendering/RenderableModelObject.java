@@ -27,6 +27,7 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
+import minecrafttransportsimulator.jsondefs.JSONAnimatedObject.JSONOutline;
 import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
 import minecrafttransportsimulator.jsondefs.JSONText;
@@ -53,6 +54,7 @@ public class RenderableModelObject {
     private final JSONAnimatedObject objectDef;
     private final JSONLight lightDef;
     private final AnimationSwitchbox switchbox;
+    private final ModelOutline outline;
     private final RenderableData interiorWindowRenderable;
     private final RenderableData colorRenderable;
     private final RenderableData flareRenderable;
@@ -84,6 +86,10 @@ public class RenderableModelObject {
         this.objectDef = entity.animatedObjectDefinitions.get(vertexObject.name);
         this.lightDef = entity.lightObjectDefinitions.get(vertexObject.name);
         this.switchbox = entity.animatedObjectSwitchboxes.get(vertexObject.name);
+        JSONOutline outlineDef = objectDef != null ? objectDef.outline : null;
+        this.outline = outlineDef != null && outlineDef.opacity > 0
+                && outlineDef.outlineScale > 0 && Float.isFinite(outlineDef.outlineScale)
+                ? new ModelOutline(entity, outlineDef) : null;
 
         //If we are a window, split the model into two parts.  The first will be the exterior which will
         //be our normal model, the second will be a new, inverted, interior model.
@@ -218,12 +224,16 @@ public class RenderableModelObject {
             }
 
             //Now set dynamic alpha if we have it, since this dictates translucent state.
+            float visibilityAlpha = 1;
             if (objectDef != null && objectDef.blendedAnimations && switchbox != null && switchbox.lastVisibilityClock != null) {
-                renderable.setAlpha(getBlendedAlpha());
+                visibilityAlpha = getBlendedAlpha();
+                renderable.setAlpha(visibilityAlpha);
             }
 
-            //If we aren't on the right pass for our main object, and we don't have lights, skip further calcs.
-            if (renderable.isTranslucent != blendingEnabled && lightDef == null) {
+            boolean renderMain = renderable.isTranslucent == blendingEnabled || lightDef != null;
+            boolean renderOutline = blendingEnabled && outline != null
+                    && outline.prepare(entity, renderable.vertexObject, partialTicks, visibilityAlpha);
+            if (!renderMain && !renderOutline) {
                 return;
             }
 
@@ -239,8 +249,10 @@ public class RenderableModelObject {
             //Do main rendering based on object properties.
             if (treadPoints != null) {
                 //Active tread.  Do tread-path rendering instead of normal model.
-                renderable.setLightValue(entity.worldLightValue);
-                doTreadRendering((PartGroundDevice) entity, partialTicks);
+                if (renderMain) {
+                    renderable.setLightValue(entity.worldLightValue);
+                }
+                doTreadRendering((PartGroundDevice) entity, partialTicks, renderMain, renderOutline);
             } else {
                 //Set object states and render.
                 boolean isLitTexture = lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
@@ -266,6 +278,13 @@ public class RenderableModelObject {
                         }
                     }
                 }
+                if (renderOutline) {
+                    outline.render(renderable.transform);
+                }
+            }
+
+            if (!renderMain) {
+                return;
             }
 
             //Check if we are a light that's not a beam.  If so, do light-specific rendering.
@@ -376,6 +395,9 @@ public class RenderableModelObject {
      */
     public void destroy() {
         renderable.destroy();
+        if (outline != null) {
+            outline.destroy();
+        }
         if (dynamicLightOwner != null) {
             DynamicLightSystem.removeOwner(this);
             dynamicLightOwner = null;
@@ -692,7 +714,7 @@ public class RenderableModelObject {
         return true;
     }
 
-    private void doTreadRendering(PartGroundDevice tread, float partialTicks) {
+    private void doTreadRendering(PartGroundDevice tread, float partialTicks, boolean renderMain, boolean renderOutline) {
         //Render the treads along their points.
         //We manually set point 0 here due to the fact it's a joint between two differing angles.
         //We also need to translate to that point to start rendering as we're currently at 0,0,0.
@@ -776,7 +798,8 @@ public class RenderableModelObject {
             //Do note that the model needs to be rotated 180 on the X-axis due to all our points
             //assuming a YZ coordinate system with 0 degrees rotation being in +Y (just how the math comes out).
             //This is why 180 is added to all points cached in the operations above.
-            if (point[2] != 0 || angleDelta != 0) {
+            boolean rotateLink = point[2] != 0 || angleDelta != 0;
+            if (rotateLink) {
                 //We can't use a running rotation here as we'll end up translating in the rotated
                 //coordinate system.  To combat this, we translate like normal, but then push a
                 //stack and rotate prior to rendering.  This keeps us from having to do another
@@ -784,11 +807,15 @@ public class RenderableModelObject {
                 treadPathBaseTransform.set(renderable.transform);
                 treadRotation.setToAxisAngle(1, 0, 0, point[2] + angleDelta * treadMovementPercentage);
                 renderable.transform.applyRotation(treadRotation);
+            }
+            if (renderMain) {
                 renderable.render();
+            }
+            if (renderOutline) {
+                outline.render(renderable.transform);
+            }
+            if (rotateLink) {
                 renderable.transform.set(treadPathBaseTransform);
-            } else {
-                //Just render as normal as we didn't rotate.
-                renderable.render();
             }
 
             //Add remaining translation.

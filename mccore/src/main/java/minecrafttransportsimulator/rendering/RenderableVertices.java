@@ -2,8 +2,10 @@ package minecrafttransportsimulator.rendering;
 
 import java.nio.FloatBuffer;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -27,6 +29,8 @@ public class RenderableVertices {
     public final boolean isTranslucent;
     public final boolean isErrorPlaceholder;
     public final boolean isLines;
+    public final boolean isOutline;
+    private Map<Float, RenderableVertices> outlines;
 
     /**Index offset array for quad faces required to build a quad-textured box.
      * Order is set here to reference the points in a counter-clockwise order for rendering.
@@ -113,12 +117,17 @@ public class RenderableVertices {
 
     /**General-use constructor that allows special placeholder models to force the missing texture.**/
     public RenderableVertices(String name, FloatBuffer vertexData, boolean cacheVertices, boolean isErrorPlaceholder) {
+        this(name, vertexData, cacheVertices, isErrorPlaceholder, false);
+    }
+
+    private RenderableVertices(String name, FloatBuffer vertexData, boolean cacheVertices, boolean isErrorPlaceholder, boolean isOutline) {
         this.name = name;
         this.vertices = vertexData;
         this.cacheVertices = cacheVertices;
         this.isTranslucent = name.toLowerCase(Locale.ROOT).contains(AModelParser.TRANSLUCENT_OBJECT_NAME);
         this.isErrorPlaceholder = isErrorPlaceholder;
         this.isLines = false;
+        this.isOutline = isOutline;
     }
 
     /**Constructor used for lines.**/
@@ -129,6 +138,7 @@ public class RenderableVertices {
         this.isTranslucent = false;
         this.isErrorPlaceholder = false;
         this.isLines = true;
+        this.isOutline = false;
     }
 
     /**Constructor used for bounding boxes.**/
@@ -139,6 +149,7 @@ public class RenderableVertices {
         this.isTranslucent = holographic;
         this.isErrorPlaceholder = false;
         this.isLines = !holographic;
+        this.isOutline = false;
     }
 
     /**Static method used for single 2D sprites with centered position.  Contains parameter for number of sprite segments and texture
@@ -307,6 +318,157 @@ public class RenderableVertices {
         backfaceObject.vertices.position(0);
         backfaceObject.vertices.limit(vertices.limit());
         return backfaceObject;
+    }
+
+    /** Shares the expanded mesh among renderables using the same model object and outline scale. */
+    RenderableVertices getOutline(float scale) {
+        if (outlines == null) {
+            outlines = new HashMap<>();
+        }
+        return outlines.computeIfAbsent(scale, this::createOutline);
+    }
+
+    private RenderableVertices createOutline(float scale) {
+        OutlineVertex[] corners = new OutlineVertex[vertices.limit() / FLOATS_PER_VERTEX];
+        Map<OutlineVertex, OutlineVertex> weldedVertices = new HashMap<>();
+        for (int i = 0; i < corners.length; ++i) {
+            int position = i * FLOATS_PER_VERTEX + VERTEX_BUFFER_X_OFFSET;
+            OutlineVertex vertex = new OutlineVertex(vertices.get(position), vertices.get(position + 1), vertices.get(position + 2), weldedVertices.size());
+            corners[i] = weldedVertices.computeIfAbsent(vertex, key -> key);
+        }
+
+        Map<Long, OutlineEdge> edges = new HashMap<>();
+        Point3D planeNormal = null;
+        double planeDistance = 0;
+        boolean flat = true;
+        for (int i = 0; i < corners.length; i += VERTEXES_PER_FACE) {
+            OutlineVertex a = corners[i];
+            OutlineVertex b = corners[i + 1];
+            OutlineVertex c = corners[i + 2];
+            Point3D ab = b.position.copy().subtract(a.position);
+            Point3D ac = c.position.copy().subtract(a.position);
+            Point3D bc = c.position.copy().subtract(b.position);
+            Point3D normal = ab.crossProduct(ac);
+            double length = normal.length();
+            if (length == 0) {
+                continue;
+            }
+            normal.scale(1 / length);
+            if (planeNormal == null) {
+                planeNormal = normal;
+                planeDistance = a.position.dotProduct(normal, false);
+            } else if (flat && (Math.abs(planeNormal.dotProduct(normal, true)) < 1 - 1E-8
+                    || Math.abs(a.position.dotProduct(planeNormal, false) - planeDistance) > 1E-6)) {
+                flat = false;
+            }
+            //Weight by corner angle so triangulating a flat face does not skew the expansion.
+            a.expansion.addScaled(normal, Math.atan2(length, ab.dotProduct(ac, false)));
+            b.expansion.addScaled(normal, Math.atan2(length, -ab.dotProduct(bc, false)));
+            c.expansion.addScaled(normal, Math.atan2(length, ac.dotProduct(bc, false)));
+            recordOutlineEdge(edges, a, b, normal);
+            recordOutlineEdge(edges, b, c, normal);
+            recordOutlineEdge(edges, c, a, normal);
+        }
+
+        int boundaryCount = 0;
+        for (OutlineEdge edge : edges.values()) {
+            if (!edge.shared) {
+                //Expand open edges sideways as well so flat meshes have a border when seen head-on.
+                Point3D outward = edge.end.position.copy().subtract(edge.start.position).crossProduct(edge.normal).normalize();
+                edge.start.expansion.add(outward);
+                edge.end.expansion.add(outward);
+                ++boundaryCount;
+            }
+        }
+        for (OutlineVertex vertex : weldedVertices.keySet()) {
+            if (flat && planeNormal != null) {
+                vertex.expansion.addScaled(planeNormal, -vertex.expansion.dotProduct(planeNormal, false));
+            }
+            vertex.expansion.normalize().scale(scale).add(vertex.position);
+        }
+
+        int vertexCount = flat ? 2 * boundaryCount * VERTEXES_PER_QUAD : corners.length + boundaryCount * VERTEXES_PER_QUAD;
+        FloatBuffer shell = FloatBuffer.allocate(vertexCount * FLOATS_PER_VERTEX);
+        //Reverse the winding.  With culling and depth testing the original surface hides the interior.
+        if (!flat) {
+            for (int i = 0; i < corners.length; i += VERTEXES_PER_FACE) {
+                putOutlineTriangle(shell, corners[i].expansion, corners[i + 2].expansion, corners[i + 1].expansion);
+            }
+        }
+        for (OutlineEdge edge : edges.values()) {
+            if (!edge.shared) {
+                putOutlineTriangle(shell, edge.end.position, edge.start.position, edge.start.expansion);
+                putOutlineTriangle(shell, edge.end.position, edge.start.expansion, edge.end.expansion);
+                if (flat) {
+                    //A flat panel only needs the border, visible from either side.
+                    putOutlineTriangle(shell, edge.end.position, edge.start.expansion, edge.start.position);
+                    putOutlineTriangle(shell, edge.end.position, edge.end.expansion, edge.start.expansion);
+                }
+            }
+        }
+        shell.flip();
+        return new RenderableVertices(name + "_OUTLINE", shell, cacheVertices, false, true);
+    }
+
+    private static void putOutlineTriangle(FloatBuffer buffer, Point3D a, Point3D b, Point3D c) {
+        putOutlineVertex(buffer, a);
+        putOutlineVertex(buffer, b);
+        putOutlineVertex(buffer, c);
+    }
+
+    private static void recordOutlineEdge(Map<Long, OutlineEdge> edges, OutlineVertex start, OutlineVertex end, Point3D normal) {
+        long key = ((long) Math.min(start.index, end.index) << 32) | Math.max(start.index, end.index);
+        OutlineEdge edge = edges.get(key);
+        if (edge == null) {
+            edges.put(key, new OutlineEdge(start, end, normal));
+        } else if (edge.start == start ? edge.normal.dotProduct(normal, true) < 1 - 1E-8
+                : edge.normal.dotProduct(normal, true) > -1 + 1E-8) {
+            //A duplicate coplanar face, including a deliberately reversed face, adds no adjacency.
+            edge.shared = true;
+        }
+    }
+
+    private static void putOutlineVertex(FloatBuffer buffer, Point3D point) {
+        //The outline uses a white texture and unlit shading.
+        buffer.put(0).put(0).put(1).put(0.5F).put(0.5F);
+        buffer.put((float) point.x).put((float) point.y).put((float) point.z);
+    }
+
+    private static final class OutlineVertex {
+        final Point3D position;
+        final Point3D expansion = new Point3D();
+        final int index;
+
+        OutlineVertex(float x, float y, float z, int index) {
+            //OBJ may encode the same coordinate as either 0 or -0.
+            this.position = new Point3D(x + 0.0F, y + 0.0F, z + 0.0F);
+            this.index = index;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof OutlineVertex && position.equals(((OutlineVertex) other).position);
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = Float.hashCode((float) position.x);
+            hash = 31 * hash + Float.hashCode((float) position.y);
+            return 31 * hash + Float.hashCode((float) position.z);
+        }
+    }
+
+    private static final class OutlineEdge {
+        final OutlineVertex start;
+        final OutlineVertex end;
+        final Point3D normal;
+        boolean shared;
+
+        OutlineEdge(OutlineVertex start, OutlineVertex end, Point3D normal) {
+            this.start = start;
+            this.end = end;
+            this.normal = normal;
+        }
     }
 
     /**

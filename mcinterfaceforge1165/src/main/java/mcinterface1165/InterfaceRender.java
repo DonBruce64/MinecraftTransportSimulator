@@ -166,7 +166,7 @@ public class InterfaceRender implements IInterfaceRender {
             //Rewind buffer for next read.
             data.vertexObject.vertices.rewind();
         } else {
-            String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending + data.writeDepth;
+            String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending + data.writeDepth + data.vertexObject.isOutline;
             final RenderType renderType;
             if (data.vertexObject.cacheVertices && !renderingGUI && ConfigSystem.client.renderingSettings.renderingMode.value != 2) {
             	//Get the render type and data buffer for this entity.
@@ -812,8 +812,8 @@ public class InterfaceRender implements IInterfaceRender {
             stateBuilder.setDiffuseLightingState(data.lightingMode.disableTextureShadows ? NO_DIFFUSE_LIGHTING : DIFFUSE_LIGHTING);
             //Always smooth shading.
             stateBuilder.setShadeModelState(SMOOTH_SHADE);
-            //Use default alpha to remove alpha fragments in cut-out textures.
-            stateBuilder.setAlphaState(DEFAULT_ALPHA);
+            //Outlines use a solid texture and need to blend at every alpha.
+            stateBuilder.setAlphaState(data.vertexObject.isOutline ? NO_ALPHA : DEFAULT_ALPHA);
             //Depth test is fine, it ensures translucent things don't render in front of everything.
             //stateBuilder.setDepthTestState(LEQUAL_DEPTH_TEST);
             //Cull is fine.  Not sure what this does, actually...
