@@ -220,6 +220,7 @@ public class Explosion {
             }
 
             float baseDamage = blastDamageVsLiving != 0 ? blastDamageVsLiving : blastDamage;
+            Point3D entityBlastPoint = entityPos.copy().add(0, entity.getEyeHeight(), 0);
             double explosionResistance = getExplosionResistance(entityBlastPoint, multiparts);
             double damageAmount = getBlastDamageAfterResistance(baseDamage, damageFalloff, explosionResistance);
             Damage damage = new Damage(damageAmount, blastBounds, gun, entityResponsible, deathLanguage).setExplosive().ignoreCooldown();
