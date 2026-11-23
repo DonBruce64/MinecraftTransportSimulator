@@ -165,12 +165,20 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     public boolean attackEntityFrom(DamageSource source, float amount) {
         if (ConfigSystem.settings.damage.allowExternalDamage.value && !world.isRemote && entity instanceof AEntityF_Multipart) {
             AEntityF_Multipart<?> multipart = ((AEntityF_Multipart<?>) entity);
-            if (multipart instanceof EntityVehicleF_Physics) {
-                amount *= ConfigSystem.externalDamageOverrides.overrides.get(multipart.definition.packID).get(multipart.definition.systemName);
-            }
             Entity attacker = source.getImmediateSource();
             Entity trueSource = source.getTrueSource();
             WrapperPlayer playerSource = trueSource instanceof EntityPlayer ? WrapperPlayer.getWrapperFor((EntityPlayer) trueSource) : null;
+            if (!source.isExplosion() && WrapperEntity.isProjectileDamage(source) && attacker != null) {
+                Point3D projectilePosition = new Point3D(attacker.posX, attacker.posY, attacker.posZ);
+                Point3D projectileMotion = new Point3D(attacker.motionX, attacker.motionY, attacker.motionZ);
+                return multipart.attackExternalProjectile(projectilePosition, projectileMotion, amount, playerSource);
+            }
+            if (multipart instanceof EntityVehicleF_Physics) {
+                amount = (float) ((EntityVehicleF_Physics) multipart).getExternalHitDamage(amount, false);
+            }
+            if (interactAttackBoxes == null) {
+                return false;
+            }
             if (lastExplosionPosition != null && source.isExplosion()) {
                 //We encountered an explosion.  These may or may not have have entities linked to them.  Depends on if
                 //it's a player firing a gun that had a bullet, or a random TNT lighting in the world.
@@ -193,7 +201,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                 }
 
                 //No damage from direct attack, see if we have movement and are a projectile.
-                Vec3d mcMovement = attacker.getPositionVector();
+                Vec3d mcMovement = new Vec3d(attacker.motionX, attacker.motionY, attacker.motionZ);
                 if (mcMovement.lengthSquared() != 0) {
                     //Check the theoretical position of the entity should it have moved.
                     //Some projectiles may call their attacking code before updating their positions.

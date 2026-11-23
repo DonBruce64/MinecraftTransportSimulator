@@ -21,10 +21,12 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityBullet.HitType;
 import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
@@ -282,13 +284,22 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * the bullet know if it WILL hit this entity.  Returns null if no boxes collided, not an empty collection.
      */
     public Collection<BoundingBoxHitResult> getHitBoxes(Point3D pathStart, Point3D pathEnd, BoundingBox movementBounds, boolean isBullet) {
-        if (encompassingBox.intersects(movementBounds)) {
+        return getHitBoxes(pathStart, pathEnd, movementBounds, isBullet, false);
+    }
+
+    public Collection<BoundingBoxHitResult> getExternalProjectileHitBoxes(Point3D start, Point3D end) {
+        return getHitBoxes(start, end, new BoundingBox(start, end), true, true);
+    }
+
+    private Collection<BoundingBoxHitResult> getHitBoxes(Point3D pathStart, Point3D pathEnd, BoundingBox movementBounds, boolean isBullet, boolean includeStartingBox) {
+        if (encompassingBox.intersects(movementBounds) || (includeStartingBox && encompassingBox.isPointInside(pathStart, null))) {
             //Get all collision boxes and check if we hit any of them.
             //Sort them by distance for later.
             TreeMap<Double, BoundingBoxHitResult> hitBoxes = new TreeMap<>();
             for (BoundingBox box : allCollisionBoxes) {
                 if (box.collisionTypes.contains(CollisionType.ATTACK) || (isBullet && box.collisionTypes.contains(CollisionType.BULLET))) {
-                    BoundingBoxHitResult hitResult = box.getIntersection(pathStart, pathEnd);
+                    BoundingBoxHitResult hitResult = includeStartingBox && box.isPointInside(pathStart, null)
+                        ? new BoundingBoxHitResult(box, pathStart, Axis.NONE) : box.getIntersection(pathStart, pathEnd);
                     if (hitResult != null) {
                         double boxDistance = hitResult.position.distanceTo(pathStart);
                         boolean addBox = true;
@@ -319,6 +330,34 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             }
         }
         return null;
+    }
+
+    /**
+     * Resolves a projectile reported by Minecraft against the active damage boxes.  External
+     * projectiles can report a hit either before or after updating their position.
+     */
+    public boolean attackExternalProjectile(Point3D position, Point3D motion, double amount, IWrapperPlayer attacker) {
+        if (!(amount > 0) || !Double.isFinite(amount)) {
+            return false;
+        }
+        Collection<BoundingBoxHitResult> hitBoxes = getExternalProjectileHitBoxes(position, position.copy().add(motion));
+        if (hitBoxes == null && !motion.isZero()) {
+            hitBoxes = getExternalProjectileHitBoxes(position.copy().subtract(motion), position);
+        }
+        if (hitBoxes == null) {
+            return false;
+        }
+        if (this instanceof EntityVehicleF_Physics) {
+            EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) this;
+            if (attacker != null) {
+                vehicle.pulseAttackVariable();
+            }
+            amount = vehicle.getExternalHitDamage(amount, true);
+        }
+        if (amount > 0 && Double.isFinite(amount)) {
+            attackProjectile(new Damage(amount, null, null, attacker, null), null, hitBoxes);
+        }
+        return true;
     }
 
     /**

@@ -242,7 +242,7 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
         //Not holding an item that can interact with a entity, nor right-clicked a box.  Try to interact with the entity itself.
         if (rightClick) {
             entity.interact(player);
-        } else if (leftClick && (hitBox.groupDef == null || hitBox.groupDef.armorThickness == 0)) {
+        } else if (leftClick) {
             //Do not let riders punch their own vehicle or remove its parts by hand.
             if (player.getEntityRiding() instanceof APart) {
                 AEntityF_Multipart<?> riddenEntity = ((APart) player.getEntityRiding()).masterEntity;
@@ -250,7 +250,12 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
                     return false;
                 }
             }
-            entity.attack(new Damage(1.0F, entity.boundingBox, null, player, null).setHand());
+            if (vehicle != null) {
+                vehicle.pulseAttackVariable();
+            }
+            if (hitBox.groupDef == null || hitBox.groupDef.armorThickness == 0) {
+                entity.attack(new Damage(1.0F, entity.boundingBox, null, player, null).setHand());
+            }
         }
         return false;
     }

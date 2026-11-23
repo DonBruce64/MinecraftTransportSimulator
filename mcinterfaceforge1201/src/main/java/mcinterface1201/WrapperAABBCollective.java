@@ -23,26 +23,44 @@ import net.minecraft.world.phys.Vec3;
  */
 public class WrapperAABBCollective extends AABB {
     private final AEntityE_Interactable<?> interactable;
-    private final boolean collision;
+    enum Mode {
+        COLLISION, INTERACTION, ENTITY_QUERY
+    }
+
+    private final Mode mode;
     private final Set<BoundingBox> boxes = new HashSet<>();
 
     public WrapperAABBCollective(AEntityE_Interactable<?> interactable, boolean collision) {
+        this(interactable, collision ? Mode.COLLISION : Mode.INTERACTION);
+    }
+
+    WrapperAABBCollective(AEntityE_Interactable<?> interactable, Mode mode) {
         super(interactable.encompassingBox.globalCenter.x - interactable.encompassingBox.widthRadius, interactable.encompassingBox.globalCenter.y - interactable.encompassingBox.heightRadius, interactable.encompassingBox.globalCenter.z - interactable.encompassingBox.depthRadius, interactable.encompassingBox.globalCenter.x + interactable.encompassingBox.widthRadius, interactable.encompassingBox.globalCenter.y + interactable.encompassingBox.heightRadius, interactable.encompassingBox.globalCenter.z + interactable.encompassingBox.depthRadius);
         this.interactable = interactable;
-        this.collision = collision;
+        this.mode = mode;
     }
 
     public synchronized Set<BoundingBox> getBoxes() {
         if (boxes.isEmpty()) {
             (interactable instanceof AEntityF_Multipart ? ((AEntityF_Multipart<?>) interactable).allCollisionBoxes : interactable.collisionBoxes).forEach(box -> {
-                if (collision) {
-                    if (box.collisionTypes.contains(CollisionType.ENTITY)) {
-                        boxes.add(box);
-                    }
-                } else {
-                    if (box.collisionTypes.contains(CollisionType.ATTACK) || box.collisionTypes.contains(CollisionType.CLICK)) {
-                        boxes.add(box);
-                    }
+                boolean physical = box.collisionTypes.contains(CollisionType.ENTITY);
+                boolean attack = box.collisionTypes.contains(CollisionType.ATTACK);
+                switch (mode) {
+                    case COLLISION:
+                        if (physical) {
+                            boxes.add(box);
+                        }
+                        break;
+                    case INTERACTION:
+                        if (attack || box.collisionTypes.contains(CollisionType.CLICK)) {
+                            boxes.add(box);
+                        }
+                        break;
+                    case ENTITY_QUERY:
+                        if (physical || attack || box.collisionTypes.contains(CollisionType.BULLET)) {
+                            boxes.add(box);
+                        }
+                        break;
                 }
             });
         }
@@ -77,6 +95,15 @@ public class WrapperAABBCollective extends AABB {
         //Check all the bounding boxes for collision to see if we hit one of them.
         Point3D start = new Point3D(vecA.x, vecA.y, vecA.z);
         Point3D end = new Point3D(vecB.x, vecB.y, vecB.z);
+        if (mode == Mode.ENTITY_QUERY && interactable instanceof AEntityF_Multipart<?> multipart) {
+            var hits = multipart.getExternalProjectileHitBoxes(start, end);
+            if (hits == null) {
+                return Optional.empty();
+            }
+            Point3D hit = hits.iterator().next().position;
+            return Optional.of(new Vec3(hit.x, hit.y, hit.z));
+        }
+
         BoundingBoxHitResult intersection = null;
         for (BoundingBox testBox : getBoxes()) {
             BoundingBoxHitResult testIntersection = testBox.getIntersection(start, end);
