@@ -1,13 +1,16 @@
-# Vehicle player animations
+# Vehicle and part player animations
 
-Vehicles (and only vehicles) may define an ordered `playerAnimations` list
-inside their `rendering` section. These client-side animations are enabled by
+Vehicles and parts may define an ordered `playerAnimations` list inside their
+`rendering` section. These client-side animations are enabled by
 the existing `playerTweaks` client setting and are visible in first and third
 person. They only ever affect players, never other humanoid mobs.
 
-The first active entry for a limb wins. Put short, high-priority actions, such
-as reaching for a starter key, before persistent targets such as a steering
-wheel grip.
+Within each model, the first active entry for a limb wins. Put short actions,
+such as reaching for a starter key, before persistent targets such as a
+steering wheel grip. For seated players, vehicle entries take priority over
+part entries. When two parts offer a target for the same seated limb, the
+first eligible part in load order wins. For standing players, the nearest
+eligible target across vehicles and parts wins.
 
 ```json
 "rendering": {
@@ -62,9 +65,9 @@ wheel grip.
 | Parameter | Required | Default | Function |
 | --- | --- | --- | --- |
 | `limb` | Yes | — | Limb to control: `armleft`, `armright`, `legleft`, or `legright`. |
-| `seatSlot` | Seated only | — | Array of zero-based indices into the vehicle's `parts` list, such as `[6, 7, 8]`, naming the seats this entry applies to. Only seats mounted directly on the vehicle match; a seat on another part never does. Omit it for an exterior animation. |
-| `applyAfter` | Yes | — | `objectName` of the `rendering.animatedObjects` entry whose complete animated transform is applied to the target. |
-| `pos` | Yes | — | Attachment coordinate in vehicle model space. The exact center of the hand or foot end face reaches this point. |
+| `seatSlot` | Seated only | — | Zero-based seat slot indices, such as `[6, 7, 8]`. Vehicle entries use seats mounted directly on the vehicle. Part entries use seats mounted directly on the defining part or one of its mounting parents. Omit for exterior entries and for an entry targeting the defining seat part's own rider. |
+| `applyAfter` | Yes | — | `objectName` of an entry in the defining model's `rendering.animatedObjects` whose complete animated transform is applied to the target. |
+| `pos` | Yes | — | Attachment coordinate in the defining model's local space. The exact center of the hand or foot end face reaches this point. |
 | `limbScale` | No | `[1, 1, 1]` | Local X/Y/Z scale for the limb. Scaling remains anchored at the end-face center, so changing it does not move the attachment point. |
 | `range` | Exterior only | — | Maximum distance in blocks from `pos` to the center of the player's torso. An exterior entry omits `seatSlot`, uses a positive `range`, and overrides only its targeted limb. |
 | `activeAnimations` | No | Always active | Normal MTS animation list that controls whether this entry is eligible. |
@@ -75,18 +78,40 @@ wheel grip.
 | `initiatingPlayerOnly` | No | `false` | Selects the entry only for the player whose authenticated client action caused the active state to change. Use it for shared controls where only the actual operator should reach. Persistent shared grips should leave this `false`. |
 | `gripOverrides` | No | — | Ordered alternative targets within the entry. The first active override wins and replaces the parent values it defines. |
 
-Each entry must have exactly one of a non-empty `seatSlot` or a `range` above 0.
-`activeAnimations` are evaluated once per vehicle tick, which is also the
+Use either a non-empty `seatSlot` or a positive `range`. On a seat part,
+omit both to animate its own rider. Conditions use the defining vehicle or
+part's variables and are evaluated once per tick, which is also the
 resolution of one-shot and linger timing.
 
 `initiatingPlayerOnly` attribution covers synchronized variable changes,
 clickable actions, GUI interaction, and custom keypresses. Direct variables are
 matched to their entity and variable. Short-lived derived values, including
 variable-modifier outputs, `player_interacting`, and clutch-shift pulses, can
-inherit the recent authenticated interaction on the same vehicle. When several
-actions happen together, direct variables provide more precise attribution.
+inherit a recent authenticated interaction. On parts, this fallback uses
+interactions on the defining part. Direct references can also match a variable
+from another entity in the same assembly through normal MTS variable lookup.
 An automatic release retains the player who started the animation for its
 configured `lingerDuration`.
+
+## Example part entry
+
+A steering wheel part mounted on a vehicle with its driver's seat in slot 4
+can use this entry in its own `rendering.playerAnimations`. Define
+`wheel` in the part's `rendering.animatedObjects` and measure `pos` from
+the part model's origin.
+
+```json
+{
+  "limb": "armright",
+  "seatSlot": [4],
+  "applyAfter": "wheel",
+  "pos": [-0.12, 0.06, 0],
+  "duration": 3
+}
+```
+
+For a part placed in the world, use a positive `range` to let a standing
+player reach its target.
 
 ## Grip override parameters
 
@@ -105,14 +130,13 @@ configured `lingerDuration`.
 
 On pack load and hotload, entries with conflicting or missing seat and range
 selectors, invalid ranges, or unknown `applyAfter` names are logged and skipped.
-This includes `applyAfter` on grip overrides. The rest of the vehicle loads
-normally. Entries defined on any other pack item are logged and cleared.
+This includes `applyAfter` on grip overrides. The rest of the vehicle or part
+loads normally. Entries on other pack items are logged and cleared.
 
 Schema errors are not covered by this and fail the whole vehicle, as they do for
 any other field: a `limb` value that is not one of the four lowercase names, a
 missing required field, or a `seatSlot` written as a bare number instead of an
-array. A `seatSlot` index that is not a seat mounted directly on the vehicle is
-not an error; the entry simply never matches.
+array. A slot index with no eligible seat produces no pose.
 
 ## Rendering
 

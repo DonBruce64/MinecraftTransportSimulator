@@ -13,9 +13,9 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 /**
- * Defines a vehicle-relative target for one of a player's limbs. Definitions
+ * Defines a model-relative target for one of a player's limbs. Definitions
  * are evaluated in list order, with the first active definition winning.
- * Only vehicles support these; entries that fail the checks in
+ * Vehicles and parts support these; entries that fail the checks in
  * {@link minecrafttransportsimulator.packloading.PackParser#validatePlayerAnimations} are dropped at load.
  */
 public class JSONPlayerAnimation {
@@ -25,7 +25,7 @@ public class JSONPlayerAnimation {
     @JSONDescription("The player limb controlled by this entry. Valid values are armleft, armright, legleft, and legright.")
     public PlayerLimb limb;
 
-    @JSONDescription("An array of zero-based indices into the vehicle's parts list, naming the seat slots this entry applies to. Only seats mounted directly on the vehicle match; a seat on another part never does. Omit this for an exterior animation and specify range instead. Exactly one of seatSlot and range must be set.")
+    @JSONDescription("Zero-based indices of eligible seat slots. On a vehicle, use slots directly on the vehicle. On a part, use slots directly on the part or any of its mounting parents. Omit this and range to target the rider of the defining seat part itself, or omit this and set range for an exterior animation.")
     public List<Integer> seatSlot;
 
     @JSONRequired
@@ -33,13 +33,13 @@ public class JSONPlayerAnimation {
     public String applyAfter;
 
     @JSONRequired
-    @JSONDescription("The attachment coordinate in vehicle model space. For arms, this point is reached by the exact center of the hand's end face. The applyAfter object's animations are applied to this coordinate.")
+    @JSONDescription("The attachment coordinate in the defining vehicle or part's model space. For arms, this point is reached by the exact center of the hand's end face. The applyAfter object's animations are applied to this coordinate.")
     public Point3D pos;
 
     @JSONDescription("Optional local X/Y/Z scale applied to the controlled limb. Defaults to [1, 1, 1]. Scaling is anchored at the center of the hand or foot end face, so pos remains exact even when the limb's length is changed.")
     public Point3D limbScale;
 
-    @JSONDescription("For an exterior animation, the maximum distance in blocks between the animated target and the center of the player's torso. Omit seatSlot and set this to a positive value; exactly one of seatSlot and range must be set. Only the targeted limb is overridden while the player remains in range.")
+    @JSONDescription("For an exterior animation, the maximum distance in blocks between the animated target and the center of the player's torso. Omit seatSlot and set this to a positive value. Only the targeted limb is overridden while the player remains in range.")
     public double range;
 
     @JSONDescription("Normal MTS active animations controlling whether this target may be selected. Entries in playerAnimations are checked from first to last, so earlier active entries override later entries for the same limb and seat.")
@@ -58,13 +58,13 @@ public class JSONPlayerAnimation {
     @JSONDescription("Only used with oneShot. If true, the one-shot fires whenever activeAnimations change in either direction, allowing one entry to handle both states of a toggle such as opening and closing a door. Initial loading does not count as a change.")
     public boolean triggerOnChange;
 
-    @JSONDescription("If true, this entry is selected only for the player whose client-issued variable change, clickable action, GUI interaction, or custom keypress caused its activeAnimations to change. Direct variable references are matched exactly, while short-lived derived variables such as variable-modifier outputs, player_interacting, and clutch-shift pulses can inherit the recent authenticated interaction on the same vehicle. Use this for shared controls such as a parking brake that either controller may operate but only the actual operator should reach for. An activation without a matching or recent interaction has no initiating player. Defaults to false, which preserves the normal behavior where every applicable occupied seat may animate.")
+    @JSONDescription("If true, this entry is selected only for the player whose client-issued variable change, clickable action, GUI interaction, or custom keypress caused its activeAnimations to change. Direct variable references are matched exactly, while short-lived derived variables such as variable-modifier outputs, player_interacting, and clutch-shift pulses can inherit the recent authenticated interaction on the same source. Use this for shared controls such as a parking brake that either controller may operate but only the actual operator should reach for. An activation without a matching or recent interaction has no initiating player. Defaults to false, which preserves the normal behavior where every applicable occupied seat may animate.")
     public boolean initiatingPlayerOnly;
 
     @JSONDescription("Optional ordered attachment overrides. The first active override replaces pos (and applyAfter when supplied), allowing a hand or foot to change grip based on additional variables.")
     public List<JSONPlayerGripOverride> gripOverrides;
 
-    /** Returns true if this definition applies to the supplied vehicle seat slot. */
+    /** Returns true if this definition applies to the supplied seat slot. */
     public boolean appliesToSeat(int slot) {
         return seatSlot != null && seatSlot.contains(slot);
     }
@@ -76,7 +76,7 @@ public class JSONPlayerAnimation {
         public String applyAfter;
 
         @JSONRequired
-        @JSONDescription("The replacement attachment coordinate in vehicle model space.")
+        @JSONDescription("The replacement attachment coordinate in the defining vehicle or part's model space.")
         public Point3D pos;
 
         @JSONDescription("Optional replacement local X/Y/Z limb scale. If omitted, the parent entry's limbScale is used. Scaling remains anchored at the hand or foot end-face center.")

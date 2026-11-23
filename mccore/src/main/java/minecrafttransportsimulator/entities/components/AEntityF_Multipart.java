@@ -76,6 +76,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * Like {@link #parts}, except contains all parts on parts as well, recursively to the lowest part.
      */
     public final List<APart> allParts = new ArrayList<>();
+    private boolean hasActorPlayerAnimationParts;
+
+    /** Whether any installed part requests the actor ID in player-originated variable updates. */
+    public final boolean hasActorPlayerAnimationParts() {
+        return hasActorPlayerAnimationParts;
+    }
 
     /**
      * Identical to {@link #parts}, except this list has null elements for empty slots.  Designed
@@ -693,10 +699,13 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      */
     protected final void updateAllpartList() {
         allParts.clear();
+        hasActorPlayerAnimationParts = false;
         parts.forEach(part -> {
             part.updateAllpartList();
             allParts.add(part);
             allParts.addAll(part.allParts);
+            hasActorPlayerAnimationParts |= part.hasActorPlayerAnimationParts()
+                    || (part.definition.rendering != null && part.definition.rendering.hasActorPlayerAnimations());
         });
     }
 

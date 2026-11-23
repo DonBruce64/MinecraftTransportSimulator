@@ -27,6 +27,7 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
+import minecrafttransportsimulator.rendering.PlayerAnimationSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
@@ -287,6 +288,23 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         updatePartBoundingBox();
         world.endProfiling();
         world.endProfiling();
+    }
+
+    @Override
+    public void doPostUpdateLogic() {
+        super.doPostUpdateLogic();
+        if (world.isClient() && isValid && definition.rendering != null && definition.rendering.playerAnimations != null
+                && !definition.rendering.playerAnimations.isEmpty()) {
+            PlayerAnimationSystem.updateSource(this);
+        }
+    }
+
+    @Override
+    public void remove() {
+        super.remove();
+        if (world.isClient()) {
+            PlayerAnimationSystem.removeSource(this);
+        }
     }
 
     @Override

@@ -190,7 +190,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             mouseAimControlVar.setActive(false, true);
         }
         if (world.isClient()) {
-            PlayerAnimationSystem.updateVehicle(this);
+            PlayerAnimationSystem.updateSource(this);
         }
         world.endProfiling();
     }
@@ -199,7 +199,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public void remove() {
         super.remove();
         if (world.isClient()) {
-            PlayerAnimationSystem.removeVehicle(this);
+            PlayerAnimationSystem.removeSource(this);
         }
     }
 

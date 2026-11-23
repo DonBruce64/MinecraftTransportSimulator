@@ -536,8 +536,8 @@ public final class PackParser {
 
     /**
      * Checks the rendering.playerAnimations of the passed-in definition, logging an error for every problem found.
-     * Player animations are only supported on vehicles, so they are cleared from any other definition.  Invalid
-     * entries on vehicles are removed so the animation system only ever sees entries that can work.  Unlike
+     * Player animations are supported on vehicles and parts. Invalid entries are removed so the animation
+     * system only ever sees entries that can work.  Unlike
      * {@link JSONParser#validateFields(Object, String, int)}, a bad entry does not stop the definition from loading.
      */
     public static void validatePlayerAnimations(AJSONBase definition) {
@@ -549,18 +549,19 @@ public final class PackParser {
             return;
         }
         String definitionName = definition.packID + ":" + definition.systemName;
-        if (!(definition instanceof JSONVehicle)) {
+        if (!(definition instanceof JSONVehicle) && !(definition instanceof JSONPart)) {
             if (!rendering.playerAnimations.isEmpty()) {
-                InterfaceManager.coreInterface.logError("Player animations are only supported on vehicles.  Ignoring rendering.playerAnimations in " + definitionName + ".");
+                InterfaceManager.coreInterface.logError("Player animations are only supported on vehicles and parts.  Ignoring rendering.playerAnimations in " + definitionName + ".");
             }
             rendering.playerAnimations = null;
             return;
         }
 
+        boolean hasOwnRider = definition instanceof JSONPart && ((JSONPart) definition).seat != null;
         List<JSONPlayerAnimation> validAnimations = new ArrayList<>();
         for (int i = 0; i < rendering.playerAnimations.size(); ++i) {
             JSONPlayerAnimation animation = rendering.playerAnimations.get(i);
-            String error = getPlayerAnimationError(animation, rendering);
+            String error = getPlayerAnimationError(animation, rendering, hasOwnRider);
             if (error == null) {
                 //An empty seatSlot list means the same as no seatSlot: an exterior entry.
                 if (animation.seatSlot != null && animation.seatSlot.isEmpty()) {
@@ -574,14 +575,17 @@ public final class PackParser {
         rendering.playerAnimations = validAnimations;
     }
 
-    private static String getPlayerAnimationError(JSONPlayerAnimation animation, JSONRendering rendering) {
+    private static String getPlayerAnimationError(JSONPlayerAnimation animation, JSONRendering rendering, boolean hasOwnRider) {
         boolean hasSeatSlot = animation.seatSlot != null && !animation.seatSlot.isEmpty();
         boolean hasRange = animation.range > 0;
         if (!Double.isFinite(animation.range) || animation.range < 0) {
             return "range must be a finite positive number for exterior animations.";
         }
-        if (hasSeatSlot == hasRange) {
-            return hasSeatSlot ? "it has both seatSlot and range.  Use seatSlot for seated animations and range for exterior ones." : "it has neither seatSlot nor a range above 0.  Use seatSlot for seated animations and range for exterior ones.";
+        if (hasSeatSlot && hasRange) {
+            return "it has both seatSlot and range.  Use seatSlot for seated animations and range for exterior ones.";
+        }
+        if (!hasSeatSlot && !hasRange && !hasOwnRider) {
+            return "it has neither seatSlot nor a range above 0.  Use seatSlot for seated animations and range for exterior ones.";
         }
         if (!isAnimatedObject(rendering, animation.applyAfter)) {
             return "applyAfter '" + animation.applyAfter + "' is not an objectName in rendering.animatedObjects.";
