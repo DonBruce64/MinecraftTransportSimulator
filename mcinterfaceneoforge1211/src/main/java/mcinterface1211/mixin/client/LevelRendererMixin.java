@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import mcinterface1211.InterfaceClient;
 import mcinterface1211.InterfaceRender;
 import mcinterface1211.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -48,6 +49,7 @@ public abstract class LevelRendererMixin {
     public void inject_renderLevelDataGetter(DeltaTracker pDeltaTracker, boolean pDrawBlockOutline, Camera pCamera, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pModelViewMatrix, Matrix4f pProjection, CallbackInfo ci) {
         InterfaceRender.projectionMatrix = pProjection;
         InterfaceRender.viewMatrix = new Matrix4f(pModelViewMatrix);
+        InterfaceClient.captureWorldProjection(pCamera, pModelViewMatrix, pProjection);
         InterfaceRender.startDynamicLightFrame();
     }
 

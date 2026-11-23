@@ -302,6 +302,7 @@ public class InterfaceRender implements IInterfaceRender {
     @SubscribeEvent
     public static void onIVRenderTick(TickEvent.RenderTickEvent event) {
         if (event.phase == TickEvent.Phase.START) {
+            InterfaceClient.resetWorldProjection();
             ++dynamicLightFrame;
             DynamicLightShadowAtlas.frameEnd();
         }
@@ -780,8 +781,6 @@ public class InterfaceRender implements IInterfaceRender {
      */
     @SubscribeEvent
     public static void onIVRenderLast(RenderWorldLastEvent event) {
-        InterfaceClient.captureWorldProjection(event.getPartialTicks());
-
         //Enable lighting as pass -1 has that disabled.
         RenderHelper.enableStandardItemLighting();
         setLightingState(true);
@@ -802,6 +801,8 @@ public class InterfaceRender implements IInterfaceRender {
                 GlStateManager.depthMask(true);
             }
         }
+
+        InterfaceClient.finishWorldProjection(event.getPartialTicks());
 
         //Turn lighting back off.
         RenderHelper.disableStandardItemLighting();
