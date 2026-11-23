@@ -35,6 +35,7 @@ public class AnimationSwitchbox {
     protected final AEntityD_Definable<?> entity;
     private final String applyAfter;
     private final String applyAfterSource;
+    private final boolean blendedVisibility;
     private final List<DurationDelayClock> clocks = new ArrayList<>();
     private final Point3D helperPoint = new Point3D();
     private final Point3D helperScalingVector = new Point3D();
@@ -45,15 +46,21 @@ public class AnimationSwitchbox {
     private boolean switchboxEnabled;
     private long lastTickRun;
     private float lastPartialTickRun;
+    private long runCount;
 
     public AnimationSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations, String applyAfter) {
         this(entity, animations, applyAfter, null);
     }
 
     public AnimationSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations, String applyAfter, String applyAfterSource) {
+        this(entity, animations, applyAfter, applyAfterSource, false);
+    }
+
+    public AnimationSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations, String applyAfter, String applyAfterSource, boolean blendedVisibility) {
         this.entity = entity;
         this.applyAfter = applyAfter;
         this.applyAfterSource = applyAfterSource;
+        this.blendedVisibility = blendedVisibility;
         for (JSONAnimationDefinition animation : animations) {
             clocks.add(new DurationDelayClock(animation));
         }
@@ -63,6 +70,7 @@ public class AnimationSwitchbox {
         if (forceSameTick || lastTickRun != entity.ticksExisted || lastPartialTickRun != partialTicks) {
             lastTickRun = entity.ticksExisted;
             lastPartialTickRun = partialTicks;
+            ++runCount;
 
             if (applyAfter != null) {
                 AnimationSwitchbox switchbox = entity.animatedObjectSwitchboxes.get(applyAfter);
@@ -87,15 +95,11 @@ public class AnimationSwitchbox {
             switchboxEnabled = true;
             for (DurationDelayClock clock : clocks) {
                 switch (clock.animation.animationType) {
-                    case TRANSLATION: {
+                    case TRANSLATION:
+                    case ROTATION:
+                    case SCALING: {
                         if (!inhibitAnimations) {
-                            runTranslation(clock, partialTicks);
-                        }
-                        break;
-                    }
-                    case ROTATION: {
-                        if (!inhibitAnimations) {
-                            runRotation(clock, partialTicks);
+                            runTransform(clock, partialTicks);
                         }
                         break;
                     }
@@ -103,7 +107,13 @@ public class AnimationSwitchbox {
                         if (!inhibitAnimations) {
                             lastVisibilityClock = clock;
                             lastVisibilityValue = getAnimatedVariableValue(clock, 1.0, partialTicks);
-                            if (lastVisibilityValue < clock.animation.clampMin || lastVisibilityValue > clock.animation.clampMax) {
+                            boolean visible = !(lastVisibilityValue < clock.animation.clampMin || lastVisibilityValue > clock.animation.clampMax);
+                            boolean active = blendedVisibility ? lastVisibilityValue > clock.animation.clampMin : visible;
+                            boolean passed = clock.passesConditionProbability(entity, runCount, active);
+                            if (!passed) {
+                                lastVisibilityValue = clock.animation.clampMin;
+                            }
+                            if (!visible || !passed) {
                                 switchboxEnabled = false;
                                 return false;
                             }
@@ -111,26 +121,14 @@ public class AnimationSwitchbox {
                         break;
                     }
                     case INHIBITOR: {
-                        if (!inhibitAnimations) {
-                            double variableValue = getAnimatedVariableValue(clock, 1.0, partialTicks);
-                            if (variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax) {
-                                inhibitAnimations = true;
-                            }
+                        if (!inhibitAnimations && isConditionActive(clock, partialTicks)) {
+                            inhibitAnimations = true;
                         }
                         break;
                     }
                     case ACTIVATOR: {
-                        if (inhibitAnimations) {
-                            double variableValue = getAnimatedVariableValue(clock, 1.0, partialTicks);
-                            if (variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax) {
-                                inhibitAnimations = false;
-                            }
-                        }
-                        break;
-                    }
-                    case SCALING: {
-                        if (!inhibitAnimations) {
-                            runScaling(clock, partialTicks);
+                        if (inhibitAnimations && isConditionActive(clock, partialTicks)) {
+                            inhibitAnimations = false;
                         }
                         break;
                     }
@@ -140,6 +138,46 @@ public class AnimationSwitchbox {
         } else {
             return switchboxEnabled;
         }
+    }
+
+    private boolean isConditionActive(DurationDelayClock clock, float partialTicks) {
+        double value = getAnimatedVariableValue(clock, 1.0, partialTicks);
+        boolean inRange = value >= clock.animation.clampMin && value <= clock.animation.clampMax;
+        return clock.passesConditionProbability(entity, runCount, inRange) && inRange;
+    }
+
+    private void runTransform(DurationDelayClock clock, float partialTicks) {
+        if (clock.usesProbability) {
+            if (!(clock.animation.probability > 0)) {
+                return;
+            }
+            double input = getAnimationInput(clock, partialTicks);
+            if (!clock.passesTransformProbability(entity, runCount, input, partialTicks)) {
+                return;
+            }
+            clock.setSampledTransformInput(input);
+        }
+        try {
+            switch (clock.animation.animationType) {
+                case TRANSLATION:
+                    runTranslation(clock, partialTicks);
+                    break;
+                case ROTATION:
+                    runRotation(clock, partialTicks);
+                    break;
+                case SCALING:
+                    runScaling(clock, partialTicks);
+                    break;
+            }
+        } finally {
+            if (clock.usesProbability) {
+                clock.setSampledTransformInput(null);
+            }
+        }
+    }
+
+    protected double getAnimationInput(DurationDelayClock clock, float partialTicks) {
+        return clock.getEntityInput(entity, partialTicks);
     }
 
     protected double getAnimatedVariableValue(DurationDelayClock clock, double scaleFactor, float partialTicks) {

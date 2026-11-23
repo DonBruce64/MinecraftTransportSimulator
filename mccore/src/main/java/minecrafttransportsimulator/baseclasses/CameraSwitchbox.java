@@ -59,6 +59,11 @@ public class CameraSwitchbox extends AnimationSwitchbox {
 
     @Override
     protected double getAnimatedVariableValue(DurationDelayClock clock, double scaleFactor, float partialTicks) {
+        return clock.clampAndScale(entity, getAnimationInput(clock, partialTicks), scaleFactor, 0, partialTicks);
+    }
+
+    @Override
+    protected double getAnimationInput(DurationDelayClock clock, float partialTicks) {
         if (cameraRider != null && cameraRider.isRiderCameraInputActive && cameraRider.activeCameraSwitchbox == this) {
             ComputedVariable variable = entity.getOrCreateVariable(clock.animation.variable);
             if (variable.entity == cameraRider) {
@@ -71,13 +76,12 @@ public class CameraSwitchbox extends AnimationSwitchbox {
                     currentInput = cameraRider.riderCameraInputOrientation.angles.x;
                     previousInput = cameraRider.prevRiderCameraInputOrientation.angles.x;
                 } else {
-                    return super.getAnimatedVariableValue(clock, scaleFactor, partialTicks);
+                    return super.getAnimationInput(clock, partialTicks);
                 }
-                double input = partialTicks != 0 ? previousInput + (currentInput - previousInput) * partialTicks : currentInput;
-                return clock.clampAndScale(entity, input, scaleFactor, 0, partialTicks);
+                return partialTicks != 0 ? previousInput + (currentInput - previousInput) * partialTicks : currentInput;
             }
         }
-        return super.getAnimatedVariableValue(clock, scaleFactor, partialTicks);
+        return super.getAnimationInput(clock, partialTicks);
     }
 
     @Override

@@ -134,21 +134,20 @@ public final class RenderInstrument {
     }
 
     private static double getInstrumentVariableValue(AEntityD_Definable<?> entity, DurationDelayClock clock, String variable, double scaleFactor, float partialTicks) {
-        double value;
+        Double sampledInput = clock != null ? clock.getSampledTransformInput() : null;
+        double value = sampledInput != null ? sampledInput : getInstrumentVariableInput(entity, variable, partialTicks);
+        return clock != null ? clock.clampAndScale(entity, value, scaleFactor, 0, partialTicks) : value * scaleFactor;
+    }
+
+    private static double getInstrumentVariableInput(AEntityD_Definable<?> entity, String variable, float partialTicks) {
         if (ComputedVariable.isNumberedVariable(variable)) {
             //Variable has a defined part index on it.  No modifications required.
-            value = entity.getOrCreateVariable(variable).computeValue(partialTicks);
-        } else {
-            value = entity.getOrCreateVariable(variable + "_" + partNumber).computeValue(partialTicks);
-            if (value == 0) {
-                //Could be 0, or part might not exist and we need to check the main entity.  Use that one instead.
-                value = entity.getOrCreateVariable(variable).computeValue(partialTicks);
-            }
+            return entity.getOrCreateVariable(variable).computeValue(partialTicks);
         }
-        if (clock != null) {
-            value = clock.clampAndScale(entity, value, scaleFactor, 0, partialTicks);
-        } else {
-            value *= scaleFactor;
+        double value = entity.getOrCreateVariable(variable + "_" + partNumber).computeValue(partialTicks);
+        if (value == 0) {
+            //Could be 0, or part might not exist and we need to check the main entity.  Use that one instead.
+            value = entity.getOrCreateVariable(variable).computeValue(partialTicks);
         }
         return value;
     }
@@ -162,6 +161,11 @@ public final class RenderInstrument {
         public InstrumentSwitchbox(AEntityD_Definable<?> entity, JSONInstrumentComponent component) {
             super(entity, component.animations, null);
             this.component = component;
+        }
+
+        @Override
+        protected double getAnimationInput(DurationDelayClock clock, float partialTicks) {
+            return getInstrumentVariableInput(entity, clock.animation.variable, partialTicks);
         }
 
         @Override
