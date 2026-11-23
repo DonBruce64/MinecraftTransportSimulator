@@ -25,7 +25,8 @@ public class VehicleGroundDeviceCollection {
     private final Point3D hookupRelativePosition = new Point3D();
     private final Point3D translationApplied = new Point3D();
     private final RotationMatrix rotationApplied = new RotationMatrix();
-    private final TransformationMatrix transformApplied = new TransformationMatrix();
+    private final Point3D rotatedPivot = new Point3D();
+    private final Point3D proposedPosition = new Point3D();
     public final Set<PartGroundDevice> groundedGroundDevices = new HashSet<>();
 
     public VehicleGroundDeviceCollection(EntityVehicleF_Physics vehicle) {
@@ -61,11 +62,18 @@ public class VehicleGroundDeviceCollection {
      * Also re-calculates which ground devices are on the ground.
      */
     public void updateCollisions(boolean updateGroundDeviceTreadPosition) {
+        updateCollisions(updateGroundDeviceTreadPosition, 0);
+    }
+
+    /**
+     * Updates ground contacts at the predicted position, including the ground boost in blocks.
+     */
+    public void updateCollisions(boolean updateGroundDeviceTreadPosition, double groundBoost) {
         groundedGroundDevices.clear();
-        frontLeftGDB.updateCollisionStatuses(groundedGroundDevices, updateGroundDeviceTreadPosition);
-        frontRightGDB.updateCollisionStatuses(groundedGroundDevices, updateGroundDeviceTreadPosition);
-        rearLeftGDB.updateCollisionStatuses(groundedGroundDevices, updateGroundDeviceTreadPosition);
-        rearRightGDB.updateCollisionStatuses(groundedGroundDevices, updateGroundDeviceTreadPosition);
+        frontLeftGDB.updateCollisionStatuses(groundedGroundDevices, updateGroundDeviceTreadPosition, groundBoost);
+        frontRightGDB.updateCollisionStatuses(groundedGroundDevices, updateGroundDeviceTreadPosition, groundBoost);
+        rearLeftGDB.updateCollisionStatuses(groundedGroundDevices, updateGroundDeviceTreadPosition, groundBoost);
+        rearRightGDB.updateCollisionStatuses(groundedGroundDevices, updateGroundDeviceTreadPosition, groundBoost);
     }
 
     /**
@@ -288,6 +296,22 @@ public class VehicleGroundDeviceCollection {
     }
 
     /**
+     * Returns true if wheels or treads are supporting the vehicle on a solid surface.
+     */
+    public boolean hasGroundedWheelsOrTreads() {
+        if (getNumberBoxesInLiquid() != 0) {
+            return false;
+        }
+        for (PartGroundDevice groundDevice : groundedGroundDevices) {
+            if ((groundDevice.definition.ground.isWheel || groundDevice.definition.ground.isTread)
+                    && isActuallyOnGround(groundDevice)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Returns true if the boxes in this collective can do roll operations.
      * More formally, it checks that they aren't all aligned on the Z-axis.
      */
@@ -485,53 +509,43 @@ public class VehicleGroundDeviceCollection {
             box2Delta = Math.hypot(originPoint.x - testBox2.contactPoint.x, originPoint.y - testBox2.contactPoint.y);
         }
 
-        //Get the angle to rotate by based on the farthest points and collision depth.
         double furthestDelta = Math.max(box1Delta, box2Delta);
-        if (furthestDelta < vehicle.climbSpeedVar.currentValue) {
-            //This is too short of a wheelbase to do this function.
+        double climbSpeed = vehicle.climbSpeedVar.currentValue;
+        if (climbSpeed <= 0 || furthestDelta < climbSpeed) {
             return;
         }
 
-        //Run though this loop until we have no collisions, or until we get a small enough delta.
-        double heightDeltaAttempted = vehicle.climbSpeedVar.currentValue;
-        double angleApplied = 0;
-        for (; heightDeltaAttempted > PartGroundDevice.groundDetectionOffset.y; heightDeltaAttempted -= vehicle.climbSpeedVar.currentValue / 4) {
-            angleApplied = Math.toDegrees(Math.asin(heightDeltaAttempted / furthestDelta));
+        //Keep the pivot fixed while moving, and keep grounded vehicles in place when stopped.
+        boolean holdHorizontalPosition = vehicle.towedByConnection == null
+                && vehicle.motion.x == 0 && vehicle.motion.z == 0 && hasGroundedWheelsOrTreads();
+        rotatedPivot.set(originPoint).rotate(vehicle.rotation);
+        for (int step = 4; step > 0; --step) {
+            double angle = Math.toDegrees(Math.asin(climbSpeed * (step / 4D) / furthestDelta));
             if (!clockwiseRotation) {
-                angleApplied = -angleApplied;
+                angle = -angle;
             }
 
-            //Set the box rotation transform.
-            //This is how the box will move given the rotation we are rotating the box about.
-            //This is done in the vehicle's local coordinates and applied to the box prior to vehicle offset.
-            transformApplied.resetTransforms();
-            transformApplied.setTranslation(originPoint);
+            rotationApplied.angles.set(vehicle.rotation.angles);
             if (pitch) {
-                rotationApplied.setToZero().rotateX(angleApplied);
+                rotationApplied.angles.x += angle;
             } else {
-                rotationApplied.setToZero().rotateZ(angleApplied);
+                rotationApplied.angles.z += angle;
             }
-            transformApplied.multiply(rotationApplied);
-            transformApplied.applyInvertedTranslation(originPoint);
 
-            //Check for collisions.
-            if (!checkCollisions || (testBox1.collidedWithTransform(transformApplied, groundMotion) && testBox2.collidedWithTransform(transformApplied, groundMotion))) {
-                break;
+            translationApplied.set(originPoint).rotate(rotationApplied).subtract(rotatedPivot).invert().rotate(vehicle.orientation);
+            if (holdHorizontalPosition) {
+                translationApplied.x = 0;
+                translationApplied.z = 0;
             }
-        }
+            proposedPosition.set(vehicle.position).addScaled(vehicle.motion, vehicle.speedFactor).add(groundMotion).add(translationApplied);
+            if (checkCollisions && (!testBox1.canApplyGroundRotation(rotationApplied, proposedPosition)
+                    || !testBox2.canApplyGroundRotation(rotationApplied, proposedPosition))) {
+                continue;
+            }
 
-        //Rotation is set to appropriate bounds, apply to vehicle and return linear movement.
-        //Don't do this if we didn't attempt any delta because we collided on everything.
-        if (heightDeltaAttempted != 0) {
-            if (pitch) {
-                vehicle.rotation.angles.x += angleApplied;
-            } else {
-                vehicle.rotation.angles.z += angleApplied;
-            }
-            //Translation applied can be calculated by getting the vector inverted by the origin and applying our rotation to it.
-            //This rotates the vehicle's center point locally and obtains a new point.  The delta between these points can then be taken.
-            translationApplied.set(0, 0, 0).transform(transformApplied).rotate(vehicle.orientation);
+            vehicle.rotation.angles.set(rotationApplied.angles);
             groundMotion.add(translationApplied);
+            return;
         }
     }
 }
