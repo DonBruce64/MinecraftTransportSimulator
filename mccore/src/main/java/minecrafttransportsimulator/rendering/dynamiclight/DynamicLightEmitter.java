@@ -6,7 +6,10 @@ package minecrafttransportsimulator.rendering.dynamiclight;
  * instead of allocating them.  Render thread only.
  */
 public final class DynamicLightEmitter {
-    /** Stable identity of the lamp across frames: owner id << 16 | component index. */
+    /** Set in the key of every particle light; a model lamp's key (owner id, 24 bits, << 16 | component index) never has it. */
+    public static final long PARTICLE_KEY = 1L << 61;
+
+    /** Stable identity of the lamp across frames: owner id << 16 | component index, or {@link #PARTICLE_KEY} | index for a particle. */
     public long key;
     public double x;
     public double y;
@@ -43,6 +46,11 @@ public final class DynamicLightEmitter {
      * for a lamp given a shadowStartDistance.  Merged point lights take the largest.
      */
     public float clearance = DynamicLightAim.LAMP_CLEARANCE;
+
+    /** Whether a particle made this light (its key carries {@link #PARTICLE_KEY}), as opposed to a model lamp. */
+    public boolean isParticle() {
+        return (key & PARTICLE_KEY) != 0;
+    }
 
     /** Copies every value of {@code other} into this emitter. */
     public DynamicLightEmitter set(DynamicLightEmitter other) {

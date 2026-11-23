@@ -29,11 +29,8 @@ class InterfacePacket implements IInterfacePacket {
      * Packets should be registered at this point in this constructor.
      */
     public static void init() {
-        //Register internal packets, then external.
-        byte packetIndex = 0;
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCSHandshakeClient.class);
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCSHandshakeServer.class);
-        APacketBase.initPackets(packetIndex);
+        //All packets come from mccore.  Builders get their state from MC's own entity and block entity syncing.
+        APacketBase.initPackets((byte) 0);
     }
 
     /**
@@ -41,7 +38,7 @@ class InterfacePacket implements IInterfacePacket {
      * with NeoForge's networking system.
      */
     public static void registerPayloads(RegisterPayloadHandlersEvent event) {
-        PayloadRegistrar registrar = event.registrar(InterfaceLoader.MODID).versioned("3");
+        PayloadRegistrar registrar = event.registrar(InterfaceLoader.MODID).versioned("4");
         registrar.playBidirectional(
             WrapperPayload.TYPE,
             WrapperPayload.CODEC,

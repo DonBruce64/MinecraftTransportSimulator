@@ -47,6 +47,17 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract boolean isClient();
 
     /**
+     * Returns true if this client world shows a recording (a replay) in which the entities of the recording can reach the
+     * client after the packets about them: the recording is played back to the client by a local server, and that server
+     * sends its recorded custom packets at once but pairs the client with an entity only when it next updates its trackers
+     * (a seek plays back many ticks between two updates).  {@link minecrafttransportsimulator.packets.components.APacketEntity} keeps such packets until the entity exists.
+     * False in a normal game, where an entity is always sent first.
+     */
+    public boolean isReplayPlayback() {
+        return false;
+    }
+
+    /**
      * Returns the time of day of the world, in ticks.
      * This method will not increment if the world's internal clock isn't currently
      * advancing.

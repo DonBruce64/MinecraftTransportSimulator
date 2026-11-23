@@ -41,11 +41,8 @@ class InterfacePacket implements IInterfacePacket {
         network.registerMessage(WrapperHandler.class, WrapperPacket.class, 1, Side.SERVER);
         network.registerMessage(InventoryOpenHandler.class, InventoryOpenPacket.class, 2, Side.CLIENT);
 
-        //Register internal packets, then external.
-        byte packetIndex = 0;
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCSHandshakeClient.class);
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCSHandshakeServer.class);
-        APacketBase.initPackets(packetIndex);
+        //All packets come from mccore.  Builders get their state from MC's own entity and tile entity syncing.
+        APacketBase.initPackets((byte) 0);
     }
 
     /**
