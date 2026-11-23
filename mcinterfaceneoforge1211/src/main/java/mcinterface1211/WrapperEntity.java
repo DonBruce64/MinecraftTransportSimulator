@@ -155,6 +155,10 @@ public class WrapperEntity implements IWrapperEntity {
         }
     }
 
+    public void setReplayRiding(AEntityB_Existing entityRiding) {
+        cachedEntityRiding = entityRiding;
+    }
+
     @Override
     public double getVerticalScale() {
         AEntityB_Existing riding = getEntityRiding();

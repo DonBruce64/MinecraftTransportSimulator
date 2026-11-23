@@ -1,0 +1,17 @@
+{
+    "required": true,
+    "minVersion": "0.8",
+    "package": "mcinterface1211.mixin.flashback",
+    "plugin": "mcinterface1211.mixin.flashback.FlashbackMixinPlugin",
+    "compatibilityLevel": "JAVA_21",
+    "client": [
+        "FlashbackRecorderMixin",
+        "FlashbackMainMenuBarMixin",
+        "FlashbackVisualsWindowMixin",
+        "FlashbackReplayUIMixin",
+        "FlashbackSelectedEntityPopup"
+    ],
+    "injectors": {
+        "defaultRequire": 0
+    }
+}

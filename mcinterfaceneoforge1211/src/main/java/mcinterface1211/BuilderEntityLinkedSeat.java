@@ -1,6 +1,7 @@
 package mcinterface1211;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
@@ -101,10 +102,26 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
         }
     }
 
+    private void releaseReplayRider() {
+        WrapperEntity rider = (WrapperEntity) entity.rider;
+        if (entity.rider instanceof WrapperEntity && rider.getEntityRiding() == entity) {
+            rider.setReplayRiding(null);
+        }
+        entity.rider = null;
+    }
+
 
     @Override
     public void onRemovedFromLevel() {
         super.onRemovedFromLevel();
+        if (level().isClientSide && InterfaceManager.clientInterface.isReplayPlayback()) {
+            if (entity != null) {
+                releaseReplayRider();
+            }
+            rider = null;
+            entity = null;
+            return;
+        }
         //Notify internal entity of rider being removed.
         if (entity != null && rider != null) {
             if (!level().isClientSide && rider.equals(entity.rider)) {
@@ -131,6 +148,8 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                     entity.rider.getYawDelta();
                     entity.rider.getPitchDelta();
                 }
+            } else if (FlashbackCompat.isReplayServerLevel(level())) {
+                pCallback.accept(pPassenger, this.getX(), this.getY(), this.getZ());
             }
         }
     }

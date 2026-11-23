@@ -56,9 +56,17 @@ public class PacketEntityTowingChange extends APacketEntity<AEntityG_Towable<?>>
             if (connection.initConnection(world, false)) {
                 hitchEntity.connectTrailer(connection, false);
             } else {
+                if (world.isClient() && InterfaceManager.clientInterface.isReplayPlayback()) {
+                    hitchEntity.addPendingTowingConnection(connection);
+                }
                 return false;
             }
         } else {
+            if (world.isClient() && InterfaceManager.clientInterface.isReplayPlayback()
+                    && connectionIndex >= hitchEntity.towingConnections.size()) {
+                hitchEntity.cancelPendingTowingConnection();
+                return false;
+            }
             hitchEntity.disconnectTrailer(connectionIndex);
         }
         return true;

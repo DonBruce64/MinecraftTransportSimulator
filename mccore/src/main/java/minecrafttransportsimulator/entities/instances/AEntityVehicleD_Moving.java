@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -103,6 +104,13 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private final Point3D clientDeltaRApplied = new Point3D();
     private double clientDeltaPApplied;
 
+    private final Point3D replayAngles = new Point3D();
+    private final Point3D replayPrevPosition = new Point3D();
+    private boolean hasReplayTransforms;
+
+    private final ArrayDeque<double[]> replayQueue = new ArrayDeque<>();
+    private boolean replayPrimed;
+
     private final Point3D roadMotion = new Point3D();
     private final Point3D roadRotation = new Point3D();
     private final Point3D vehicleCollisionMotion = new Point3D();
@@ -139,7 +147,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         this.groundDeviceCollective = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
         this.placingPlayer = placingPlayer;
         this.blockBreakDelay = 500;
-        
+
         addVariable(this.leftTurnLightVar = new ComputedVariable(this, "left_turn_signal", data));
         addVariable(this.rightTurnLightVar = new ComputedVariable(this, "right_turn_signal", data));
         addVariable(this.brakeVar = new ComputedVariable(this, "brake", data));
@@ -227,6 +235,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 }
             }
             placementStackToReturn = null;
+        }
+
+        if (world.isClient() && InterfaceManager.clientInterface.isReplayPlayback()) {
+            applyReplayTransform();
+            world.endProfiling();
+            return;
         }
 
         //Now do update calculations and logic.
@@ -1002,7 +1016,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //Note that orientation wasn't a direct angle-addition, as the rotation is applied relative to the current
                 //orientation.  This means that if we yaw 5 degrees, but are rolling 10 degrees, then we need to not do the
                 //yaw rotation in the XZ plane, but instead in that relative-rotated plane.
-                //To account for this, we get the angle delta between the prior and current orientation, and use that for the delta. 
+                //To account for this, we get the angle delta between the prior and current orientation, and use that for the delta.
                 //Though before we do this we check if those angles were non-zero, as no need to do math if they are.
                 if (!rotationApplied.angles.isZero()) {
                     rotationApplied.angles.set(orientation.angles).subtract(prevOrientation.angles).clamp180();
@@ -1183,6 +1197,72 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             }
         }
         return false;
+    }
+
+    public void setReplayTransform(Point3D newPosition, Point3D newAngles, double newVelocity, Point3D newMotion, boolean snap) {
+        if (snap || !hasReplayTransforms) {
+            position.set(newPosition);
+            prevPosition.set(newPosition);
+            orientation.angles.set(newAngles);
+            orientation.updateToAngles();
+            prevOrientation.set(orientation);
+            if (newMotion != null) {
+                motion.set(newMotion);
+            } else {
+                motion.set(0, 0, newVelocity).rotate(orientation);
+            }
+            velocity = motion.length();
+            replayQueue.clear();
+            replayPrimed = false;
+            hasReplayTransforms = true;
+        } else {
+            replayQueue.addLast(new double[]{newPosition.x, newPosition.y, newPosition.z, newAngles.x, newAngles.y,
+                    newAngles.z, newVelocity, newMotion != null ? newMotion.x : Double.NaN,
+                    newMotion != null ? newMotion.y : Double.NaN, newMotion != null ? newMotion.z : Double.NaN});
+        }
+        replayAngles.set(newAngles);
+        hasReplayTransforms = true;
+    }
+
+    private void applyReplayTransform() {
+        if (!hasReplayTransforms) {
+            return;
+        }
+        replayPrevPosition.set(position);
+        if (!replayPrimed && replayQueue.size() >= 2) {
+            replayPrimed = true;
+        }
+        while (replayQueue.size() > 4) {
+            replayQueue.pollFirst();
+        }
+        double[] sample = replayPrimed ? replayQueue.pollFirst() : null;
+        if (sample == null) {
+            replayPrimed = false;
+        } else {
+            position.set(sample[0], sample[1], sample[2]);
+            orientation.angles.set(sample[3], sample[4], sample[5]);
+            orientation.updateToAngles();
+            if (position.distanceTo(replayPrevPosition) > 16) {
+                prevPosition.set(position);
+                prevOrientation.set(orientation);
+            }
+            if (!Double.isNaN(sample[7])) {
+                motion.set(sample[7], sample[8], sample[9]);
+            } else if (position.distanceTo(replayPrevPosition) > 16) {
+                motion.set(0, 0, sample[6]).rotate(orientation);
+            } else {
+                motion.set(position).subtract(replayPrevPosition).scale(1D / speedFactor);
+                if (motion.length() < 0.001) {
+                    motion.set(0, 0, 0);
+                }
+            }
+            velocity = motion.length();
+            groundVelocity = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
+            double headingLength = Math.sqrt(headingVector.x * headingVector.x + headingVector.z * headingVector.z);
+            goingInReverse = groundVelocity > 0.01 && headingLength > 0
+                    && (motion.x * headingVector.x + motion.z * headingVector.z) / (groundVelocity * headingLength) < -0.5;
+        }
+        groundDeviceCollective.updateCollisions(false);
     }
 
     public void addToServerDeltas(Point3D motionAdded, Point3D rotationAdded, double pathingAdded) {
