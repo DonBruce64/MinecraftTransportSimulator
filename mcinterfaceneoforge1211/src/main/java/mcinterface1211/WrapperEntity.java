@@ -223,7 +223,14 @@ public class WrapperEntity implements IWrapperEntity {
         return mutablePosition;
     }
 
+    @Override
+    public Point3D getInterpolatedPosition(float partialTicks) {
+        mutableInterpolatedPosition.set(entity.xo + (entity.getX() - entity.xo) * partialTicks, entity.yo + (entity.getY() - entity.yo) * partialTicks, entity.zo + (entity.getZ() - entity.zo) * partialTicks);
+        return mutableInterpolatedPosition;
+    }
+
     private final Point3D mutablePosition = new Point3D();
+    private final Point3D mutableInterpolatedPosition = new Point3D();
 
     @Override
     public Point3D getEyePosition() {
@@ -365,6 +372,22 @@ public class WrapperEntity implements IWrapperEntity {
     @Override
     public float getBodyYaw() {
         return entity instanceof LivingEntity ? -((LivingEntity) entity).yBodyRot : 0;
+    }
+
+    @Override
+    public float getInterpolatedBodyYaw(float partialTicks) {
+        if (entity instanceof LivingEntity) {
+            LivingEntity living = (LivingEntity) entity;
+            return -interpolateDegrees(living.yBodyRotO, living.yBodyRot, partialTicks);
+        }
+        return 0;
+    }
+
+    private static float interpolateDegrees(float previous, float current, float partialTicks) {
+        float delta = current - previous;
+        while (delta < -180F) delta += 360F;
+        while (delta >= 180F) delta -= 360F;
+        return previous + delta * partialTicks;
     }
 
     @Override

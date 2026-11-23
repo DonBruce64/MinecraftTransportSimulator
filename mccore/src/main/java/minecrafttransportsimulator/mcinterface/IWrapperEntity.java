@@ -99,6 +99,13 @@ public interface IWrapperEntity {
     Point3D getPosition();
 
     /**
+     * Gets the entity position interpolated to the current rendered frame.
+     * This should be used when positioning render-only elements against a
+     * vanilla entity, whose visible position lies between simulation ticks.
+     */
+    Point3D getInterpolatedPosition(float partialTicks);
+
+    /**
      * Like {@link #getPosition()}, but for the player's eyes.  Unlike {@link #getPosition()}, the
      * returned object MAY NOT be mutable without affecting other logic, so DO NOT change it.
      */
@@ -198,6 +205,9 @@ public interface IWrapperEntity {
      * follow it, which is why rendering is such a PITA with yaw.
      */
     float getBodyYaw();
+
+    /** Returns body yaw interpolated to the current rendered frame. */
+    float getInterpolatedBodyYaw(float partialTicks);
 
     /**
      * Returns a vector in the direction of the entity's line of sight,

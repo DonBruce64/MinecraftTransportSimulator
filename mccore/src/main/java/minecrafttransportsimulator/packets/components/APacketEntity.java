@@ -35,7 +35,14 @@ public abstract class APacketEntity<EntityType extends AEntityA_Base> extends AP
 
     @Override
     public void handle(AWrapperWorld world) {
-        EntityType entity = world.getEntity(uniqueUUID);
+        handleAndForward(world, getEntity(world));
+    }
+
+    protected final EntityType getEntity(AWrapperWorld world) {
+        return world.getEntity(uniqueUUID);
+    }
+
+    protected final void handleAndForward(AWrapperWorld world, EntityType entity) {
         if (entity != null && handle(world, entity) && !world.isClient()) {
             InterfaceManager.packetInterface.sendToAllClients(this);
             if (entity instanceof ATileEntityBase) {

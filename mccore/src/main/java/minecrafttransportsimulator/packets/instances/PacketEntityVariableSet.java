@@ -2,9 +2,6 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**
  * Packet used to set variable states.  Sent from clients to servers to
@@ -17,32 +14,12 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  *
  * @author don_bruce
  */
-public class PacketEntityVariableSet extends APacketEntity<AEntityD_Definable<?>> {
-    private final String variableKey;
-    private final double variableValue;
-
+public class PacketEntityVariableSet extends APacketEntityVariable {
     public PacketEntityVariableSet(ComputedVariable variable, double variableValue) {
-        super(variable.entity);
-        this.variableKey = variable.variableKey;
-        this.variableValue = variableValue;
+        super(variable, Operation.SET, variableValue, 0, 0);
     }
 
     public PacketEntityVariableSet(ByteBuf buf) {
-        super(buf);
-        this.variableKey = readStringFromBuffer(buf);
-        this.variableValue = buf.readDouble();
-    }
-
-    @Override
-    public void writeToBuffer(ByteBuf buf) {
-        super.writeToBuffer(buf);
-        writeStringToBuffer(variableKey, buf);
-        buf.writeDouble(variableValue);
-    }
-
-    @Override
-    public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity) {
-        entity.getOrCreateVariable(variableKey).setTo(variableValue, false);
-        return true;
+        super(buf, Operation.SET);
     }
 }
