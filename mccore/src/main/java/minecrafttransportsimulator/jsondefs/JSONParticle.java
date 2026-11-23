@@ -81,6 +81,9 @@ public class JSONParticle {
     @JSONDescription("Like above, but tells the particle to gradually change from its initial scale to this value.  Defaults to 1.0 if this and scale are not set.")
     public float toScale;
 
+    @JSONDescription("Random fraction of the rendered scale to add or subtract. A value of 0.25 gives a multiplier between 0.75 and 1.25. Defaults to 0 if are not set.")
+    public float scaleRandomness;
+
     @JSONDescription("The time, in ticks, for the particle to scale in at the start of its lifespan.  Particles scale by multiplying their defined scale times the relative time-value of this value.  So if fade-in time is 10, and the particle is 5 ticks from spawn, scale will be half of what is defined (5/10).")
     public int fadeInScaleTime;
 
@@ -159,6 +162,9 @@ public class JSONParticle {
 
     @JSONDescription("A list of sub-particles this particle can spawn.  They will be spawned when their conditions are met.  Note that sub-particles do not reference spawningAnimations or activeAnimations.")
     public List<JSONSubParticle> subParticles;
+
+    @JSONDescription("A dynamic light this particle gives off, with the same fields as a light's blendableComponents entry: isDynamicLight or a lightPreset makes it light the world (otherwise it does nothing), beamIntensity, lightReach, lightAngle, beamSoftness, beamDiameter with beamLength, lightBeamLength, shadowStartDistance, and flareWidth or flareHeight for a corona (bloomIntensity scales it).  pos is relative to the particle and defaults to its center; axis, also turned with the particle, makes it a spot, and no axis makes a point light.  Its color defaults to the particle's current color, and its brightness follows the particle's transparency (clamped to 0 to 1; daytimeReductionFactor against the daylight on the particle), so it fades and changes color with the particle.  Particle lights rank below every lamp, and point lights within 1.5 blocks of each other add up into one light.  Sub-particles do not inherit it.")
+    public JSONLight.JSONLightBlendableComponent light;
 
     @Deprecated
     public int fadeScaleTime;

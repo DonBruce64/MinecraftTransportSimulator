@@ -3,7 +3,9 @@ package mcinterface1122;
 import java.util.HashMap;
 import java.util.Map;
 
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -17,6 +19,7 @@ import net.minecraft.block.BlockWorkbench;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerWorkbench;
@@ -59,6 +62,16 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
     protected WrapperPlayer(EntityPlayer player) {
         super(player);
         this.player = player;
+    }
+
+    @Override
+    public void setPosition(Point3D position, boolean onGround) {
+        super.setPosition(position, onGround);
+        //Clear active flight when riding, including players who mounted while already flying.
+        if (getEntityRiding() != null && !player.isSpectator() && player.capabilities.isFlying) {
+            player.capabilities.isFlying = false;
+            player.sendPlayerAbilities();
+        }
     }
 
     @Override
@@ -170,6 +183,12 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
                 };
             }
         });
+    }
+
+    @Override
+    public void openInventoryGUI(EntityInventoryContainer inventory, String texture, IWrapperItemStack inventoryItem) {
+        int heldPlayerSlot = inventoryItem != null ? getHotbarIndex() : -1;
+        InterfacePacket.openInventoryGUI((EntityPlayerMP) player, inventory, texture, inventoryItem, heldPlayerSlot);
     }
 
     /**

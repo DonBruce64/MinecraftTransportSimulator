@@ -2,6 +2,7 @@ package minecrafttransportsimulator.mcinterface;
 
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
+import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
@@ -103,4 +104,19 @@ public interface IWrapperPlayer extends IWrapperEntity {
      * present in the internal code, which automatically closes the GUI.
      */
     void openCraftingGUI();
+
+    /**
+     * Opens a Minecraft-native inventory menu backed by an IV inventory.  The inventory itself
+     * remains IV-owned (and therefore keeps the existing JSON/NBT format), while Minecraft owns
+     * the carried stack and slot click handling.  This gives the screen normal left/right click,
+     * drag, double-click, number-key, drop, and shift-click behavior and exposes real slots to
+     * client-side inventory helpers.
+     *
+     * @param inventory The IV inventory to expose through the menu.
+     * @param texture The pack-defined inventory texture, or null for IV's default texture.
+     * @param inventoryItem The exact item stack that owns this inventory, or null for inventories
+     *                      attached to world objects.  Passing the stack prevents a later hotbar
+     *                      selection change from saving into an unrelated item.
+     */
+    void openInventoryGUI(EntityInventoryContainer inventory, String texture, IWrapperItemStack inventoryItem);
 }

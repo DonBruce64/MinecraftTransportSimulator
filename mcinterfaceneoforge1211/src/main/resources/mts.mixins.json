@@ -5,6 +5,12 @@
     "compatibilityLevel": "JAVA_21",
     "client": [
         "client.CameraMixin",
+        "client.ClientLevelMixin",
+        "client.CompositeRenderTypeMixin",
+        "client.CompositeStateMixin",
+        "client.CreativeModeInventoryScreenMixin",
+        "client.EmptyTextureStateShardMixin",
+        "client.EntityRendererMixin",
         "client.HumanoidModelMixin",
         "client.LevelRendererMixin",
         "client.ListenerMixin",

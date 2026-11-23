@@ -6,12 +6,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import mcinterface1165.InterfaceRender;
 import mcinterface1165.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
@@ -21,8 +23,10 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderTypeBuffers;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.block.BlockState;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.IBlockDisplayReader;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.Heightmap;
 
@@ -30,6 +34,15 @@ import net.minecraft.world.gen.Heightmap;
 public abstract class WorldRendererMixin {
     @Shadow
     private RenderTypeBuffers renderBuffers;
+
+    /**
+     * Need this to grab variables used in the level rendering routine for the rendering routine.
+     */
+    @Inject(method = "renderLevel", at = @At(value = "HEAD"))
+    public void inject_renderLevelDataGetter(MatrixStack pMatrixStack, float pPartialTicks, long pFinishTimeNano, boolean pDrawBlockOutline, ActiveRenderInfo pActiveRenderInfo, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pProjection, CallbackInfo ci) {
+        InterfaceRender.projectionMatrix = pProjection;
+        InterfaceRender.startDynamicLightFrame();
+    }
 
     /**
      * Need this to render translucent things at the right time.  MC doesn't properly support this natively.
@@ -45,7 +58,24 @@ public abstract class WorldRendererMixin {
         if (ConfigSystem.settings.general.forceRenderLastSolid.value) {
             InterfaceRender.doRenderCall(pMatrixStack, irendertypebuffer$impl, false, pPartialTicks);
         }
+        //Dynamic lights go over the finished world and IV's solid pass, under IV's blended pass.
+        InterfaceRender.renderDynamicLightFrame(pMatrixStack.last().pose(), pProjection, pActiveRenderInfo, pPartialTicks);
         InterfaceRender.doRenderCall(pMatrixStack, irendertypebuffer$impl, true, pPartialTicks);
+    }
+
+    /**
+     * Raises the block light chunk meshes bake by the dynamic lights while a shader pack is active
+     * ({@link DynamicLightSystem#blockLightAt} is 0 otherwise).
+     */
+    @Inject(method = "getLightColor(Lnet/minecraft/world/IBlockDisplayReader;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/BlockPos;)I", at = @At("RETURN"), cancellable = true)
+    private static void inject_getLightColor(IBlockDisplayReader world, BlockState state, BlockPos pos, CallbackInfoReturnable<Integer> cir) {
+        int raised = DynamicLightSystem.blockLightAt(pos.getX(), pos.getY(), pos.getZ());
+        if (raised > 0) {
+            int packed = cir.getReturnValueI();
+            if (raised > LightTexture.block(packed)) {
+                cir.setReturnValue(LightTexture.pack(raised, LightTexture.sky(packed)));
+            }
+        }
     }
 
     /**

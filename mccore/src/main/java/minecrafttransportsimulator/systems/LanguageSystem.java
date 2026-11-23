@@ -275,8 +275,22 @@ public class LanguageSystem {
     public static final LanguageEntry GUI_PART_BENCH_CARGO = new LanguageEntry("gui.part_bench.cargo", "Cargo: ");
     public static final LanguageEntry GUI_PART_BENCH_MIXED = new LanguageEntry("gui.part_bench.mixed", "Mixed: ");
     public static final LanguageEntry GUI_PART_BENCH_ENGINE = new LanguageEntry("gui.part_bench.engine", "Engine Size: ");
+    public static final LanguageEntry GUI_PARTINSTALL_INSTALLING = new LanguageEntry("gui.partinstall.installing", "Installing part...");
+    public static final LanguageEntry GUI_PARTREMOVE_REMOVING = new LanguageEntry("gui.partremove.removing", "Removing part...");
+    public static final LanguageEntry GUI_VEHICLEDEPLOY_DEPLOYING = new LanguageEntry("gui.vehicledeploy.deploying", "Deploying vehicle...");
+    public static final LanguageEntry GUI_VEHICLEPACK_PACKING = new LanguageEntry("gui.vehiclepack.packing", "Packing vehicle...");
+
     public static final LanguageEntry GUI_PART_BENCH_WHEEL = new LanguageEntry("gui.part_bench.wheel", "Wheel Size: ");
     public static final LanguageEntry GUI_PART_BENCH_COLOR = new LanguageEntry("gui.part_bench.color", "Color: ");
+
+    public static final LanguageEntry GUI_PART_SLOT_GENERIC = new LanguageEntry("gui.parttype.generic", "Generic Part");
+    public static final LanguageEntry GUI_PART_SLOT_ENGINE = new LanguageEntry("gui.parttype.engine", "Engine");
+    public static final LanguageEntry GUI_PART_SLOT_GROUND = new LanguageEntry("gui.parttype.ground", "Ground Device");
+    public static final LanguageEntry GUI_PART_SLOT_PROPELLER = new LanguageEntry("gui.parttype.propeller", "Propeller");
+    public static final LanguageEntry GUI_PART_SLOT_SEAT = new LanguageEntry("gui.parttype.seat", "Seat");
+    public static final LanguageEntry GUI_PART_SLOT_GUN = new LanguageEntry("gui.parttype.gun", "Gun");
+    public static final LanguageEntry GUI_PART_SLOT_INTERACTABLE = new LanguageEntry("gui.parttype.interactable", "Interactable");
+    public static final LanguageEntry GUI_PART_SLOT_EFFECTOR = new LanguageEntry("gui.parttype.effector", "Effector");
 
     public static final LanguageEntry GUI_PANEL_TRIM_ROLL = new LanguageEntry("gui.panel.trim_roll", "ROLL TRIM");
     public static final LanguageEntry GUI_PANEL_TRIM_PITCH = new LanguageEntry("gui.panel.trim_pitch", "PITCH TRIM");
@@ -301,6 +315,8 @@ public class LanguageSystem {
     public static final LanguageEntry GUI_CONFIG_CONTROLS_RADIOVOLUME = new LanguageEntry("gui.config.controls.radiovolume", "Radio Volume: ");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_GENERAL_KEYBOARD = new LanguageEntry("gui.config.controls.general.keyboard", "GENERAL KEYBOARD");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_GENERAL_JOYSTICK = new LanguageEntry("gui.config.controls.general.joystick", "GENERAL JOYSTICK");
+    public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRSHIP_KEYBOARD = new LanguageEntry("gui.config.controls.airship.keyboard", "AIRSHIP KEYBOARD");
+    public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRSHIP_JOYSTICK = new LanguageEntry("gui.config.controls.airship.joystick", "AIRSHIP JOYSTICK");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRCRAFT_KEYBOARD = new LanguageEntry("gui.config.controls.aircraft.keyboard", "AIRCRAFT KEYBOARD");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRCRAFT_JOYSTICK = new LanguageEntry("gui.config.controls.aircraft.joystick", "AIRCRAFT JOYSTICK");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_CAR_KEYBOARD = new LanguageEntry("gui.config.controls.car.keyboard", "CAR/BOAT KEYBOARD");
@@ -382,6 +398,14 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_MOUSEYOKE_DISABLED = new LanguageEntry("interact.mouseyoke.disabled", "Mouse Yoke disabled");
     public static final LanguageEntry INTERACT_ARCADEMODE_ENABLED = new LanguageEntry("interact.arcademode.enabled", "Arcade Mode enabled");
     public static final LanguageEntry INTERACT_ARCADEMODE_DISABLED = new LanguageEntry("interact.arcademode.disabled", "Arcade Mode disabled");
+    public static final LanguageEntry INTERACT_ARCADEMODE_VEHICLE_ENABLED = new LanguageEntry("interact.arcademode.vehicle.enabled", "Arcade flight enabled for this aircraft in this mode");
+    public static final LanguageEntry INTERACT_ARCADEMODE_VEHICLE_DISABLED = new LanguageEntry("interact.arcademode.vehicle.disabled", "Arcade flight disabled for this aircraft in this mode");
+    public static final LanguageEntry INTERACT_ARCADEMODE_SCHEME_ARCADE = new LanguageEntry("interact.arcademode.scheme.arcade", "arcade (mouse) flight");
+    public static final LanguageEntry INTERACT_ARCADEMODE_SCHEME_STANDARD = new LanguageEntry("interact.arcademode.scheme.standard", "standard controls");
+    public static final LanguageEntry INTERACT_ARCADEMODE_NOTICE_DEFAULT = new LanguageEntry("interact.arcademode.notice.default", "This aircraft defaults to %1$s. Press [%2$s] to fly with %3$s instead.");
+    public static final LanguageEntry INTERACT_ARCADEMODE_NOTICE_OVERRIDE = new LanguageEntry("interact.arcademode.notice.override", "This aircraft is set to %1$s from your saved choice. Press [%2$s] to fly with %3$s instead.");
+    public static final LanguageEntry INTERACT_ARCADEMODE_NOTICE_MODE_DEFAULT = new LanguageEntry("interact.arcademode.notice.mode.default", "This mode defaults to %1$s. Press [%2$s] to switch. Your choice is remembered separately for each mode.");
+    public static final LanguageEntry INTERACT_ARCADEMODE_NOTICE_MODE_OVERRIDE = new LanguageEntry("interact.arcademode.notice.mode.override", "This mode is set to %1$s from your saved choice. Press [%2$s] to switch. Your choice is remembered separately for each mode.");
     
     public static final LanguageEntry INTERACT_PARTREMOVE_HASPARTS = new LanguageEntry("interact.partremove.hasparts", "You must first remove all parts from this part to remove it!");
     public static final LanguageEntry INTERACT_PARTREMOVE_WRENCH = new LanguageEntry("interact.partremove.wrench", "This part requires a wrench to remove!");
@@ -523,6 +547,10 @@ public class LanguageSystem {
     public static final LanguageEntry INPUT_THROTTLE = new LanguageEntry("input.throttle", "Throttle");
     public static final LanguageEntry INPUT_THROTTLE_U = new LanguageEntry("input.throttle_u", "ThrottleUp");
     public static final LanguageEntry INPUT_THROTTLE_D = new LanguageEntry("input.throttle_d", "ThrottleDown");
+    public static final LanguageEntry INPUT_FORWARD = new LanguageEntry("input.forward", "Forward");
+    public static final LanguageEntry INPUT_HEIGHT = new LanguageEntry("input.height", "Height");
+    public static final LanguageEntry INPUT_HEIGHT_U = new LanguageEntry("input.height_u", "HeightUp");
+    public static final LanguageEntry INPUT_HEIGHT_D = new LanguageEntry("input.height_d", "HeightDown");
     public static final LanguageEntry INPUT_FLAPS_U = new LanguageEntry("input.flaps_u", "FlapsUp");
     public static final LanguageEntry INPUT_FLAPS_D = new LanguageEntry("input.flaps_d", "FlapsDown");
     public static final LanguageEntry INPUT_ARCADE = new LanguageEntry("input.arcade", "Arcade Mode");

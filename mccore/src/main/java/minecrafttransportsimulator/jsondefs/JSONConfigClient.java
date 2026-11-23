@@ -33,12 +33,18 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> renderFlares = new JSONConfigEntry<>(true, "If false, flares on lights will not render.");
         public JSONConfigEntry<Boolean> renderBeams = new JSONConfigEntry<>(true, "If false, beams on lights will not render.");
 
+        public JSONConfigEntry<Boolean> dynamicLights = new JSONConfigEntry<>(true, "If true, light components marked isDynamicLight light up the world around them, cast shadows and draw a volumetric beam and corona.  If false, they render as regular beams and flares.");
+        public JSONConfigEntry<Boolean> DynL_shadows = new JSONConfigEntry<>(true, "If true, dynamic lights cast shadows from blocks, vehicles and mobs.  Turn off to save GPU time.");
+        public JSONConfigEntry<Integer> DynL_MaxLights = new JSONConfigEntry<>(48, "How many dynamic lights may light the world at once, 0 to 256, and how many beams and coronas are drawn.  The strongest and closest are kept.  Fewer lights cost less GPU time; raise it on a powerful machine.");
+        public JSONConfigEntry<Boolean> DynL_ShaderFB = new JSONConfigEntry<>(false, "If true, dynamic lights still light the world under a shader pack (Iris, Oculus, OptiFine) by raising block light and drawing a simple beam cone and flare.  If false, they render as regular beams and flares while a shader pack is active.");
+
         public JSONConfigEntry<Boolean> brightLights = new JSONConfigEntry<>(true, "If false, lights from vehicles and blocks will not make themselves bright and instead will render as if they were part of the model at that same brightness.  Useful if you have shaders and this is causing troubles.");
         public JSONConfigEntry<Boolean> blendedLights = new JSONConfigEntry<>(true, "If false, beam-based lights from vehicles and blocks will not do brightness blending.  This is different from the general brightness setting as this will do OpenGL blending on the world to make it brighter, not just the beams themselves.");
 
         public JSONConfigEntry<Boolean> lightsTransp = new JSONConfigEntry<>(false, "If true, textures that light up will be rendered on the transperent pass.  This is required for some shaders to prevent lit textures without alpha channels from becoming invible, but it may break rendering on non-shader builds.");
         public JSONConfigEntry<Boolean> playerTweaks = new JSONConfigEntry<>(true, "If true, player hands will be modified when holding guns, and hands and legs will be modified when riding in vehicles.  Set this to false (and restart the game) if mods cause issues, like two-hand rendering or player model issues.  Automatically set to false if some mods are detected.");
         public JSONConfigEntry<Boolean> gunCrosshair = new JSONConfigEntry<>(true, "If false, the aiming crosshair for active guns will not be rendered.");
+        public JSONConfigEntry<Boolean> customInventoryTabs = new JSONConfigEntry<>(true, "If false, pack-authored creative-inventory side tabs are disabled and every pack item is shown together in the normal pack tab.  Disable this if another mod's creative inventory is incompatible with the side-tab UI.");
 
         public JSONConfigEntry<Integer> renderingMode = new JSONConfigEntry<>(0, "Internal rendering mode value, don't touch!");
     }
@@ -58,6 +64,7 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> mouseYoke = new JSONConfigEntry<>(false, "If true, aircraft pitch and roll are controlled by an invisible on-screen mouse yoke.  Cursor center is neutral; window edges are full input.");
         public JSONConfigEntry<Boolean> arcadeMode = new JSONConfigEntry<>(false, "If true, arcade-style flight and mouse aiming will be enabled. This allows the mouse cursor to control aircraft/helicopter steering systems.");
         public JSONConfigEntry<Boolean> showTutorial = new JSONConfigEntry<>(true, "If true, tutorial and onboarding overlays may be shown.  Set this to false to hide those prompts.");
+        public JSONConfigEntry<Boolean> showDefaultAircraftControlsMessageEveryTime = new JSONConfigEntry<>(true, "If true, the message telling you which controls an aircraft defaults to will show every time you get into the pilot seat of an aircraft that sets its own default.  If false, it only shows the first time you fly each aircraft in each mode.");
         public JSONConfigEntry<Boolean> showHoverTxt = new JSONConfigEntry<>(true, "If true, hover text helpers may be shown when looking at supported vehicle elements.  Set this to false to hide those prompts.");
         public JSONConfigEntry<Boolean> cullingWarn = new JSONConfigEntry<>(true, "If true, IV will show a one-time startup warning when Entity Culling is detected.");
 
@@ -73,6 +80,11 @@ public class JSONConfigClient {
         public JSONConfigEntry<Double> joystickDeadZone = new JSONConfigEntry<>(0.03D, "Dead zone for joystick axis.  This is NOT joystick specific.");
         public JSONConfigEntry<Float> soundVolume = new JSONConfigEntry<>(1.0F, "Volume for all sounds in the mod.  This is used instead of the game's master volume.");
         public JSONConfigEntry<Float> radioVolume = new JSONConfigEntry<>(1.0F, "Volume for radios in the mod.  This is used instead of the game's master volume.");
+
+        //Per-aircraft arcade flight choices for aircraft that set arcadeFlightMode, set with the arcade key.
+        //Keyed by "packID:systemName|arcade" or "packID:systemName|standard" (the default being overridden).
+        //True is arcade flight, false is standard controls.  May be null if loaded from an older config.
+        public Map<String, Boolean> arcadeFlightOverrides = new HashMap<>();
     }
 
     public static class JSONControls {

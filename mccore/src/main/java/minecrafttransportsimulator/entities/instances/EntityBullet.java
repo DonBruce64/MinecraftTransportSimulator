@@ -20,6 +20,7 @@ import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
+import minecrafttransportsimulator.jsondefs.JSONCameraShake;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONPart.LockOnType;
 import minecrafttransportsimulator.jsondefs.JSONPart.TargetType;
@@ -31,6 +32,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitExternalEntity;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitGeneric;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
@@ -659,6 +661,13 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 if (hitType == HitType.BLOCK) {
                     explosionPosition.add(hitSide.xOffset, hitSide.yOffset, hitSide.zOffset);
                 }
+                double cameraShakeBlastStrength = gun.lastLoadedBullet.definition.bullet.blastStrength;
+                if (gun.lastLoadedBullet.definition.bullet.blastDamage == 0 && cameraShakeBlastStrength == 0) {
+                    cameraShakeBlastStrength = gun.lastLoadedBullet.definition.bullet.diameter / 10F;
+                }
+                JSONCameraShake cameraShakeParams = gun.lastLoadedBullet.definition.bullet.cameraShakeParams;
+                double cameraShakeStrength = cameraShakeParams != null && cameraShakeParams.strength != null ? cameraShakeParams.strength : (gun.lastLoadedBullet.definition.bullet.blastDamage + cameraShakeBlastStrength) / 2D;
+                CameraSystem.sendExplosionCameraShake(gun.world, explosionPosition, cameraShakeStrength, cameraShakeParams != null ? cameraShakeParams.radius : 0, cameraShakeParams != null ? cameraShakeParams.duration : 0, cameraShakeParams != null ? cameraShakeParams.intensity : 1);
                 if (gun.lastLoadedBullet.definition.bullet.blastDamage != 0) {
                     //Use custom explosion system with elliptical radii and per-target-type damage.
                     new Explosion(gun.world, explosionPosition, gun).doExplosion();
