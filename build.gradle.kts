@@ -96,6 +96,24 @@ tasks.register<Exec>("buildForge1211") {
     }
 }
 
+tasks.register<Exec>("buildForge262") {
+    dependsOn(mcCore.tasks.named("shadowJar"))
+    doFirst { preBuild() }
+    commandLine(
+        "${System.getProperty("java.home")}/bin/java",
+        "-classpath",
+        "${project.projectDir.canonicalPath}/gradle/neoforge-wrapper-262/gradle-wrapper.jar",
+        "org.gradle.wrapper.GradleWrapperMain",
+        "--no-daemon",
+        "-p",
+        "${project.projectDir.canonicalPath}/mcinterfaceneoforge262",
+        "build"
+    )
+    doLast {
+        moveToOut("mcinterfaceneoforge262", "26.2-$modVersion")
+    }
+}
+
 tasks.register("buildForgeAll") {
     dependsOn(tasks.getByName("buildForge1122"))
     dependsOn(tasks.getByName("buildForge1165"))
