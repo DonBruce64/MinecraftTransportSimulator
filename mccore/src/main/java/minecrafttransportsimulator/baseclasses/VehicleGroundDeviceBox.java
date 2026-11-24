@@ -46,6 +46,8 @@ public class VehicleGroundDeviceBox {
     public boolean isAbleToDoGroundOperations;
     public boolean isUsingLiquidBoxes;
     public double collisionDepth;
+    //Distance in blocks from the projected box to the surface found by either solid-ground probe.
+    double groundClearance = Double.POSITIVE_INFINITY;
     /**
      * The point where this box contacts the world, in local coords to the vehicle it is on
      **/
@@ -229,6 +231,7 @@ public class VehicleGroundDeviceBox {
         isAbleToDoGroundOperations = false;
         isUsingLiquidBoxes = false;
         collisionDepth = 0;
+        groundClearance = Double.POSITIVE_INFINITY;
 
         Point3D vehicleMotionOffset = vehicle.motion.copy().scale(vehicle.speedFactor);
         vehicleMotionOffset.y += groundBoost;
@@ -237,7 +240,6 @@ public class VehicleGroundDeviceBox {
             //If we don't, then we won't do trailer physics right as those always need to check for blocks below them.
             vehicleMotionOffset.y = -0.00001;
         }
-        Point3D groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundDetectionOffset);
         if (!groundDevices.isEmpty()) {
             if (updateGroundDeviceTreadPosition && isLongTread) {
                 //If we are over an air block, move the collision towards the center to account for this.
@@ -293,6 +295,7 @@ public class VehicleGroundDeviceBox {
 
             //If we are collided, do other things now to handle collision.
             if (isCollided) {
+                groundClearance = 0;
                 isGrounded = true;
                 isAirborne = false;
                 isBlockedVertically = true;
@@ -319,28 +322,20 @@ public class VehicleGroundDeviceBox {
                     }
                 }
             } else {
-                solidBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
-                vehicle.world.updateBoundingBoxCollisions(solidBox, groundCollisionOffset, false);
-                contactedEntity = checkEntityCollisions(groundCollisionOffset);
-                solidBox.globalCenter.subtract(PartGroundDevice.groundDetectionOffset);
-                isGrounded = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
+                isGrounded = probeSolidGround(PartGroundDevice.groundDetectionOffset);
             }
 
             if (isGrounded) {
                 isAbleToDoGroundOperations = true;
                 isAirborne = false;
             } else {
-                groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundOperationOffset);
-                solidBox.globalCenter.add(PartGroundDevice.groundOperationOffset);
-                vehicle.world.updateBoundingBoxCollisions(solidBox, groundCollisionOffset, false);
-                contactedEntity = checkEntityCollisions(groundCollisionOffset);
-                solidBox.globalCenter.subtract(PartGroundDevice.groundOperationOffset);
-                isAbleToDoGroundOperations = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
+                isAbleToDoGroundOperations = probeSolidGround(PartGroundDevice.groundOperationOffset);
             }
         }
 
         //Try liquids if we don't have the solid boxes on the ground.
         if (!isAbleToDoGroundOperations && (!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty())) {
+            Point3D groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundDetectionOffset);
             liquidBox.globalCenter.set(liquidBox.localCenter).rotate(vehicle.rotation).rotate(vehicle.orientation).add(vehicle.position).add(vehicleMotionOffset);
             vehicle.world.updateBoundingBoxCollisions(liquidBox, vehicleMotionOffset, false);
             isCollided = !liquidBox.collidingBlockPositions.isEmpty();
@@ -378,6 +373,18 @@ public class VehicleGroundDeviceBox {
         if (groundedGroundDevices != null && isAbleToDoGroundOperations) {
             groundedGroundDevices.addAll(groundDevices);
         }
+    }
+
+    private boolean probeSolidGround(Point3D offset) {
+        solidBox.globalCenter.add(offset);
+        vehicle.world.updateBoundingBoxCollisions(solidBox, offset, false);
+        contactedEntity = checkEntityCollisions(offset);
+        solidBox.globalCenter.subtract(offset);
+        boolean foundGround = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
+        if (foundGround) {
+            groundClearance = contactedEntity ? 0 : Math.max(0, solidBox.currentCollisionDepth.y - offset.y);
+        }
+        return foundGround;
     }
 
     /**

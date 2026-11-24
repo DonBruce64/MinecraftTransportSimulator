@@ -17,6 +17,7 @@ import minecrafttransportsimulator.entities.instances.PartPropeller;
  * @author don_bruce
  */
 public class VehicleGroundDeviceCollection {
+    private static final double GROUND_CONTACT_TOLERANCE = 0.001D;
     private final EntityVehicleF_Physics vehicle;
     private final VehicleGroundDeviceBox frontLeftGDB;
     private final VehicleGroundDeviceBox frontRightGDB;
@@ -340,33 +341,38 @@ public class VehicleGroundDeviceCollection {
      */
     public void performPitchCorrection(Point3D groundMotion) {
         if (vehicle.towedByConnection == null) {
+            boolean frontLeftGrounded = hasGroundContact(frontLeftGDB);
+            boolean frontRightGrounded = hasGroundContact(frontRightGDB);
+            boolean rearLeftGrounded = hasGroundContact(rearLeftGDB);
+            boolean rearRightGrounded = hasGroundContact(rearRightGDB);
+
             //Counter-clockwise rotation if both rear wheels are airborne
-            if (rearLeftGDB.isAirborne && rearLeftGDB.isReady() && rearRightGDB.isAirborne && rearRightGDB.isReady()) {
+            if (!rearLeftGrounded && rearLeftGDB.isReady() && !rearRightGrounded && rearRightGDB.isReady()) {
                 //Make sure front is not airborne on at least one wheel before rotating.
-                if (!frontLeftGDB.isAirborne) {
-                    if (!frontRightGDB.isAirborne) {
+                if (frontLeftGrounded) {
+                    if (frontRightGrounded) {
                         adjustAnglesMatrix(frontLeftGDB.contactPoint.z > frontRightGDB.contactPoint.z ? frontLeftGDB.contactPoint : frontRightGDB.contactPoint, rearLeftGDB, rearRightGDB, false, true, true, groundMotion);
                     } else {
                         adjustAnglesMatrix(frontLeftGDB.contactPoint, rearLeftGDB, rearRightGDB, false, true, true, groundMotion);
                     }
                     return;
-                } else if (!frontRightGDB.isAirborne) {
+                } else if (frontRightGrounded) {
                     adjustAnglesMatrix(frontRightGDB.contactPoint, rearLeftGDB, rearRightGDB, false, true, true, groundMotion);
                     return;
                 }
             }
 
             //Clockwise rotation if both front wheels are airborne
-            if (frontLeftGDB.isAirborne && frontLeftGDB.isReady() && frontRightGDB.isAirborne && frontRightGDB.isReady()) {
+            if (!frontLeftGrounded && frontLeftGDB.isReady() && !frontRightGrounded && frontRightGDB.isReady()) {
                 //Make sure rear is not airborne on at least one wheel before rotating.
-                if (!rearLeftGDB.isAirborne) {
-                    if (!rearRightGDB.isAirborne) {
+                if (rearLeftGrounded) {
+                    if (rearRightGrounded) {
                         adjustAnglesMatrix(rearLeftGDB.contactPoint.z < rearRightGDB.contactPoint.z ? rearLeftGDB.contactPoint : rearRightGDB.contactPoint, frontLeftGDB, frontRightGDB, true, true, true, groundMotion);
                     } else {
                         adjustAnglesMatrix(rearLeftGDB.contactPoint, frontLeftGDB, frontRightGDB, true, true, true, groundMotion);
                     }
                     return;
-                } else if (!rearRightGDB.isAirborne) {
+                } else if (rearRightGrounded) {
                     adjustAnglesMatrix(rearRightGDB.contactPoint, frontLeftGDB, frontRightGDB, true, true, true, groundMotion);
                     return;
                 }
@@ -443,32 +449,37 @@ public class VehicleGroundDeviceCollection {
      * Actual motion and position are not changed, despite rotation being.
      */
     public void performRollCorrection(Point3D groundMotion) {
+        boolean frontLeftGrounded = hasGroundContact(frontLeftGDB);
+        boolean frontRightGrounded = hasGroundContact(frontRightGDB);
+        boolean rearLeftGrounded = hasGroundContact(rearLeftGDB);
+        boolean rearRightGrounded = hasGroundContact(rearRightGDB);
+
         //Counter-clockwise rotation if both left wheels are free 
-        if (!frontLeftGDB.isCollided && !frontLeftGDB.isGrounded && frontLeftGDB.isReady() && !rearLeftGDB.isCollided && !rearLeftGDB.isGrounded && rearLeftGDB.isReady()) {
+        if (!frontLeftGrounded && frontLeftGDB.isReady() && !rearLeftGrounded && rearLeftGDB.isReady()) {
             //Make sure right is grounded or collided on at least one wheel before rotating.
             //This prevents us from doing rotation in the air.
-            if (frontRightGDB.isCollided || frontRightGDB.isGrounded) {
-                if (rearRightGDB.isCollided || rearRightGDB.isGrounded) {
+            if (frontRightGrounded) {
+                if (rearRightGrounded) {
                     adjustAnglesMatrix(frontRightGDB.contactPoint.x < rearRightGDB.contactPoint.x ? frontRightGDB.contactPoint : rearRightGDB.contactPoint, frontLeftGDB, rearLeftGDB, false, false, true, groundMotion);
                 } else {
                     adjustAnglesMatrix(frontRightGDB.contactPoint, frontLeftGDB, rearLeftGDB, false, false, true, groundMotion);
                 }
-            } else if (rearRightGDB.isCollided || rearRightGDB.isGrounded) {
+            } else if (rearRightGrounded) {
                 adjustAnglesMatrix(rearRightGDB.contactPoint, frontLeftGDB, rearLeftGDB, false, false, true, groundMotion);
             }
         }
 
         //Clockwise rotation if both right wheels are free
-        if (!frontRightGDB.isCollided && !frontRightGDB.isGrounded && frontRightGDB.isReady() && !rearRightGDB.isCollided && !rearRightGDB.isGrounded && rearRightGDB.isReady()) {
+        if (!frontRightGrounded && frontRightGDB.isReady() && !rearRightGrounded && rearRightGDB.isReady()) {
             //Make sure left is grounded or collided on at least one wheel before rotating.
             //This prevents us from doing rotation in the air.
-            if (frontLeftGDB.isCollided || frontLeftGDB.isGrounded) {
-                if (rearLeftGDB.isCollided || rearLeftGDB.isGrounded) {
+            if (frontLeftGrounded) {
+                if (rearLeftGrounded) {
                     adjustAnglesMatrix(frontLeftGDB.contactPoint.x < rearLeftGDB.contactPoint.x ? frontLeftGDB.contactPoint : rearLeftGDB.contactPoint, frontRightGDB, rearRightGDB, true, false, true, groundMotion);
                 } else {
                     adjustAnglesMatrix(frontLeftGDB.contactPoint, frontRightGDB, rearRightGDB, true, false, true, groundMotion);
                 }
-            } else if (rearLeftGDB.isCollided || rearLeftGDB.isGrounded) {
+            } else if (rearLeftGrounded) {
                 adjustAnglesMatrix(rearLeftGDB.contactPoint, frontRightGDB, rearRightGDB, true, false, true, groundMotion);
             }
         }
@@ -478,20 +489,25 @@ public class VehicleGroundDeviceCollection {
         if (frontLeftGDB.contactPoint.x == 0 && frontRightGDB.contactPoint.x == 0 && rearLeftGDB.isReady() && rearRightGDB.isReady()) {
             //Only use rear wheels for roll on this vehicle.
             //Counter-clockwise rotation if left wheel is free and right is touching.  Clockwise otherwise.
-            if (!rearLeftGDB.isCollided && !rearLeftGDB.isGrounded && (rearRightGDB.isCollided || rearRightGDB.isGrounded)) {
+            if (!rearLeftGrounded && (rearRightGrounded)) {
                 adjustAnglesMatrix(rearRightGDB.contactPoint, rearLeftGDB, rearLeftGDB, false, false, true, groundMotion);
-            } else if (!rearRightGDB.isCollided && !rearRightGDB.isGrounded && (rearLeftGDB.isCollided || rearLeftGDB.isGrounded)) {
+            } else if (!rearRightGrounded && (rearLeftGrounded)) {
                 adjustAnglesMatrix(rearLeftGDB.contactPoint, rearRightGDB, rearRightGDB, true, false, true, groundMotion);
             }
         } else if (rearLeftGDB.contactPoint.x == 0 && rearRightGDB.contactPoint.x == 0 && frontLeftGDB.isReady() && frontRightGDB.isReady()) {
             //Only use front wheels for roll on this vehicle.
             //Counter-clockwise rotation if left wheel is free and right is touching.  Clockwise otherwise.
-            if (!frontLeftGDB.isCollided && !frontLeftGDB.isGrounded && (frontRightGDB.isCollided || frontRightGDB.isGrounded)) {
+            if (!frontLeftGrounded && (frontRightGrounded)) {
                 adjustAnglesMatrix(frontRightGDB.contactPoint, frontLeftGDB, frontLeftGDB, false, false, true, groundMotion);
-            } else if (!frontRightGDB.isCollided && !frontRightGDB.isGrounded && (frontLeftGDB.isCollided || frontLeftGDB.isGrounded)) {
+            } else if (!frontRightGrounded && (frontLeftGrounded)) {
                 adjustAnglesMatrix(frontLeftGDB.contactPoint, frontRightGDB, frontRightGDB, true, false, true, groundMotion);
             }
         }
+    }
+
+    private boolean hasGroundContact(VehicleGroundDeviceBox box) {
+        //The ground detection probe also reaches boxes that are still above the surface.
+        return box.isGrounded && (vehicle.towedByConnection != null || box.isUsingLiquidBoxes || box.groundClearance <= GROUND_CONTACT_TOLERANCE);
     }
 
     /**
@@ -510,8 +526,15 @@ public class VehicleGroundDeviceCollection {
         }
 
         double furthestDelta = Math.max(box1Delta, box2Delta);
-        double climbSpeed = vehicle.climbSpeedVar.currentValue;
-        if (climbSpeed <= 0 || furthestDelta < climbSpeed) {
+        double heightDelta = vehicle.climbSpeedVar.currentValue;
+        if (vehicle.towedByConnection == null) {
+            double clearance = Math.min(testBox1.groundClearance, testBox2.groundClearance);
+            if (clearance > GROUND_CONTACT_TOLERANCE) {
+                //Lower to the detected surface without requesting the full climb step.
+                heightDelta = Math.min(heightDelta, clearance);
+            }
+        }
+        if (heightDelta <= 0 || furthestDelta < heightDelta) {
             return;
         }
 
@@ -520,7 +543,7 @@ public class VehicleGroundDeviceCollection {
                 && vehicle.motion.x == 0 && vehicle.motion.z == 0 && hasGroundedWheelsOrTreads();
         rotatedPivot.set(originPoint).rotate(vehicle.rotation);
         for (int step = 4; step > 0; --step) {
-            double angle = Math.toDegrees(Math.asin(climbSpeed * (step / 4D) / furthestDelta));
+            double angle = Math.toDegrees(Math.asin(heightDelta * (step / 4D) / furthestDelta));
             if (!clockwiseRotation) {
                 angle = -angle;
             }
