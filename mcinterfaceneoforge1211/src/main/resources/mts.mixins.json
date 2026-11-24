@@ -24,7 +24,8 @@
         "common.BiomeMixin",
         "common.ConcretePowderBlockMixin",
         "common.DimensionDataStorageMixin",
-        "common.EntityMixin"
+        "common.EntityMixin",
+        "common.TaczHitboxMixin"
     ],
     "injectors": {
         "defaultRequire": 1

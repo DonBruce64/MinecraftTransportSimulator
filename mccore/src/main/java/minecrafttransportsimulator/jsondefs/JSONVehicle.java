@@ -103,6 +103,15 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("If this is true, the vehicle and its parts will not take damage from explosions.  Useful for vehicles like tanks that shouldn't be affected by this.")
         public boolean ignoreExplosiveDamage;
 
+        @JSONDescription("Fraction of intercepted rider damage or a direct external projectile hit dealt to the vehicle, from 0 to 1.  When omitted, the default is based on the vehicle's maximum health.")
+        public Double absorbedDamagePercent;
+
+        @JSONDescription("Minimum full incoming hit, from 1 to 9999 damage, required before the vehicle takes its share.  When omitted, the default is based on the vehicle's maximum health.")
+        public Double minDamageAbsorption;
+
+        @JSONDescription("Fraction of explosion damage that reaches a seated player, from 0 to 1.  When omitted, the default is based on the vehicle's maximum health.")
+        public Double explosionDmgPassPercentage;
+
         @JSONDescription("The mass of this vehicle, when empty, in kg.  Note that fuel, cargo, players, and player inventories all count as weight, so this mass will not be the mass of the vehicle during normal operation.  Not too important in cars, but in aircraft this value should be as close to the real-life value as possible to avoid physics issues.")
         public int emptyMass;
 
@@ -278,6 +287,49 @@ public class JSONVehicle extends AJSONPartProvider {
         public String hookupType;
         @Deprecated
         public List<JSONInstrumentDefinition> instruments;
+
+        public double getAbsorbedDamage(int vehicleHealth, double incomingDamage) {
+            DamageTier tier = DamageTier.forHealth(vehicleHealth);
+            double minimum = boundedOverride(minDamageAbsorption, tier.minimum, 1, 9999);
+            double fraction = boundedOverride(absorbedDamagePercent, tier.hullFraction, 0, 1);
+            return incomingDamage >= minimum ? incomingDamage * fraction : 0;
+        }
+
+        public double getExplosionDamagePassPercentage(int vehicleHealth) {
+            return boundedOverride(explosionDmgPassPercentage, DamageTier.forHealth(vehicleHealth).explosionPassFraction, 0, 1);
+        }
+
+        private static double boundedOverride(Double value, double defaultValue, double minimum, double maximum) {
+            return value != null && Double.isFinite(value) ? Math.max(minimum, Math.min(maximum, value)) : defaultValue;
+        }
+
+        private enum DamageTier {
+            LIGHT(0.75, 1, 0.75),
+            NORMAL(0.50, 2, 0.50),
+            HEAVY(0.10, 5, 0.20),
+            SUPER_HEAVY(0.04, 10, 0.05);
+
+            private final double hullFraction;
+            private final double minimum;
+            private final double explosionPassFraction;
+
+            DamageTier(double hullFraction, double minimum, double explosionPassFraction) {
+                this.hullFraction = hullFraction;
+                this.minimum = minimum;
+                this.explosionPassFraction = explosionPassFraction;
+            }
+
+            private static DamageTier forHealth(int health) {
+                if (health < 150) {
+                    return LIGHT;
+                } else if (health <= 300) {
+                    return NORMAL;
+                } else if (health <= 600) {
+                    return HEAVY;
+                }
+                return SUPER_HEAVY;
+            }
+        }
     }
 
     @Deprecated

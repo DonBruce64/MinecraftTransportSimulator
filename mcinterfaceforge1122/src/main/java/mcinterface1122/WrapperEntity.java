@@ -22,6 +22,7 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.IProjectile;
 import net.minecraft.item.ItemLead;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -33,12 +34,14 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 
 @EventBusSubscriber
 public class WrapperEntity implements IWrapperEntity {
@@ -409,16 +412,7 @@ public class WrapperEntity implements IWrapperEntity {
         if (damage.language == null) {
             throw new IllegalArgumentException("ERROR: Cannot attack an entity with a damage of no type and language component!");
         }
-        DamageSource newSource = new EntityDamageSource(damage.language.getCurrentValue(), damage.entityResponsible != null ? ((WrapperEntity) damage.entityResponsible).entity : null) {
-            @Override
-            public ITextComponent getDeathMessage(EntityLivingBase player) {
-                if (damage.entityResponsible != null) {
-                    return new TextComponentString(String.format(damage.language.getCurrentValue(), player.getDisplayName().getFormattedText(), ((WrapperEntity) damage.entityResponsible).entity.getDisplayName().getFormattedText()));
-                } else {
-                    return new TextComponentString(String.format(damage.language.getCurrentValue(), player.getDisplayName().getFormattedText()));
-                }
-            }
-        };
+        DamageSource newSource = new IVDamageSource(damage);
         if (damage.isFire) {
             newSource.setFireDamage();
             entity.setFire(5);
@@ -477,6 +471,83 @@ public class WrapperEntity implements IWrapperEntity {
         }
     }
 
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void onRiderAttack(LivingAttackEvent event) {
+        DamageSource source = event.getSource();
+        float amount = event.getAmount();
+        if (!source.isExplosion() && amount > 0 && getProtectedRiderDamage(event.getEntityLiving(), source, amount, false) == 0) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void onRiderExplosion(LivingHurtEvent event) {
+        DamageSource source = event.getSource();
+        if (source.isExplosion()) {
+            float amount = event.getAmount();
+            float riderDamage = getProtectedRiderDamage(event.getEntityLiving(), source, amount, true);
+            if (riderDamage < amount) {
+                if (riderDamage == 0) {
+                    event.setCanceled(true);
+                } else {
+                    event.setAmount(riderDamage);
+                }
+            }
+        }
+    }
+
+    private static float getProtectedRiderDamage(Entity target, DamageSource source, float amount, boolean explosive) {
+        if (!(target instanceof EntityPlayer) || target.world.isRemote || !target.isEntityAlive()) {
+            return amount;
+        }
+        EntityPlayer player = (EntityPlayer) target;
+        if (player.isEntityInvulnerable(source) || (player.capabilities.disableDamage && !source.canHarmInCreative())) {
+            return amount;
+        }
+
+        Entity mount = player.getRidingEntity();
+        if (!(mount instanceof BuilderEntityLinkedSeat) || !(((BuilderEntityLinkedSeat) mount).entity instanceof PartSeat)) {
+            return amount;
+        }
+        PartSeat seat = (PartSeat) ((BuilderEntityLinkedSeat) mount).entity;
+        if (!seat.isValid || seat.vehicleOn == null || source instanceof IVDamageSource
+            || source == DamageSource.DROWN || source == DamageSource.OUT_OF_WORLD) {
+            return amount;
+        }
+
+        Entity attacker = source.getTrueSource();
+        boolean melee = attacker instanceof EntityLivingBase && source.getImmediateSource() == attacker;
+        if (source.canHarmInCreative() && !explosive && !melee && !isProjectileDamage(source)) {
+            return amount;
+        }
+
+        boolean fromMob = attacker instanceof EntityLivingBase && !(attacker instanceof EntityPlayer);
+        IWrapperPlayer playerSource = attacker instanceof EntityPlayer ? WrapperPlayer.getWrapperFor((EntityPlayer) attacker) : null;
+        return seat.vehicleOn.applyRiderDamageProtection(amount, fromMob, explosive, playerSource);
+    }
+
+    static boolean isProjectileDamage(DamageSource source) {
+        return source.isProjectile() || source.getImmediateSource() instanceof IProjectile;
+    }
+
+    private static final class IVDamageSource extends EntityDamageSource {
+        private final Damage damage;
+
+        private IVDamageSource(Damage damage) {
+            super(damage.language.getCurrentValue(), damage.entityResponsible != null ? ((WrapperEntity) damage.entityResponsible).entity : null);
+            this.damage = damage;
+        }
+
+        @Override
+        public ITextComponent getDeathMessage(EntityLivingBase player) {
+            if (damage.entityResponsible != null) {
+                return new TextComponentString(String.format(damage.language.getCurrentValue(), player.getDisplayName().getFormattedText(), ((WrapperEntity) damage.entityResponsible).entity.getDisplayName().getFormattedText()));
+            } else {
+                return new TextComponentString(String.format(damage.language.getCurrentValue(), player.getDisplayName().getFormattedText()));
+            }
+        }
+    }
+
     @SubscribeEvent
     public static void onIVLivingAttack(LivingAttackEvent event) {
         if (event.getEntityLiving() instanceof EntityPlayer && !event.getEntityLiving().world.isRemote) {
@@ -484,7 +555,8 @@ public class WrapperEntity implements IWrapperEntity {
             Entity attacker = source.getImmediateSource();
             if (attacker instanceof EntityLiving && attacker.equals(source.getTrueSource()) && "mob".equals(source.getDamageType())) {
                 AEntityB_Existing riding = WrapperPlayer.getWrapperFor((EntityPlayer) event.getEntityLiving()).getEntityRiding();
-                if (riding instanceof PartSeat && ((PartSeat) riding).interceptRiderMeleeAttack(getWrapperFor(attacker), event.getAmount())) {
+                if (riding instanceof PartSeat && ((PartSeat) riding).vehicleOn == null
+                    && ((PartSeat) riding).interceptRiderMeleeAttack(getWrapperFor(attacker), event.getAmount())) {
                     event.setCanceled(true);
                 }
             }

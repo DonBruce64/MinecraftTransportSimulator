@@ -29,15 +29,18 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.LeadItem;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 @EventBusSubscriber
@@ -419,16 +422,7 @@ public class WrapperEntity implements IWrapperEntity {
         if (damage.language == null) {
             throw new IllegalArgumentException("ERROR: Cannot attack an entity with a damage of no type and language component!");
         }
-        DamageSource newSource = new EntityDamageSource(damage.language.getCurrentValue(), damage.entityResponsible != null ? ((WrapperEntity) damage.entityResponsible).entity : null) {
-            @Override
-            public Component getLocalizedDeathMessage(LivingEntity player) {
-                if (damage.entityResponsible != null) {
-                    return new TextComponent(String.format(damage.language.getCurrentValue(), player.getDisplayName().getString(), ((WrapperEntity) damage.entityResponsible).entity.getDisplayName().getString()));
-                } else {
-                    return new TextComponent(String.format(damage.language.getCurrentValue(), player.getDisplayName().getString()));
-                }
-            }
-        };
+        DamageSource newSource = new IVDamageSource(damage);
         if (damage.isFire) {
             newSource.setIsFire();
             entity.setRemainingFireTicks(5);
@@ -488,6 +482,80 @@ public class WrapperEntity implements IWrapperEntity {
         }
     }
 
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void onRiderAttack(LivingAttackEvent event) {
+        DamageSource source = event.getSource();
+        float amount = event.getAmount();
+        if (!source.isExplosion() && amount > 0 && getProtectedRiderDamage(event.getEntityLiving(), source, amount, false) == 0) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void onRiderExplosion(LivingHurtEvent event) {
+        DamageSource source = event.getSource();
+        if (source.isExplosion()) {
+            float amount = event.getAmount();
+            float riderDamage = getProtectedRiderDamage(event.getEntityLiving(), source, amount, true);
+            if (riderDamage < amount) {
+                if (riderDamage == 0) {
+                    event.setCanceled(true);
+                } else {
+                    event.setAmount(riderDamage);
+                }
+            }
+        }
+    }
+
+    private static float getProtectedRiderDamage(Entity target, DamageSource source, float amount, boolean explosive) {
+        if (!(target instanceof Player player) || target.level.isClientSide || !target.isAlive()) {
+            return amount;
+        }
+        if (player.isInvulnerableTo(source) || (player.getAbilities().invulnerable && !source.isBypassInvul())) {
+            return amount;
+        }
+
+        if (!(player.getVehicle() instanceof BuilderEntityLinkedSeat linkedSeat) || !(linkedSeat.entity instanceof PartSeat seat)) {
+            return amount;
+        }
+        if (!seat.isValid || seat.vehicleOn == null || source instanceof IVDamageSource
+            || source == DamageSource.DROWN || source == DamageSource.OUT_OF_WORLD) {
+            return amount;
+        }
+
+        Entity attacker = source.getEntity();
+        boolean melee = attacker instanceof LivingEntity && source.getDirectEntity() == attacker;
+        if (source.isBypassInvul() && !explosive && !melee && !isProjectileDamage(source)) {
+            return amount;
+        }
+
+        boolean fromMob = attacker instanceof LivingEntity && !(attacker instanceof Player);
+        IWrapperPlayer playerSource = attacker instanceof Player ? WrapperPlayer.getWrapperFor((Player) attacker) : null;
+        return seat.vehicleOn.applyRiderDamageProtection(amount, fromMob, explosive, playerSource);
+    }
+
+    static boolean isProjectileDamage(DamageSource source) {
+        return source.isProjectile() || source.getDirectEntity() instanceof Projectile;
+    }
+
+    private static final class IVDamageSource extends EntityDamageSource {
+        private final Damage damage;
+
+        private IVDamageSource(Damage damage) {
+            super(damage.language.getCurrentValue(), damage.entityResponsible != null ? ((WrapperEntity) damage.entityResponsible).entity : null);
+            this.damage = damage;
+        }
+
+        @Override
+        public Component getLocalizedDeathMessage(LivingEntity player) {
+            if (damage.entityResponsible != null) {
+                return new TextComponent(String.format(damage.language.getCurrentValue(), player.getDisplayName().getString(), ((WrapperEntity) damage.entityResponsible).entity.getDisplayName().getString()));
+            } else {
+                return new TextComponent(String.format(damage.language.getCurrentValue(), player.getDisplayName().getString()));
+            }
+        }
+    }
+
     @SubscribeEvent
     public static void onIVLivingAttack(LivingAttackEvent event) {
         if (event.getEntityLiving() instanceof Player && !event.getEntityLiving().level.isClientSide) {
@@ -495,7 +563,8 @@ public class WrapperEntity implements IWrapperEntity {
             Entity attacker = source.getDirectEntity();
             if (attacker instanceof Mob && attacker.equals(source.getEntity()) && ("mob".equals(source.getMsgId()) || "sting".equals(source.getMsgId()))) {
                 AEntityB_Existing riding = WrapperPlayer.getWrapperFor((Player) event.getEntityLiving()).getEntityRiding();
-                if (riding instanceof PartSeat && ((PartSeat) riding).interceptRiderMeleeAttack(getWrapperFor(attacker), event.getAmount())) {
+                if (riding instanceof PartSeat && ((PartSeat) riding).vehicleOn == null
+                    && ((PartSeat) riding).interceptRiderMeleeAttack(getWrapperFor(attacker), event.getAmount())) {
                     event.setCanceled(true);
                 }
             }

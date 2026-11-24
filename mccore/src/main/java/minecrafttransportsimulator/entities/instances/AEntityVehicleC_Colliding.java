@@ -2,8 +2,10 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
@@ -29,6 +31,11 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
  * @author don_bruce
  */
 abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
+    private static final int MOB_DAMAGE_COOLDOWN_TICKS = 10;
+    private static final int MOB_ATTACK_PULSE_TICKS = 3;
+    private long lastRedirectedMobHitTick = -MOB_DAMAGE_COOLDOWN_TICKS;
+    private long lastAttackPulseTick;
+    private final ComputedVariable mobAttackedVar;
 
     //Internal states.
     public double currentMass;
@@ -42,6 +49,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
 
     public AEntityVehicleC_Colliding(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);
+        addVariable(this.mobAttackedVar = new ComputedVariable(this, "mob_attacked"));
         this.speedFactor = (definition.motorized.isAircraft ? ConfigSystem.settings.general.aircraftSpeedFactor.value : ConfigSystem.settings.general.carSpeedFactor.value) * ConfigSystem.settings.general.packSpeedFactors.value.get(definition.packID);
         double vehicleScale = ConfigSystem.settings.general.packVehicleScales.value.get(definition.packID);
         scale.set(vehicleScale, vehicleScale, vehicleScale);
@@ -51,6 +59,10 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
     public void update() {
         super.update();
         world.beginProfiling("VehicleC_Level", true);
+
+        if (!world.isClient() && mobAttackedVar.isActive && ticksExisted - lastAttackPulseTick >= MOB_ATTACK_PULSE_TICKS) {
+            mobAttackedVar.setActive(false, true);
+        }
 
         //Set vectors to current velocity and orientation.
         headingVector.set(0D, 0D, 1D);
@@ -69,6 +81,76 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
         world.endProfiling();
     }
 
+    @Override
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
+        if ("mob_attacked".equals(variable) && mobAttackedVar != null) {
+            return mobAttackedVar;
+        }
+        return super.createComputedVariable(variable, createDefaultIfNotPresent);
+    }
+
+    /**
+     * Applies the hull's share of an incoming rider hit and returns the amount that reaches the rider.
+     */
+    public float applyRiderDamageProtection(float incomingDamage, boolean fromMob, boolean explosive, IWrapperPlayer playerSource) {
+        int health = definition.general.health;
+        if (world.isClient() || !isValid || outOfHealth || health <= 0 || damageVar.currentValue >= health
+            || incomingDamage <= 0 || !Float.isFinite(incomingDamage)) {
+            return incomingDamage;
+        }
+
+        double passFraction = explosive ? definition.motorized.getExplosionDamagePassPercentage(health) : 0;
+        float riderDamage = (float) (incomingDamage * passFraction);
+        if (!ConfigSystem.settings.damage.allowExternalDamage.value
+            || (fromMob && ticksExisted - lastRedirectedMobHitTick < MOB_DAMAGE_COOLDOWN_TICKS)) {
+            return riderDamage;
+        }
+
+        double interceptedDamage = definition.motorized.getAbsorbedDamage(health, incomingDamage) * (1 - passFraction);
+        double transferredDamage = scaleExternalDamage(interceptedDamage);
+        if (transferredDamage <= 0 || !Double.isFinite(transferredDamage)) {
+            return riderDamage;
+        }
+
+        double previousDamage = damageVar.currentValue;
+        //A rider hit transfers to hull health directly.
+        Damage damage = new Damage(transferredDamage, null, null, playerSource, null);
+        damage.isExplosion = explosive;
+        attack(damage);
+        if (fromMob && damageVar.currentValue > previousDamage) {
+            lastRedirectedMobHitTick = ticksExisted;
+            pulseAttackVariable();
+        }
+        return riderDamage;
+    }
+
+    @Override
+    public void attack(Damage damage) {
+        if (damage.entityResponsible instanceof IWrapperPlayer && damage.amount > 0 && !damage.isWater) {
+            pulseAttackVariable();
+        }
+        super.attack(damage);
+    }
+
+    public void pulseAttackVariable() {
+        if (!world.isClient() && isValid) {
+            lastAttackPulseTick = ticksExisted;
+            mobAttackedVar.setActive(true, true);
+        }
+    }
+
+    public double getExternalHitDamage(double incomingDamage, boolean projectile) {
+        double damage = projectile ? definition.motorized.getAbsorbedDamage(definition.general.health, incomingDamage) : incomingDamage;
+        return scaleExternalDamage(damage);
+    }
+
+    private double scaleExternalDamage(double damage) {
+        Map<String, Double> packDamageOverrides = ConfigSystem.externalDamageOverrides.overrides.get(definition.packID);
+        Double damageFactor = packDamageOverrides != null ? packDamageOverrides.get(definition.systemName) : null;
+        return damageFactor != null ? damage * damageFactor : damage;
+    }
+
+    @Override
     public boolean ignoreExplosiveDamage() {
         return definition.motorized.ignoreExplosiveDamage;
     }

@@ -336,6 +336,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             }
         } else {
             //Not a removable part, or is an actual attack.
+            if (vehicleOn != null && damage.entityResponsible instanceof IWrapperPlayer && damage.amount > 0 && !damage.isWater) {
+                vehicleOn.pulseAttackVariable();
+            }
             super.attack(damage);
             if (definition.generic.forwardsDamageMultiplier != 0) {
                 //Need to re-create damage object to use on entity.  Use null for box since we want to hurt the core entity.

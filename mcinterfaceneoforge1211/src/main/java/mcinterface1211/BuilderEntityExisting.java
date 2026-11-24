@@ -110,7 +110,9 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     collisionBoxes = new WrapperAABBCollective(interactable, true);
                     //Set this to make collision checks work with the multiple collision points.
                     //We use the collision boxes as a wrapper here as we need a bounding box large enough to encompass both.
-                    setBoundingBox(collisionBoxes);
+                    setBoundingBox(isPickable()
+                        ? new WrapperAABBCollective(interactable, WrapperAABBCollective.Mode.ENTITY_QUERY)
+                        : collisionBoxes);
                     interactAttackBoxes = new WrapperAABBCollective(interactable, false);
                     if (entity instanceof EntityVehicleF_Physics && interactable.ticksExisted > 1 && interactable.ticksExisted % 20 == 0) {
                         mutableDims = EntityDimensions.scalable((float) Math.max(interactable.encompassingBox.widthRadius * 2F, interactable.encompassingBox.depthRadius * 2F), (float) interactable.encompassingBox.heightRadius * 2F);
@@ -169,12 +171,22 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     public boolean hurt(DamageSource source, float amount) {
         if (ConfigSystem.settings.damage.allowExternalDamage.value && !level().isClientSide && entity instanceof AEntityF_Multipart) {
             AEntityF_Multipart<?> multipart = ((AEntityF_Multipart<?>) entity);
-            if (multipart instanceof EntityVehicleF_Physics) {
-                amount *= ConfigSystem.externalDamageOverrides.overrides.get(multipart.definition.packID).get(multipart.definition.systemName);
-            }
             Entity attacker = source.getDirectEntity();
             Entity trueSource = source.getEntity();
             WrapperPlayer playerSource = trueSource instanceof Player ? WrapperPlayer.getWrapperFor((Player) trueSource) : null;
+            if (!source.is(DamageTypeTags.IS_EXPLOSION) && WrapperEntity.isProjectileDamage(source) && attacker != null) {
+                Vec3 position = attacker.position();
+                Point3D projectilePosition = new Point3D(position.x, position.y, position.z);
+                Vec3 movement = attacker.getDeltaMovement();
+                Point3D projectileMotion = new Point3D(movement.x, movement.y, movement.z);
+                return multipart.attackExternalProjectile(projectilePosition, projectileMotion, amount, playerSource);
+            }
+            if (multipart instanceof EntityVehicleF_Physics) {
+                amount = (float) ((EntityVehicleF_Physics) multipart).getExternalHitDamage(amount, false);
+            }
+            if (interactAttackBoxes == null) {
+                return false;
+            }
             if (lastExplosionPosition != null && source.is(DamageTypeTags.IS_EXPLOSION)) {
                 //We encountered an explosion.  These may or may not have have entities linked to them.  Depends on if
                 //it's a player firing a gun that had a bullet, or a random TNT lighting in the world.
