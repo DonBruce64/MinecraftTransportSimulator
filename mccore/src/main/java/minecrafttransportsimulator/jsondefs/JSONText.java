@@ -42,7 +42,7 @@ public class JSONText {
     public String fontName;
 
     @JSONRequired(alternativeField = "textureNames")
-    @JSONDescription("The default text to display.  This is what the field will have when the model is first placed down, and will persist until a player changes it.  Required for text objects, but may be blank.  May be omitted for guiTextObjects that define textureNames.")
+    @JSONDescription("The default text to display.  This is what the field will have when the model is first placed down, and will persist until a player changes it.  Required for text objects, but may be blank.  May be omitted for guiTextObjects that define textureNames.  Use [keybind.car.horn] or another IV control ID to show the local player's current binding.  Unknown or unbound controls display None.")
     public String defaultText;
 
     @JSONDescription("The max number of characters this entry can have.  Required for editable world text, but optional for guiTextObjects and variable-driven text.")

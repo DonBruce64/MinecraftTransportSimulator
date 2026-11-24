@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
@@ -17,6 +19,7 @@ import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
+import minecrafttransportsimulator.systems.ControlSystem;
 
 /**
  * Main render class for text.  This class contains a few methods for rendering text.  These mainly pertain to rendering
@@ -35,6 +38,7 @@ public class RenderText {
     public static final char UNDERLINE_CHAR = '_';
     public static final char STRIKETHROUGH_CHAR = '-';
 
+    private static final Pattern KEYBIND_PLACEHOLDER = Pattern.compile("\\[keybind\\.([a-z0-9_.-]+)\\]");
     private static final Map<String, FontData> fontDatas = new HashMap<>();
     private static final TransformationMatrix transformHelper = new TransformationMatrix();
     private static final int GUI_TEXTURE_BASE_SIZE = 16;
@@ -96,7 +100,7 @@ public class RenderText {
             //Render the text.
             transformHelper.set(transform);
             transformHelper.applyTranslation(definition.pos);
-            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, renderLit, entity.worldLightValue, false, alpha);
+            getFontData(definition.fontName).renderText(resolveKeybinds(text), transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, renderLit, entity.worldLightValue, false, alpha);
         }
     }
 
@@ -110,8 +114,28 @@ public class RenderText {
             transformHelper.resetTransforms();
             transformHelper.applyTranslation(screenWidth / 2D, -screenHeight / 2D, zOffset);
             transformHelper.applyTranslation(definition.pos.x, -definition.pos.y, definition.pos.z);
-            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, true, color, true, entity.worldLightValue, true, alpha);
+            getFontData(definition.fontName).renderText(resolveKeybinds(text), transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, true, color, true, entity.worldLightValue, true, alpha);
         }
+    }
+
+    //Resolve at render time so each viewer sees their own bindings and saved text keeps the placeholders.
+    private static String resolveKeybinds(String text) {
+        if (!text.contains("[keybind.")) {
+            return text;
+        }
+
+        Matcher matcher = KEYBIND_PLACEHOLDER.matcher(text);
+        if (!matcher.find()) {
+            return text;
+        }
+
+        StringBuffer resolved = new StringBuffer(text.length());
+        do {
+            String keyName = ControlSystem.getKeybindDisplayName(matcher.group(1));
+            matcher.appendReplacement(resolved, Matcher.quoteReplacement(keyName));
+        } while (matcher.find());
+        matcher.appendTail(resolved);
+        return resolved.toString();
     }
 
     /**

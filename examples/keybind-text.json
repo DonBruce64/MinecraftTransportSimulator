@@ -1,0 +1,22 @@
+{
+    "rendering": {
+        "textObjects": [
+            {
+                "fieldName": "Vehicle tutorial",
+                "pos": [0.0, 1.5, 1.5],
+                "scale": 0.25,
+                "color": "FFFFFF",
+                "maxLength": 100,
+                "defaultText": "Press [keybind.car.horn] to honk."
+            }
+        ],
+        "guiTextObjects": [
+            {
+                "pos": [0.0, 40.0, 0.0],
+                "scale": 1.0,
+                "color": "FFFFFF",
+                "defaultText": "Press [keybind.car.panel] for the panel or [keybind.car.lights] for the lights."
+            }
+        ]
+    }
+}

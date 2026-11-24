@@ -257,18 +257,20 @@ public class GUIConfig extends AGUIBase {
                     GUIComponentTextBox box = new GUIComponentTextBox(this, guiLeft + horizontalOffset, guiTop + verticalOffset, 40, 10, "", ColorRGB.WHITE, 5) {
                         @Override
                         public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control) {
-                            setText(InterfaceManager.inputInterface.getNameForKeyCode(typedCode));
-                            keyboardBoxes.get(controlConfiguring).get(this).config.keyCode = typedCode;
-                            keyboardBoxes.get(controlConfiguring).get(this).config.isMouseButton = false;
+                            ControlsKeyboard binding = keyboardBoxes.get(controlConfiguring).get(this);
+                            binding.config.keyCode = typedCode;
+                            binding.config.isMouseButton = false;
+                            setText(binding.getDisplayName());
                             ConfigSystem.saveToDisk();
                             focused = false;
                         }
 
                         @Override
                         public boolean handleMouseClicked(int mouseButton) {
-                            setText(InterfaceManager.inputInterface.getNameForMouseButton(mouseButton));
-                            keyboardBoxes.get(controlConfiguring).get(this).config.keyCode = mouseButton;
-                            keyboardBoxes.get(controlConfiguring).get(this).config.isMouseButton = true;
+                            ControlsKeyboard binding = keyboardBoxes.get(controlConfiguring).get(this);
+                            binding.config.keyCode = mouseButton;
+                            binding.config.isMouseButton = true;
+                            setText(binding.getDisplayName());
                             ConfigSystem.saveToDisk();
                             focused = false;
                             return true;
@@ -561,19 +563,13 @@ public class GUIConfig extends AGUIBase {
                     textBox.setText("");
                 } else {
                     ControlsKeyboard control = keyboardBoxes.get(controlType).get(textBox);
-                    if (control.config.isMouseButton) {
-                        textBox.setText(InterfaceManager.inputInterface.getNameForMouseButton(control.config.keyCode));
-                    } else {
-                        textBox.setText(InterfaceManager.inputInterface.getNameForKeyCode(control.config.keyCode));
-                    }
+                    textBox.setText(control.getDisplayName());
                 }
             }
             for (GUIComponentLabel label : keyboardLabels.get(controlType).keySet()) {
                 label.visible = finishKeyboardBindingsButton.visible && controlType.equals(controlConfiguring);
                 ControlsKeyboardDynamic dynamicControl = keyboardLabels.get(controlType).get(label);
-                String modName = dynamicControl.modControl.config.isMouseButton ? InterfaceManager.inputInterface.getNameForMouseButton(dynamicControl.modControl.config.keyCode) : InterfaceManager.inputInterface.getNameForKeyCode(dynamicControl.modControl.config.keyCode);
-                String mainName = dynamicControl.mainControl.config.isMouseButton ? InterfaceManager.inputInterface.getNameForMouseButton(dynamicControl.mainControl.config.keyCode) : InterfaceManager.inputInterface.getNameForKeyCode(dynamicControl.mainControl.config.keyCode);
-                label.text = dynamicControl.language.getCurrentValue() + ": " + modName + " + " + mainName;
+                label.text = dynamicControl.language.getCurrentValue() + ": " + dynamicControl.getDisplayName();
             }
         }
 

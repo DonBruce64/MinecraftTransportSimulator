@@ -11,6 +11,16 @@
 From the folks that brought you Minecraft Flight Simulator comes the all-new Immersive Vehicles mod!\
 This mod is the result of over a year's worth of work and is the continuation and future of Minecraft Flight Simulator.
 
+## Keybinds in Pack Text
+
+Use `[keybind.<control-id>]` in `defaultText` for `rendering.textObjects` or `rendering.guiTextObjects`. Each player sees their current keyboard or mouse binding from the Immersive Vehicles Controls menu. Unknown and unbound controls display `None`.
+
+Use the IDs from the `controls.keyboard` section of `config/mtsconfigclient.json`, such as `car.horn`, `aircraft.flaps_u`, or `general.custom1`. For an action defined in the pack under `customKeybinds`, use `general.custom1` through `general.custom10` to match its `keyIndex`. The modifier combinations use `car.slow`, `car.shift_nu`, and `car.shift_nd`.
+
+[Example vehicle JSON](examples/keybind-text.json) includes both a model label and an on-screen tutorial. Copy the entries you want into your vehicle's existing `rendering` section and adjust the positions for your model or screen. Rebind an example control in the IV Controls menu to see the displayed name update.
+
+To test an unbound IV control, close Minecraft and set the existing control's `keyCode` to `-1` and `isMouseButton` to `false` in `config/mtsconfigclient.json`.
+
 ## Building From Source
 
 These instructions assume you are using Windows.   If you are using a flavor of Linux, you should be able to tell where your instructions differ and how to handle such differences.

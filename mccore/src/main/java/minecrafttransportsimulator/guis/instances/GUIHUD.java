@@ -135,7 +135,7 @@ public class GUIHUD extends AGUIBase {
         customKeybindLabels.entrySet().forEach(entry -> {
             byte keyIndex = entry.getKey();
             GUIComponentLabel label = entry.getValue();
-            label.text = InterfaceManager.inputInterface.getNameForKeyCode(customKeybindControls[keyIndex - 1].config.keyCode) + "->";
+            label.text = customKeybindControls[keyIndex - 1].getDisplayName() + "->";
             customKeybindNames.get(keyIndex).forEach(name -> {
                 if (!label.text.endsWith(">")) {
                     label.text += ", ";
