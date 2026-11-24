@@ -53,6 +53,7 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
  */
 public final class ControlSystem {
     private static final int NULL_COMPONENT = 999;
+    private static final String UNBOUND_KEY_NAME = "None";
     private static final double INTERACTION_DISTANCE = 3.5;
     private static final double VEHICLE_DEPLOYMENT_DISTANCE = 5.0D;
     private static final int TIMED_ACTION_COMPLETION_RETRY_INTERVAL_TICKS = 5;
@@ -118,14 +119,36 @@ public final class ControlSystem {
             ConfigSystem.client.controls.joystick.put(control.systemName, control.config);
         }
         for (ControlsKeyboard control : ControlsKeyboard.values()) {
-            ConfigSystem.client.controls.keyboard.put(control.systemName, control.config);
-        }
-        for (ControlsKeyboard control : ControlsKeyboard.values()) {
-            if (control.config.keyCode <= 0 && !control.config.isMouseButton) {
+            //Only new controls get defaults.  Keep explicitly unbound controls across restarts.
+            if (ConfigSystem.client.controls.keyboard.put(control.systemName, control.config) == null) {
                 control.config.keyCode = InterfaceManager.inputInterface.getKeyCodeForName(control.defaultKeyName);
             }
         }
         ConfigSystem.saveToDisk();
+    }
+
+    /**
+     * Returns the local player's current keyboard or mouse binding for an IV control ID.
+     */
+    public static String getKeybindDisplayName(String systemName) {
+        ConfigKeyboard config = ConfigSystem.client.controls.keyboard.get(systemName);
+        if (config != null) {
+            String keyName = getBoundKeyName(config);
+            return keyName != null ? keyName : UNBOUND_KEY_NAME;
+        }
+        for (ControlsKeyboardDynamic control : ControlsKeyboardDynamic.values()) {
+            if (control.systemName.equals(systemName)) {
+                return control.getDisplayName();
+            }
+        }
+        return UNBOUND_KEY_NAME;
+    }
+
+    private static String getBoundKeyName(ConfigKeyboard config) {
+        if (config.isMouseButton) {
+            return config.keyCode >= 0 ? InterfaceManager.inputInterface.getNameForMouseButton(config.keyCode) : null;
+        }
+        return config.keyCode > 0 ? InterfaceManager.inputInterface.getNameForKeyCode(config.keyCode) : null;
     }
 
     public static void controlGlobal(IWrapperPlayer player) {
@@ -1317,8 +1340,7 @@ public final class ControlSystem {
                 }
                 String currentScheme = (arcadeActive ? LanguageSystem.INTERACT_ARCADEMODE_SCHEME_ARCADE : LanguageSystem.INTERACT_ARCADEMODE_SCHEME_STANDARD).getCurrentValue();
                 String otherScheme = (arcadeActive ? LanguageSystem.INTERACT_ARCADEMODE_SCHEME_STANDARD : LanguageSystem.INTERACT_ARCADEMODE_SCHEME_ARCADE).getCurrentValue();
-                ConfigKeyboard arcadeKey = ControlsKeyboard.AIRCRAFT_ARCADE.config;
-                String keyName = arcadeKey.isMouseButton ? InterfaceManager.inputInterface.getNameForMouseButton(arcadeKey.keyCode) : InterfaceManager.inputInterface.getNameForKeyCode(arcadeKey.keyCode);
+                String keyName = ControlsKeyboard.AIRCRAFT_ARCADE.getDisplayName();
                 InterfaceManager.clientInterface.displayOverlayMessage(String.format(message.getCurrentValue(), currentScheme, keyName, otherScheme));
             }
         }
@@ -1858,11 +1880,13 @@ public final class ControlSystem {
             this.systemName = this.name().toLowerCase(Locale.ROOT).replaceFirst("_", ".");
             this.language = language;
             this.defaultKeyName = defaultKeyName;
-            if (ConfigSystem.client.controls.keyboard.containsKey(systemName)) {
-                this.config = ConfigSystem.client.controls.keyboard.get(systemName);
-            } else {
-                this.config = new ConfigKeyboard();
-            }
+            ConfigKeyboard savedBinding = ConfigSystem.client.controls.keyboard.get(systemName);
+            this.config = savedBinding != null ? savedBinding : new ConfigKeyboard();
+        }
+
+        public String getDisplayName() {
+            String keyName = getBoundKeyName(config);
+            return keyName != null ? keyName : UNBOUND_KEY_NAME;
         }
 
         /**
@@ -1885,10 +1909,10 @@ public final class ControlSystem {
                     if (AGUIBase.activeInputGUI != null) {
                         wasPressedThisCall = false;
                     } else {
-                        wasPressedThisCall = InterfaceManager.inputInterface.isMouseButtonPressed(config.keyCode);
+                        wasPressedThisCall = config.keyCode >= 0 && InterfaceManager.inputInterface.isMouseButtonPressed(config.keyCode);
                     }
                 } else {
-                    wasPressedThisCall = InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
+                    wasPressedThisCall = config.keyCode > 0 && InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
                 }
                 if (isMomentary && wasPressedLastCall) {
                     return false;
@@ -2115,14 +2139,22 @@ public final class ControlSystem {
         CAR_SHIFT_NU(ControlsKeyboard.CAR_SHIFT_U, ControlsKeyboard.CAR_MOD, LanguageSystem.INPUT_SHIFT_N),
         CAR_SHIFT_ND(ControlsKeyboard.CAR_SHIFT_D, ControlsKeyboard.CAR_MOD, LanguageSystem.INPUT_SHIFT_N);
 
+        public final String systemName;
         public final LanguageEntry language;
         public final ControlsKeyboard mainControl;
         public final ControlsKeyboard modControl;
 
         ControlsKeyboardDynamic(ControlsKeyboard mainControl, ControlsKeyboard modControl, LanguageEntry language) {
+            this.systemName = this.name().toLowerCase(Locale.ROOT).replaceFirst("_", ".");
             this.language = language;
             this.mainControl = mainControl;
             this.modControl = modControl;
+        }
+
+        public String getDisplayName() {
+            String modName = getBoundKeyName(modControl.config);
+            String mainName = getBoundKeyName(mainControl.config);
+            return modName != null && mainName != null ? modName + " + " + mainName : UNBOUND_KEY_NAME;
         }
 
         public boolean isPressed() {
