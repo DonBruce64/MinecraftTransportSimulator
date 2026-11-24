@@ -15,6 +15,8 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
@@ -294,7 +296,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                 if (multipart != this && !multipart.allParts.contains(this)) {
                     for (BoundingBox otherBox : multipart.allCollisionBoxes) {
                         if (otherBox.collisionTypes.contains(CollisionType.ATTACK) && otherBox.intersects(box)) {
-                            multipart.attack(new Damage(damage, otherBox, this, null, null));
+                            EntityVehicleF_Physics vehicle = this instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) this
+                                    : this instanceof APart ? ((APart) this).vehicleOn : null;
+                            multipart.attack(new Damage(damage, otherBox, this, vehicle != null ? vehicle.getController() : null, null));
                             return;
                         }
                     }
@@ -325,8 +329,13 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      * Only call this method on the server: clients will update via variable packets.
      */
     public void damageCollisionBox(BoundingBox box, double damageAmount) {
+        damageCollisionBox(box, damageAmount, null);
+    }
+
+    public void damageCollisionBox(BoundingBox box, double damageAmount, IWrapperEntity responsible) {
         ComputedVariable variable = getOrCreateVariable("collision_" + (definition.collisionGroups.indexOf(box.groupDef) + 1) + "_damage");
-        double currentDamage = variable.currentValue + damageAmount;
+        double previousDamage = variable.currentValue;
+        double currentDamage = previousDamage + damageAmount;
         if (currentDamage > box.groupDef.health) {
             double amountActuallyNeeded = damageAmount - (currentDamage - box.groupDef.health);
             currentDamage = box.groupDef.health;
@@ -336,6 +345,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(variable, damageAmount));
         }
         variable.setTo(currentDamage, false);
+        if (responsible instanceof IWrapperPlayer) {
+            ((IWrapperPlayer) responsible).addDamageDealt(currentDamage - previousDamage);
+        }
     }
 
     @Override
@@ -406,7 +418,8 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     public void attack(Damage damage) {
         if (!damage.isWater && !(damage.isExplosion && ignoreExplosiveDamage() && !damage.bypassesIgnoredExplosiveDamage)) {
             if (!outOfHealth) {
-                double currentDamage = damageVar.currentValue + damage.amount;
+                double previousDamage = damageVar.currentValue;
+                double currentDamage = previousDamage + damage.amount;
                 if (currentDamage > definition.general.health) {
                     currentDamage = definition.general.health;
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(damageVar, definition.general.health));
@@ -415,6 +428,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                 }
                 damageVar.setTo(currentDamage, false);
                 outOfHealth = currentDamage == definition.general.health && definition.general.health != 0;
+                if (damage.damgeSource != this && damage.entityResponsible instanceof IWrapperPlayer) {
+                    ((IWrapperPlayer) damage.entityResponsible).addDamageDealt(currentDamage - previousDamage);
+                }
             }
         }
     }

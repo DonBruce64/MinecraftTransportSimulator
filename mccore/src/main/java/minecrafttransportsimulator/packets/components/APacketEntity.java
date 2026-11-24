@@ -35,7 +35,7 @@ public abstract class APacketEntity<EntityType extends AEntityA_Base> extends AP
 
     @Override
     public void handle(AWrapperWorld world) {
-        EntityType entity = world.getEntity(uniqueUUID);
+        EntityType entity = getEntity(world);
         if (entity != null && handle(world, entity) && !world.isClient()) {
             InterfaceManager.packetInterface.sendToAllClients(this);
             if (entity instanceof ATileEntityBase) {
@@ -43,6 +43,10 @@ public abstract class APacketEntity<EntityType extends AEntityA_Base> extends AP
                 ((ATileEntityBase<?>) entity).hasChanged = true;
             }
         }
+    }
+
+    protected final EntityType getEntity(AWrapperWorld world) {
+        return world.getEntity(uniqueUUID);
     }
 
     /**

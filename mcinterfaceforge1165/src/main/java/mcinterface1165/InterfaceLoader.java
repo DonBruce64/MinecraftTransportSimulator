@@ -263,6 +263,7 @@ public class InterfaceLoader {
     }
 
     public void onPostConstruction(FMLLoadCompleteEvent event) {
+        event.enqueueWork(VehicleStatistics::initialize);
         if (FMLEnvironment.dist.isClient()) {
             //Put all liquids into the config file for use by modpack makers.
             ConfigSystem.settings.fuel.lastLoadedFluids = InterfaceManager.clientInterface.getAllFluidNames();

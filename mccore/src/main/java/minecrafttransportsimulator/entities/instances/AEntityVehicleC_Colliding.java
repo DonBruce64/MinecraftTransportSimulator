@@ -18,6 +18,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
+import minecrafttransportsimulator.systems.VehicleStat;
 
 /**
  * Now that we have an existing vehicle its time to add the ability to collide with it,
@@ -71,6 +72,28 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
 
     public boolean ignoreExplosiveDamage() {
         return definition.motorized.ignoreExplosiveDamage;
+    }
+
+    @Override
+    public void attack(Damage damage) {
+        boolean hadHealth = !outOfHealth;
+        super.attack(damage);
+        if (hadHealth && outOfHealth && isValid) {
+            creditDestruction(damage.entityResponsible);
+        }
+    }
+
+    void destroyBy(BoundingBox box, IWrapperEntity responsible) {
+        if (!outOfHealth && isValid) {
+            creditDestruction(responsible);
+        }
+        destroy(box);
+    }
+
+    private void creditDestruction(IWrapperEntity responsible) {
+        if (!world.isClient() && responsible instanceof IWrapperPlayer) {
+            ((IWrapperPlayer) responsible).addVehicleStat(VehicleStat.VEHICLES_DESTROYED, 1);
+        }
     }
 
     @Override

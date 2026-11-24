@@ -3,7 +3,11 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.List;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 import minecrafttransportsimulator.entities.instances.PartGun;
+import minecrafttransportsimulator.entities.instances.PartPropeller;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -88,6 +92,21 @@ public class Damage {
             knockback = box.globalCenter.copy().subtract(gun.position).normalize().scale(gun.lastLoadedBullet.definition.bullet.knockback);
         }
         effects = gun.lastLoadedBullet.definition.bullet.effects;
+    }
+
+    public boolean isWheelDamage() {
+        return damgeSource instanceof PartGroundDevice
+                && ((PartGroundDevice) damgeSource).vehicleOn != null
+                && ((PartGroundDevice) damgeSource).definition.ground.isWheel
+                && (language == LanguageSystem.DEATH_WHEEL_PLAYER || language == LanguageSystem.DEATH_WHEEL_NULL);
+    }
+
+    public boolean isVehicleContactDamage() {
+        if (damgeSource instanceof PartGroundDevice || damgeSource instanceof PartPropeller) {
+            return true;
+        }
+        return (language == LanguageSystem.DEATH_HITBOX_NULL || language == LanguageSystem.DEATH_HITBOX_PLAYER)
+                && (damgeSource instanceof EntityVehicleF_Physics || (damgeSource instanceof APart && ((APart) damgeSource).vehicleOn != null));
     }
 
     /**

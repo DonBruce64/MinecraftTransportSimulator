@@ -5,6 +5,7 @@ import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
+import minecrafttransportsimulator.systems.VehicleStat;
 
 /**
  * IWrapper for the player entity class.  This class wraps the player into a more
@@ -15,6 +16,17 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
  * @author don_bruce
  */
 public interface IWrapperPlayer extends IWrapperEntity {
+
+    /**
+     * Adds to a server-side vehicle statistic in centimeters, millibuckets, engine ticks, or events.
+     */
+    void addVehicleStat(VehicleStat stat, double amount);
+
+    /** Adds effective damage, in health points, to Minecraft's Damage Dealt statistic. */
+    void addDamageDealt(double healthPoints);
+
+    /** Returns the number of deaths registered by the server. */
+    int getDeathCount();
 
     /**
      * Returns true if this player is OP.  Will always return true on single-player worlds.

@@ -3,6 +3,7 @@ package mcinterface1122;
 import java.util.HashMap;
 import java.util.Map;
 
+import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
@@ -15,6 +16,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
+import minecrafttransportsimulator.systems.VehicleStat;
 import net.minecraft.block.BlockWorkbench;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLiving;
@@ -24,6 +26,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerWorkbench;
 import net.minecraft.item.Item;
+import net.minecraft.stats.StatList;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.TextComponentString;
@@ -84,6 +87,35 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
             return (-12D / 16D) * (30D / 32D);
         } else {
             return 0;
+        }
+    }
+
+    @Override
+    public void addVehicleStat(VehicleStat stat, double amount) {
+        VehicleStatistics.award(player, stat, amount);
+    }
+
+    @Override
+    public void addDamageDealt(double healthPoints) {
+        if (player instanceof EntityPlayerMP && Double.isFinite(healthPoints) && healthPoints > 0) {
+            player.addStat(StatList.DAMAGE_DEALT, (int) Math.min(Integer.MAX_VALUE, Math.round(healthPoints * 10)));
+        }
+    }
+
+    @Override
+    public int getDeathCount() {
+        return VehicleStatistics.getDeathCount(player);
+    }
+
+    @Override
+    public void attack(Damage damage) {
+        int deathsBefore = player instanceof EntityPlayerMP && damage.isVehicleContactDamage() ? getDeathCount() : -1;
+        super.attack(damage);
+        if (deathsBefore >= 0 && getDeathCount() > deathsBefore) {
+            addVehicleStat(VehicleStat.HORRIFIC_ACCIDENTS, 1);
+            if (damage.isWheelDamage() && damage.entityResponsible instanceof IWrapperPlayer) {
+                ((IWrapperPlayer) damage.entityResponsible).addVehicleStat(VehicleStat.PLAYERS_RUN_OVER, 1);
+            }
         }
     }
 

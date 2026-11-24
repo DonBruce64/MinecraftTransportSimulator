@@ -34,6 +34,7 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.VehicleStat;
 
 /**
  * At the final basic vehicle level we add in the functionality for state-based movement.
@@ -242,11 +243,28 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             world.beginProfiling("TotalMovement", false);
             moveVehicle();
             if (!world.isClient()) {
+                if (isValid && ticksExisted > 1) {
+                    recordTravelDistance();
+                }
                 adjustControlSurfaces();
             }
             world.endProfiling();
         }
         world.endProfiling();
+    }
+
+    private void recordTravelDistance() {
+        double centimeters = position.distanceTo(prevPosition) * 100;
+        if (centimeters > 0) {
+            VehicleStat drivingStat = definition.motorized.isAircraft || definition.motorized.isBlimp
+                    ? VehicleStat.DISTANCE_FLOWN : VehicleStat.DISTANCE_DRIVEN;
+            for (APart part : allParts) {
+                if (part instanceof PartSeat && part.rider instanceof IWrapperPlayer && part.rider.isValid()) {
+                    VehicleStat stat = part.placementDefinition.isController ? drivingStat : VehicleStat.DISTANCE_AS_PASSENGER;
+                    ((IWrapperPlayer) part.rider).addVehicleStat(stat, centimeters);
+                }
+            }
+        }
     }
 
     @Override
@@ -1138,10 +1156,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                                         if (scaledVelocity > definition.motorized.crashSpeedDestroyed) {
                                             destroyThisHit = true;
                                         } else {
-                                            attack(new Damage(definition.general.health, null, null, null, null));
+                                            attack(new Damage(definition.general.health, null, this, getController(), null));
                                         }
                                     } else {
-                                        attack(new Damage(damage, null, null, null, null));
+                                        attack(new Damage(damage, null, this, getController(), null));
                                     }
                                     //Need the debounce so we don't continously apply crash damage during a crash.
                                     crashDebounce = 60;
@@ -1156,7 +1174,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                                 hardnessHitThisTick -= hardnessHitThisBox;
                                 partHit.remove();
                             } else {
-                                destroy(box);
+                                destroyBy(box, getController());
                                 return false;
                             }
                         }

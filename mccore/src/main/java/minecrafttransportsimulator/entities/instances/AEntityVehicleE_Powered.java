@@ -1,7 +1,9 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -21,6 +23,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.VehicleStat;
 
 /**
  * This class adds engine components for vehicles, such as fuel, throttle,
@@ -213,6 +216,17 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
 
     @Override
     public void destroy(BoundingBox box) {
+        //The explosion and the crash damage can both kill occupants. Observe the whole destruction once.
+        Map<IWrapperPlayer, Integer> riderDeaths = new HashMap<>();
+        if (!world.isClient()) {
+            for (APart part : allParts) {
+                if (part.rider instanceof IWrapperPlayer && part.rider.isValid()) {
+                    IWrapperPlayer player = (IWrapperPlayer) part.rider;
+                    riderDeaths.put(player, player.getDeathCount());
+                }
+            }
+        }
+
         //Spawn instruments in the world.
         for (ItemInstrument instrument : instruments) {
             if (instrument != null) {
@@ -235,6 +249,11 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
 
         //Now call super, since super might modify parts.
         super.destroy(box);
+        riderDeaths.forEach((player, deathsBefore) -> {
+            if (player.getDeathCount() > deathsBefore) {
+                player.addVehicleStat(VehicleStat.HORRIFIC_ACCIDENTS, 1);
+            }
+        });
     }
 
     @Override

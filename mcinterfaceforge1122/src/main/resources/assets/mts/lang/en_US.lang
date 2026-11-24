@@ -1,5 +1,15 @@
 #Translated by don_bruce
 
+stat.mts.distance_driven=Distance Driven in a Vehicle
+stat.mts.distance_as_passenger=Distance as Passenger Princess
+stat.mts.distance_flown=Distance Flown in an Aircraft
+stat.mts.vehicles_destroyed=Vehicles Destroyed
+stat.mts.fuel_burned=Fuel Burned in Total
+stat.mts.engine_hours=Engine Hours Accumulated
+stat.mts.horrific_accidents=Amount of Horrific Vehicular Accidents
+stat.mts.mobs_run_over=Mobs Ran Over with a Vehicle
+stat.mts.players_run_over=Players Ran Over with a Vehicle
+
 advancements.mts.root.title=Immersive Vehicles (MTS)
 advancements.mts.root.description=Start your journey into powered transport!
 advancements.mts.rtfm.title=RTFM

@@ -343,7 +343,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             }
             if (outOfHealth) {
                 if (definition.generic.destroyable) {
-                    destroy(damage.box);
+                    destroy(damage.box, damage.entityResponsible);
                     world.spawnExplosion(position, 0F, false, false);
                 } else {
                     isActiveVar.setActive(false, false);
@@ -357,6 +357,10 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     public boolean ignoreExplosiveDamage() {
         return entityOn.ignoreExplosiveDamage();
+    }
+
+    protected void destroy(BoundingBox box, IWrapperEntity responsible) {
+        destroy(box);
     }
 
     @Override
