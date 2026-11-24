@@ -1,0 +1,16 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        " a ",
+        " a ",
+        " b "
+    ],
+    "key": {
+        "a": "#c:nuggets/iron",
+        "b": "minecraft:clay_ball"
+    },
+    "result": {
+        "id": "mts:mts.key"
+    }
+}
+
