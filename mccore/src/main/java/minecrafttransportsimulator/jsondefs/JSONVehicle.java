@@ -49,6 +49,9 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("Optional offset, relative to the vehicle origin and orientation, to use as the third-person camera orbit point.  If omitted, the camera uses the rider position.")
         public Point3D cameraOffset;
 
+        @JSONDescription("Optional offset, relative to the vehicle origin and orientation, to use as the third-person camera orbit point while arcade mode is active.  If omitted, the camera uses cameraOffset or the rider position.")
+        public Point3D arcadeCameraOffset;
+
         @JSONDescription("Make this true to allow your plane to come equipped with autopilot. Perhaps not the best thing to have on WWII fighters, but right at home on jet airliners. No, this won't work on cars.  This is MTS, not TMS (Tesla Motors Simulator).")
         public boolean hasAutopilot;
 
