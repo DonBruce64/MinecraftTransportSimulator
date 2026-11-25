@@ -632,8 +632,9 @@ public class PartEngine extends APart {
                         if (skidSteerDrive) {
                             //Counter-rotating wheels increase engine speed in either direction.
                             double wheelRPM = desiredWheelVelocity * 1200D * Math.abs(gearRatioVar.currentValue * vehicleOn.axleRatioVar.currentValue);
-                            double revLimit = revLimitRPMVar.currentValue;
-                            double rpmLimit = revLimit == -1 ? maxSafeRPMVar.currentValue : Math.min(maxSafeRPMVar.currentValue, revLimit);
+                            double rpmLimit = revLimitRPMVar.currentValue == -1
+                                    ? maxSafeRPMVar.currentValue
+                                    : Math.min(maxSafeRPMVar.currentValue, revLimitRPMVar.currentValue);
                             desiredRPM = Math.min(idleRPMVar.currentValue + wheelRPM, rpmLimit);
                         } else {
                             desiredRPM = lowestWheelVelocity * 1200F * gearRatioVar.currentValue * vehicleOn.axleRatioVar.currentValue;
