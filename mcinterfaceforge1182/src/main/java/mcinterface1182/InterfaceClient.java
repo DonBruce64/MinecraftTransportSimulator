@@ -18,6 +18,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.particles.ParticleObject;
 import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -53,6 +54,16 @@ public class InterfaceClient implements IInterfaceClient {
     private static CameraMode actualCameraMode;
     private static CameraMode cameraModeRequest;
     private static int ticksToCullingWarning = 200;
+
+    @Override
+    public void spawnParticle(ParticleObject particle) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (particle.isValid && minecraft.level == ((WrapperWorld) particle.world).world) {
+            minecraft.particleEngine.add(new WrapperParticle(particle));
+        } else {
+            particle.remove();
+        }
+    }
 
     @Override
     public boolean isGamePaused() {

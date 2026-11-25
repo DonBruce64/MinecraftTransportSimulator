@@ -5,6 +5,7 @@ import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.particles.ParticleObject;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 
 /**
@@ -18,6 +19,11 @@ import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
  * @author don_bruce
  */
 public interface IInterfaceClient {
+
+    /**
+     * Adds a client particle to Minecraft's native particle engine.
+     */
+    void spawnParticle(ParticleObject particle);
 
     /**
      * Returns true if the game is paused.

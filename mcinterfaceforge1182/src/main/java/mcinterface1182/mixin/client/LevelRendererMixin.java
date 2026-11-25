@@ -48,11 +48,16 @@ public abstract class LevelRendererMixin {
     }
 
     /**
-     * Need this to render translucent things at the right time.  MC doesn't properly support this natively.
-     * Instead, it tries to render translucent things with the regular things and fouls the depth buffer.
+     * Render translucent vehicle effects before native translucent terrain and particles.
+     * Rendering them at the end of the frame makes lights overlay foreground particles.
      */
-    @Inject(method = "renderLevel", at = @At(value = "TAIL"))
+    @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderType;translucent()Lnet/minecraft/client/renderer/RenderType;"))
     public void inject_renderLevelBlended(PoseStack pMatrixStack, float pPartialTicks, long pFinishTimeNano, boolean pDrawBlockOutline, Camera pCamera, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pProjection, CallbackInfo ci) {
+        //Fabulous copies depth without leaving the main framebuffer bound.
+        //Other pipelines, including shader packs, keep their own framebuffer active here.
+        if (Minecraft.useShaderTransparency()) {
+            Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+        }
         MultiBufferSource.BufferSource irendertypebuffer$impl = renderBuffers.bufferSource();
         //Set camera offset point for later.
         Vec3 position = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();

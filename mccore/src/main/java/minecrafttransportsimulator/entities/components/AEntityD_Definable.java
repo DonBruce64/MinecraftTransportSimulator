@@ -24,7 +24,6 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.baseclasses.TextureOverlaySwitchbox;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -51,6 +50,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.particles.ParticleObject;
 import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.DurationDelayClock;
 import minecrafttransportsimulator.rendering.RenderText;
@@ -634,6 +634,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * updates.
      */
     public void spawnParticles(float partialTicks) {
+        if (!world.isClient()) {
+            return;
+        }
         //Check all particle defs and update the existing particles accordingly.
         for (Entry<JSONParticle, AnimationSwitchbox> particleEntry : particleActiveSwitchboxes.entrySet()) {
             //Check if the particle should be spawned this tick.
@@ -646,7 +649,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
                 if (particleDef.spawningOrientation == JSONParticle.ParticleSpawningOrientation.TRAIL) {
                     //First get spawning position as defined by JSON and animations.
-                    EntityParticle.setPointToSpawn(position, orientation, particleDef.pos, scale, spawningSwitchbox, particleSpawningPosition);
+                    ParticleObject.setPointToSpawn(position, orientation, particleDef.pos, scale, spawningSwitchbox, particleSpawningPosition);
 
                     //Spawn one particle for the whole segment, aligned on the local Z-axis.
                     Point3D lastParticlePosition = lastPositionParticleSpawned.get(particleDef);
@@ -660,16 +663,16 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         if (trailLength > 0) {
                             particleTrailPosition.set(lastParticlePosition).interpolate(particleSpawningPosition, 0.5);
                             for (int i = 0; i < particleDef.quantity; ++i) {
-                                EntityParticle particle = new EntityParticle(this, particleDef, particleTrailPosition, particleTrailDelta.copy().getAngles(true), spawningSwitchbox);
+                                ParticleObject particle = new ParticleObject(this, particleDef, particleTrailPosition, particleTrailDelta.copy().getAngles(true), spawningSwitchbox);
                                 particle.setTrailSegmentLength(trailLength);
-                                world.addEntity(particle);
+                                InterfaceManager.clientInterface.spawnParticle(particle);
                             }
                         }
                         lastParticlePosition.set(particleSpawningPosition);
                     }
                 } else if (particleDef.distance > 0) {
                     //First get spawning position as defined by JSON and animations.
-                    EntityParticle.setPointToSpawn(position, particleDef.spawningOrientation == JSONParticle.ParticleSpawningOrientation.WORLD ? null : orientation, particleDef.pos, scale, spawningSwitchbox, particleSpawningPosition);
+                    ParticleObject.setPointToSpawn(position, particleDef.spawningOrientation == JSONParticle.ParticleSpawningOrientation.WORLD ? null : orientation, particleDef.pos, scale, spawningSwitchbox, particleSpawningPosition);
 
                     //Now check if we need to spawn.
                     Point3D lastParticlePosition = lastPositionParticleSpawned.get(particleDef);
@@ -686,7 +689,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                             if (particleDef.spawningOrientation == JSONParticle.ParticleSpawningOrientation.STREAK) {
                                 angles = spawningPosition.copy().subtract(lastParticlePosition).getAngles(true);
                             }
-                            world.addEntity(new EntityParticle(this, particleDef, spawningPosition, angles, spawningSwitchbox));
+                            InterfaceManager.clientInterface.spawnParticle(new ParticleObject(this, particleDef, spawningPosition, angles, spawningSwitchbox));
                         }
                         lastParticlePosition.set(spawningPosition);
                     }
@@ -695,7 +698,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     Long particleSpawnTime = lastTickParticleSpawned.get(particleDef);
                     if (particleSpawnTime == null || (particleDef.spawnEveryTick && ticksExisted > particleSpawnTime)) {
                         for (int i = 0; i < particleDef.quantity; ++i) {
-                            world.addEntity(new EntityParticle(this, particleDef, position, null, spawningSwitchbox));
+                            InterfaceManager.clientInterface.spawnParticle(new ParticleObject(this, particleDef, position, null, spawningSwitchbox));
                         }
                         lastTickParticleSpawned.put(particleDef, ticksExisted);
                     }

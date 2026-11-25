@@ -92,6 +92,7 @@ public class InterfaceRender implements IInterfaceRender {
     private static final Map<RenderableVertices, Set<RenderableData>> objectMap = new HashMap<>();
     private static final Map<RenderableVertices, Integer> cachedIndexMap = new HashMap<>();
     protected static int lastRenderPassActualPass;
+    static boolean renderingParticles;
     /** Bounding radius of each cached display list's vertices around its origin, for the dynamic light shadow bodies. */
     private static final Map<RenderableVertices, Float> cachedRadiusMap = new HashMap<>();
     private static final FloatBuffer modelViewBuffer = BufferUtils.createFloatBuffer(16);
@@ -148,6 +149,15 @@ public class InterfaceRender implements IInterfaceRender {
 
     @Override
     public void renderVertices(RenderableData data, boolean changedSinceLastRender) {
+        if (renderingParticles) {
+            if (BuilderParticle.queueTranslucent(data)) {
+                return;
+            }
+            boolean translucent = data.isTranslucent || data.enableBrightBlending;
+            setBlend(translucent);
+            GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GlStateManager.depthMask(!translucent);
+        }
         if (data.lightingMode.disableWorldLighting || data.vertexObject.isLines) {
             setLightingState(false);
         }
