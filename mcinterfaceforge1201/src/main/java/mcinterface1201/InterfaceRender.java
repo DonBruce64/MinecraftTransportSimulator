@@ -16,6 +16,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.imageio.ImageIO;
 
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
+
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -106,7 +109,11 @@ public class InterfaceRender implements IInterfaceRender {
     private static final ConcurrentHashMap<String, RenderType> renderTypes = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<RenderableData, BufferData> buffers = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<RenderType, List<RenderData>> queuedRenders = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<RenderType, Integer> renderTypeOrders = new ConcurrentHashMap<>();
     private static final ConcurrentLinkedQueue<BufferData> removedRenders = new ConcurrentLinkedQueue<>();
+    private static final RenderStateShard.TexturingStateShard TRANSPARENT_BORDER_TEXTURING = new RenderStateShard.TexturingStateShard("mts_transparent_texture_border", InterfaceRender::setTransparentTextureBorder, InterfaceRender::restoreTextureWrapping);
+    private static int priorTextureWrapS;
+    private static int priorTextureWrapT;
 
     @SuppressWarnings("deprecation")
     private static final ResourceLocation BLOCK_TEXTURE_LOCATION = TextureAtlas.LOCATION_BLOCKS;
@@ -260,11 +267,12 @@ public class InterfaceRender implements IInterfaceRender {
             //Rewind buffer for next read.
             data.vertexObject.vertices.rewind();
         } else {
-            String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending + data.writeDepth + (renderingGUI ? "_gui" : renderingParticles ? "_particle" : "_world");
+            String typeID = (renderingGUI ? "gui|" : renderingParticles ? "particle|" : "world|") + data.texture + "|" + data.isTranslucent + "|" + data.lightingMode + "|" + data.enableBrightBlending + "|" + data.writeDepth + "|" + data.textureClampToTransparent + "|" + data.renderingOrder;
             final RenderType renderType;
             if (data.vertexObject.cacheVertices && !renderingGUI && !renderingParticles && ConfigSystem.client.renderingSettings.renderingMode.value != 2) {
             	//Get the render type and data buffer for this entity.
                 renderType = renderTypes.computeIfAbsent(typeID, k -> CustomRenderType.create("mts_entity", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.TRIANGLES, 2097152, true, data.isTranslucent, CustomRenderType.createForObject(data).createCompositeState(false)));
+                renderTypeOrders.put(renderType, data.renderingOrder);
                 BufferData bufferData = buffers.computeIfAbsent(data, k -> new BufferData(renderType, data));
             
                 //Shader packs change the vertex layout, including when toggled without changing the model.
@@ -284,8 +292,8 @@ public class InterfaceRender implements IInterfaceRender {
                         float normalX = data.vertexObject.vertices.get();
                         float normalY = data.vertexObject.vertices.get();
                         float normalZ = data.vertexObject.vertices.get();
-                        float texU = data.vertexObject.vertices.get();
-                        float texV = data.vertexObject.vertices.get();
+                        float texU = data.vertexObject.vertices.get() * data.textureScaleU + data.textureOffsetU;
+                        float texV = data.vertexObject.vertices.get() * data.textureScaleV + data.textureOffsetV;
                         float posX = data.vertexObject.vertices.get();
                         float posY = data.vertexObject.vertices.get();
                         float posZ = data.vertexObject.vertices.get();
@@ -319,8 +327,8 @@ public class InterfaceRender implements IInterfaceRender {
                     float normalX = data.vertexObject.vertices.get();
                     float normalY = data.vertexObject.vertices.get();
                     float normalZ = data.vertexObject.vertices.get();
-                    float texU = data.vertexObject.vertices.get();
-                    float texV = data.vertexObject.vertices.get();
+                    float texU = data.vertexObject.vertices.get() * data.textureScaleU + data.textureOffsetU;
+                    float texV = data.vertexObject.vertices.get() * data.textureScaleV + data.textureOffsetV;
                     float posX = data.vertexObject.vertices.get();
                     float posY = data.vertexObject.vertices.get();
                     float posZ = data.vertexObject.vertices.get();
@@ -384,7 +392,9 @@ public class InterfaceRender implements IInterfaceRender {
      */
     private static void renderBuffers(float partialTicks, boolean closeRemoved) {
         //Call order is CRITICAL and will lead to random JME faults with no stacktrace if modified!
-        for (Entry<RenderType, List<RenderData>> renderEntry : queuedRenders.entrySet()) {
+        List<Entry<RenderType, List<RenderData>>> orderedRenderEntries = new ArrayList<>(queuedRenders.entrySet());
+        orderedRenderEntries.sort((entry1, entry2) -> Integer.compare(renderTypeOrders.getOrDefault(entry1.getKey(), 0), renderTypeOrders.getOrDefault(entry2.getKey(), 0)));
+        for (Entry<RenderType, List<RenderData>> renderEntry : orderedRenderEntries) {
             RenderType renderType = renderEntry.getKey();
             List<RenderData> datas = renderEntry.getValue();
             //The texture its bodies cast dynamic light shadows through, -1 for none.
@@ -541,9 +551,20 @@ public class InterfaceRender implements IInterfaceRender {
             //Depth test is fine, it ensures translucent things don't render in front of everything.
             //stateBuilder.setDepthTestState(LEQUAL_DEPTH_TEST);
             //No layering is fine.
-            //stateBuilder.setLayeringState(NO_LAYERING);
+            if (data.renderingOrder > 0) {
+                final float depthOffset = -10.0F * data.renderingOrder;
+                stateBuilder.setLayeringState(new RenderStateShard.LayeringStateShard("mts_texture_overlay_depth_" + data.renderingOrder, () -> {
+                    RenderSystem.polygonOffset(-1.0F, depthOffset);
+                    RenderSystem.enablePolygonOffset();
+                }, () -> {
+                    RenderSystem.polygonOffset(0.0F, 0.0F);
+                    RenderSystem.disablePolygonOffset();
+                }));
+            }
             //Default texture application is fine.
-            //stateBuilder.setTexturingState(DEFAULT_TEXTURING);
+            if (data.textureClampToTransparent) {
+                stateBuilder.setTexturingState(TRANSPARENT_BORDER_TEXTURING);
+            }
             //Not sure what this does, but it should be fine as-is?  I think this is for the Z-buffer.
             //stateBuilder.setWriteMaskState(COLOR_DEPTH_WRITE);
             if (renderingParticles && (data.isTranslucent || data.enableBrightBlending)) {
@@ -555,6 +576,22 @@ public class InterfaceRender implements IInterfaceRender {
             //Return.
             return stateBuilder;
         }
+    }
+
+    private static void setTransparentTextureBorder() {
+        RenderSystem.activeTexture(GL13.GL_TEXTURE0);
+        RenderSystem.bindTexture(RenderSystem.getShaderTexture(0));
+        priorTextureWrapS = GL11.glGetTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S);
+        priorTextureWrapT = GL11.glGetTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T);
+        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL13.GL_CLAMP_TO_BORDER);
+        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL13.GL_CLAMP_TO_BORDER);
+    }
+
+    private static void restoreTextureWrapping() {
+        RenderSystem.activeTexture(GL13.GL_TEXTURE0);
+        RenderSystem.bindTexture(RenderSystem.getShaderTexture(0));
+        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, priorTextureWrapS);
+        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, priorTextureWrapT);
     }
 
     @Override
