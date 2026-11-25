@@ -16,6 +16,7 @@ import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
@@ -27,6 +28,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentCrosshair;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentPartSlotMarkers;
 import minecrafttransportsimulator.guis.components.GUIComponentPartSlotScanner;
+import minecrafttransportsimulator.jsondefs.JSONBullet.Bullet;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -62,6 +64,8 @@ public class GUIOverlay extends AGUIBase {
     private final Point3D simVel = new Point3D();
     private final Point3D simDir = new Point3D();
     private final RotationMatrix simOri = new RotationMatrix();
+    private final RotationMatrix simFlightOrientation = new RotationMatrix();
+    private final Point3D simAccelerationMotion = new Point3D();
 
     @Override
     public void setupComponents() {
@@ -84,6 +88,11 @@ public class GUIOverlay extends AGUIBase {
 
     @Override
     public void setStates() {
+        setStates(1);
+    }
+
+    @Override
+    protected void setStates(float partialTicks) {
         super.setStates();
         IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
 
@@ -91,7 +100,6 @@ public class GUIOverlay extends AGUIBase {
         gunLabel.visible = false;
         aimingCrosshair.visible = false;
         aimingCrosshair.pendingImpactPoint = null;
-        aimingCrosshair.vehicleRef = null;
         if (!InterfaceManager.clientInterface.isChatOpen()) {
             EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
             List<PartGun> activeGunGroup = null;
@@ -124,7 +132,7 @@ public class GUIOverlay extends AGUIBase {
 
             // Update the aiming crosshair position when a gun is active.
             if (activeGunGroup != null && ConfigSystem.client.renderingSettings.gunCrosshair.value) {
-                updateAimingCrosshair(activeGunGroup, player.getWorld());
+                updateAimingCrosshair(activeGunGroup, player.getWorld(), partialTicks);
             }
         }
 
@@ -288,25 +296,22 @@ public class GUIOverlay extends AGUIBase {
     }
 
     /**
-     * Computes the predicted impact point for the given gun and stores it in the crosshair
-     * component.  Screen projection (including partial-tick vehicle position correction) is
-     * deferred to {@link GUIComponentCrosshair#render} where {@code partialTicks} is available.
+     * Computes the predicted impact point from the gun's interpolated muzzle pose.
+     * Screen projection is deferred to {@link GUIComponentCrosshair#render}.
      *
-     * <p>Aircraft guns use a straight barrel-direction raycast (no gravity simulation) since
-     * ballistic arcing is negligible at aircraft speeds.  Ground-vehicle and hand-held guns use
-     * a full ballistic simulation; if the simulation exits loaded terrain, the result falls back
-     * to the barrel-direction raycast so the crosshair remains stable.
+     * <p>Aircraft guns firing without gravity use a straight-line raycast. The ballistic
+     * prediction uses the projectile's tick physics and traces it through the loaded world.
      *
      * <p>When multiple guns are in the same group the muzzle positions are averaged so the crosshair
      * points to the geometric center of the salvo.  Velocity direction is taken from the first gun.
      */
-    private void updateAimingCrosshair(List<PartGun> gunGroup, AWrapperWorld world) {
+    private void updateAimingCrosshair(List<PartGun> gunGroup, AWrapperWorld world, float partialTicks) {
         PartGun firstGun = gunGroup.get(0);
         JSONMuzzle muzzle = firstGun.getActiveMuzzle();
         if (muzzle == null) return;
 
         // Populate muzzle position and velocity from the first gun.
-        firstGun.setBulletSpawn(simPos, simVel, simOri, muzzle, false);
+        firstGun.setBulletPreviewSpawn(simPos, simVel, simOri, muzzle, partialTicks);
         simDir.set(0, 0, 1).rotate(simOri).normalize();
 
         // If multiple guns share the group, shift simPos to the group's muzzle center.
@@ -320,7 +325,7 @@ public class GUIOverlay extends AGUIBase {
                 PartGun otherGun = gunGroup.get(i);
                 JSONMuzzle otherMuzzle = otherGun.getActiveMuzzle();
                 if (otherMuzzle != null) {
-                    otherGun.setBulletSpawn(tmpPos, tmpVel, tmpOri, otherMuzzle, false);
+                    otherGun.setBulletPreviewSpawn(tmpPos, tmpVel, tmpOri, otherMuzzle, partialTicks);
                     sumX += tmpPos.x; sumY += tmpPos.y; sumZ += tmpPos.z;
                     count++;
                 }
@@ -328,101 +333,49 @@ public class GUIOverlay extends AGUIBase {
             simPos.set(sumX / count, sumY / count, sumZ / count);
         }
 
+        Bullet bullet = firstGun.lastLoadedBullet != null ? firstGun.lastLoadedBullet.definition.bullet : null;
         double bulletSpeed = simVel.length();
+        double acceleration = bullet != null ? EntityBullet.getFlightAcceleration(bullet, bulletSpeed) : 0;
+        boolean hasGravity = bullet != null && bullet.gravitationalVelocity != 0;
+        boolean isAircraft = firstGun.vehicleOn != null && firstGun.vehicleOn.definition.motorized.isAircraft;
         Point3D impactPoint;
 
-        // Determine if this weapon has significant gravity (bomb/mortar).
-        boolean isBallistic = firstGun.lastLoadedBullet != null
-                && firstGun.lastLoadedBullet.definition.bullet.gravitationalVelocity > 0.001;
-        boolean acceleratesAfterLaunch = firstGun.lastLoadedBullet != null
-                && firstGun.lastLoadedBullet.definition.bullet.maxVelocity > 0
-                && firstGun.lastLoadedBullet.definition.bullet.accelerationTime > 0;
-
-        if (bulletSpeed < 0.001 && !acceleratesAfterLaunch) {
-            // Zero-velocity non-accelerating projectile — use muzzle position.
+        if (bulletSpeed < 0.001 && acceleration == 0 && !hasGravity) {
             impactPoint = simPos.copy();
-        } else if (firstGun.vehicleOn != null && firstGun.vehicleOn.definition.motorized.isAircraft && !isBallistic) {
-            // Aircraft with flat-trajectory ammo (guns/cannons): barrel direction only.
+        } else if (bullet == null || (isAircraft && !hasGravity)) {
             impactPoint = raycastBarrel(firstGun, world, firstGun.vehicleOn);
         } else {
-            // Ground vehicle, hand-held, OR aircraft bomb (gravitationalVelocity > 0): ballistic.
-            impactPoint = simulateBallistic(firstGun, world, firstGun.vehicleOn);
-            if (impactPoint == null) {
-                // Ballistic simulation left loaded terrain — fall back to barrel direction.
-                impactPoint = raycastBarrel(firstGun, world, firstGun.vehicleOn);
-            }
+            impactPoint = simulateBallistic(firstGun, world, bullet, acceleration);
         }
 
-        // Enable screen-space smoothing for aircraft to hide tick-boundary barrel direction jumps.
-        boolean isAircraft = firstGun.vehicleOn != null && firstGun.vehicleOn.definition.motorized.isAircraft;
+        // Smooth changes in the calculated impact point for aircraft.
         aimingCrosshair.applySmoothing = isAircraft;
 
-        // Store world-space impact point; render() will project with partial-tick correction.
+        // Store the frame-time impact point for screen projection.
         aimingCrosshair.pendingImpactPoint = impactPoint;
-        aimingCrosshair.vehicleRef = firstGun.vehicleOn;
         aimingCrosshair.visible = true;
     }
 
     /**
-     * Simulates the bullet trajectory tick-by-tick and returns the approximate world position
-     * where it would first hit a block or entity, or the final resting position if the despawn
-     * timer expires.  Returns {@code null} if the simulation crosses into an unloaded chunk
-     * (caller should fall back to {@link #raycastBarrel}).
-     * Uses the scratch fields {@link #simPos} and {@link #simVel} which must be initialised by the
-     * caller before this is invoked (i.e. via {@link PartGun#setBulletSpawn}).
+     * Traces the projectile from the interpolated muzzle to the first hit or last simulated position.
+     * Uses the launch state populated by {@link PartGun#setBulletPreviewSpawn}.
      */
-    private Point3D simulateBallistic(PartGun gun, AWrapperWorld world, AEntityF_Multipart<?> ownVehicle) {
-        double gravity   = (gun.lastLoadedBullet != null) ? gun.lastLoadedBullet.definition.bullet.gravitationalVelocity : 0;
-        double slowdown  = (gun.lastLoadedBullet != null) ? gun.lastLoadedBullet.definition.bullet.slowdownSpeed : 0;
-        int    burnTime  = (gun.lastLoadedBullet != null) ? gun.lastLoadedBullet.definition.bullet.burnTime : 0;
-        int    accelerationTime  = (gun.lastLoadedBullet != null) ? gun.lastLoadedBullet.definition.bullet.accelerationTime : 0;
-        int    accelerationDelay = (gun.lastLoadedBullet != null) ? gun.lastLoadedBullet.definition.bullet.accelerationDelay : 0;
-        double velocityToAddEachTick = accelerationTime > 0 ? (gun.lastLoadedBullet.definition.bullet.maxVelocity / 20D - simVel.length()) / accelerationTime : 0;
-        // Cap iterations to avoid freezing on mortars/artillery with large despawnTime values.
-        int    maxTicks  = Math.min(
-                (gun.lastLoadedBullet != null && gun.lastLoadedBullet.definition.bullet.despawnTime != 0)
-                    ? gun.lastLoadedBullet.definition.bullet.despawnTime : 200,
-                500);
-
-        // Work on a copy so we don't pollute the scratch objects used elsewhere this frame.
+    private Point3D simulateBallistic(PartGun gun, AWrapperWorld world, Bullet bullet, double acceleration) {
+        long maxTicks = Math.min(EntityBullet.getFlightLifetime(bullet), 500);
         Point3D pos = simPos.copy();
         Point3D vel = simVel.copy();
-        Point3D startPos = pos.copy();
-        Point3D accelerationDirection = simDir.copy().normalize();
+        simFlightOrientation.set(simOri);
         IWrapperEntity gunController = gun.getGunController();
+        AEntityF_Multipart<?> ownVehicle = gun.vehicleOn;
+        boolean isBomb = gun.definition.gun.muzzleVelocity == 0;
 
-        if (vel.length() < 0.001 && velocityToAddEachTick == 0) {
-            return pos;
-        }
-
-        for (int tick = 0; tick < maxTicks; tick++) {
-            // Hard distance cap — prevent runaway loops on high-arc trajectories.
-            if (startPos.distanceTo(pos) > 512) {
-                return pos;
+        for (int tick = 1; tick <= maxTicks; ++tick) {
+            if (!world.chunkLoaded(pos) || !world.isInsideBorder(pos)) {
+                break;
             }
-
-            // Stop if we have entered an unloaded chunk — getBlockHit returns null there,
-            // causing the crosshair to oscillate between chunk boundaries and empty space.
-            // Return null so the caller can fall back to barrel-direction aiming.
-            if (!world.chunkLoaded(pos)) {
-                return null;
-            }
-
-            // Apply physics after burn time (mirrors EntityBullet.update: ticksExisted > burnTime).
-            if (tick > burnTime) {
-                if (slowdown > 0) {
-                    double speed = vel.length();
-                    if (speed > slowdown) {
-                        vel.addScaled(vel.copy().normalize(), -slowdown);
-                    } else {
-                        break; // Bullet stopped.
-                    }
-                }
-                vel.y -= gravity;
-            }
-            boolean notAcceleratingYet = accelerationDelay != 0 && tick < accelerationDelay;
-            if (velocityToAddEachTick != 0 && !notAcceleratingYet && tick - accelerationDelay < accelerationTime) {
-                vel.addScaled(accelerationDirection, velocityToAddEachTick);
+            EntityBullet.applyFlightForces(bullet, tick, vel, simFlightOrientation, acceleration, simAccelerationMotion);
+            if (acceleration != 0) {
+                EntityBullet.alignFlightOrientation(bullet, tick, isBomb, vel, simFlightOrientation);
             }
 
             // Next position for this step.
@@ -482,7 +435,7 @@ public class GUIOverlay extends AGUIBase {
 
     /**
      * Straight-line raycast along the barrel direction (normalised {@link #simVel}).
-     * Used for aircraft and as a fallback when the ballistic simulation exits loaded terrain.
+     * Used for aircraft with gravity-free projectiles and when no projectile is loaded.
      * Steps one block at a time up to 512 blocks; stops at chunk boundaries, block hits, or
      * entity hits.  Uses the scratch fields {@link #simPos} and {@link #simVel} (must be
      * pre-populated).

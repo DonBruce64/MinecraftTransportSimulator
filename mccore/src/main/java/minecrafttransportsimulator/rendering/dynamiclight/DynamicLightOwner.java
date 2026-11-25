@@ -3,6 +3,7 @@ package minecrafttransportsimulator.rendering.dynamiclight;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -81,7 +82,7 @@ public final class DynamicLightOwner {
             hide();
             return;
         }
-        float shown = modelObject.runVisibility(partialTicks);
+        float shown = modelObject.runVisibility(ComputedVariable.getRenderPartialTicks(partialTicks));
         TransformationMatrix animation = modelObject.getAnimationMatrix();
         if (animation != null) {
             animationTransform.set(animation);
@@ -89,7 +90,8 @@ public final class DynamicLightOwner {
         entity.getInterpolatedOrientation(interpolatedOrientation, partialTicks);
         objectTransform.resetTransforms();
         if (entity.requiresDeltaUpdates()) {
-            scratch.set(entity.prevPosition).interpolate(entity.position, partialTicks).subtract(entity.position);
+            entity.getInterpolatedPosition(scratch, partialTicks);
+            scratch.subtract(entity.position);
             objectTransform.setTranslation(scratch);
         }
         objectTransform.applyRotation(interpolatedOrientation);

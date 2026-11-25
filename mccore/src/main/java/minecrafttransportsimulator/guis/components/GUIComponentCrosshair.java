@@ -4,7 +4,6 @@ import java.nio.FloatBuffer;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
@@ -17,14 +16,10 @@ import minecrafttransportsimulator.rendering.RenderableVertices;
  * <p>Usage each frame (from {@link AGUIBase#setStates()}):
  * <ol>
  *   <li>Set {@link #pendingImpactPoint} to the world-space ballistic impact point.</li>
- *   <li>Set {@link #vehicleRef} to the top-level vehicle for partial-tick interpolation.</li>
  *   <li>Set {@link #visible} = {@code true}.</li>
  * </ol>
  *
- * <p>Screen projection is deferred to {@link #render}, where {@code partialTicks} is available.
- * A partial-tick vehicle position correction is applied before projecting to eliminate the
- * discrete per-tick jump that arises when the impact point (tick-time) is projected from a
- * camera that is already at its interpolated position.
+ * <p>The impact point is calculated from the interpolated muzzle pose before screen projection.
  *
  * @author don_bruce
  */
@@ -48,12 +43,6 @@ public class GUIComponentCrosshair extends AGUIComponent {
      * {@code setStates()}.  {@code null} means "do not draw".
      */
     public Point3D pendingImpactPoint = null;
-
-    /**
-     * Top-level vehicle the gun is mounted on, used for partial-tick position interpolation to
-     * smooth per-tick jitter.  May be null for a hand-held player gun.
-     */
-    public AEntityB_Existing vehicleRef = null;
 
     /**
      * When {@code true}, applies world-space exponential-moving-average smoothing to the projected
@@ -137,16 +126,7 @@ public class GUIComponentCrosshair extends AGUIComponent {
             return;
         }
 
-        // Apply partial-tick vehicle position correction to eliminate tick-boundary jitter.
-        // The impact point is computed at tick time (t=1).  The camera is at partial-tick t,
-        // so we shift the impact point back by (1-t) * vehicleVelocity to keep them consistent.
         adjustedImpact.set(pendingImpactPoint);
-        if (vehicleRef != null) {
-            double dt = 1.0 - partialTicks;
-            adjustedImpact.x -= (vehicleRef.position.x - vehicleRef.prevPosition.x) * dt;
-            adjustedImpact.y -= (vehicleRef.position.y - vehicleRef.prevPosition.y) * dt;
-            adjustedImpact.z -= (vehicleRef.position.z - vehicleRef.prevPosition.z) * dt;
-        }
 
         // Apply world-space EMA smoothing for aircraft to hide per-tick barrel direction jumps.
         // alpha = 1 - exp(-k * dt); at 60 FPS with k=30 this gives ~90% convergence in ~5 frames.

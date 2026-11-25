@@ -94,6 +94,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     private final AnimationSwitchbox internalActiveSwitchbox;
     private final AnimationSwitchbox placementMovementSwitchbox;
     private final AnimationSwitchbox internalMovementSwitchbox;
+    private PartRenderPose renderPose;
 
     public APart(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, AItemPart item, IWrapperNBT data) {
         super(entityOn.world, placingPlayer, item, data);
@@ -278,6 +279,10 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         position.add(localPositionDelta);
         orientation.multiply(localOrientation);
 
+        if (world.isClient()) {
+            captureRenderPose();
+        }
+
         //Adjust localOffset to align with actual local offset.  This happens if we are a sub-part.
         if (partOn != null) {
             localOffset.reOrigin(partOn.localOrientation).add(partOn.localOffset);
@@ -287,6 +292,82 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         updatePartBoundingBox();
         world.endProfiling();
         world.endProfiling();
+    }
+
+    private void captureRenderPose() {
+        ComputedVariable motion = placementMovementSwitchbox != null ? placementMovementSwitchbox.getInterpolatedMotionVariable() : null;
+        if (motion == null && internalMovementSwitchbox != null) {
+            motion = internalMovementSwitchbox.getInterpolatedMotionVariable();
+        }
+        PartGun gun = motion != null && motion.entity instanceof PartGun ? (PartGun) motion.entity : null;
+        if (gun == null && (partOn == null || partOn.renderPose == null)) {
+            renderPose = null;
+            return;
+        }
+        if (renderPose == null) {
+            renderPose = new PartRenderPose();
+        }
+
+        //Keep the local poses actually used by the tick. A linked gun may update after this part.
+        renderPose.hasPreviousPose = renderPose.captureTick != 0 && renderPose.captureTick + 1 == ticksExisted;
+        renderPose.captureTick = ticksExisted;
+        renderPose.previousOffset.set(renderPose.offset);
+        renderPose.previousRotation.set(renderPose.rotation);
+        renderPose.offset.set(localOffset);
+        renderPose.rotation.set(localOrientation);
+        renderPose.startRate = gun != null ? gun.getRenderAimStartRate() : 1;
+        renderPose.partialTicks = Double.NaN;
+    }
+
+    @Override
+    public void getInterpolatedPosition(Point3D store, double partialTicks) {
+        if (updateRenderPose(partialTicks)) {
+            store.set(renderPose.position);
+        } else {
+            super.getInterpolatedPosition(store, partialTicks);
+        }
+    }
+
+    @Override
+    public void getInterpolatedOrientation(RotationMatrix store, double partialTicks) {
+        if (updateRenderPose(partialTicks)) {
+            store.set(renderPose.orientation);
+        } else {
+            super.getInterpolatedOrientation(store, partialTicks);
+        }
+    }
+
+    private boolean updateRenderPose(double partialTicks) {
+        PartRenderPose pose = renderPose;
+        if (pose == null || !pose.hasPreviousPose || partialTicks <= 0 || partialTicks >= 1) {
+            return false;
+        }
+
+        if (pose.partialTicks != partialTicks) {
+            double localProgress = PartGun.interpolateAimProgress(partialTicks, pose.startRate);
+            entityOn.getInterpolatedPosition(pose.position, partialTicks);
+            entityOn.getInterpolatedOrientation(pose.orientation, partialTicks);
+            pose.position.add(pose.interpolatedOffset.set(pose.previousOffset).interpolate(pose.offset, localProgress).rotate(pose.orientation));
+            pose.interpolatedRotation.interploate(pose.previousRotation, pose.rotation, localProgress);
+            pose.orientation.multiply(pose.interpolatedRotation);
+            pose.partialTicks = partialTicks;
+        }
+        return true;
+    }
+
+    private static final class PartRenderPose {
+        private final Point3D previousOffset = new Point3D();
+        private final Point3D offset = new Point3D();
+        private final RotationMatrix previousRotation = new RotationMatrix();
+        private final RotationMatrix rotation = new RotationMatrix();
+        private final Point3D position = new Point3D();
+        private final RotationMatrix orientation = new RotationMatrix();
+        private final Point3D interpolatedOffset = new Point3D();
+        private final RotationMatrix interpolatedRotation = new RotationMatrix();
+        private long captureTick;
+        private boolean hasPreviousPose;
+        private double startRate;
+        private double partialTicks;
     }
 
     @Override

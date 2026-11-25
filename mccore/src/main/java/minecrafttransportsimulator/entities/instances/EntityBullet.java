@@ -19,6 +19,7 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
+import minecrafttransportsimulator.jsondefs.JSONBullet.Bullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONCameraShake;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
@@ -57,7 +58,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     public final double initialVelocity;
     private final double velocityToAddEachTick;
     private final Point3D motionToAddEachTick;
-    private final int despawnTime;
+    private final long flightLifetime;
     private final BoundingBox proxBounds;
     private static final HashMap<String, CustomHitFunction> CUSTOM_HIT_FUNCTIONS = new HashMap<>();
 
@@ -94,14 +95,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         this.boundingBox.heightRadius = definition.bullet.diameter / 1000D / 2D;
         this.boundingBox.depthRadius = definition.bullet.diameter / 1000D / 2D;
         this.initialVelocity = motion.length();
-        if (definition.bullet.accelerationTime > 0) {
-            velocityToAddEachTick = (definition.bullet.maxVelocity / 20D - motion.length()) / definition.bullet.accelerationTime;
-            this.motionToAddEachTick = new Point3D(0, 0, velocityToAddEachTick).rotate(gun.orientation);
-        } else {
-            velocityToAddEachTick = 0;
-            motionToAddEachTick = null;
-        }
-        this.despawnTime = definition.bullet.despawnTime != 0 ? definition.bullet.despawnTime : 200;
+        this.velocityToAddEachTick = getFlightAcceleration(definition.bullet, initialVelocity);
+        this.motionToAddEachTick = velocityToAddEachTick != 0 ? new Point3D() : null;
+        this.flightLifetime = getFlightLifetime(definition.bullet);
         this.proxBounds = definition.bullet.proximityFuze != 0 ? new BoundingBox(position.copy(), definition.bullet.proximityFuze) : null;
         this.orientation.set(orientation);
         prevOrientation.set(orientation);
@@ -134,6 +130,34 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         displayDebugMessage("LOCKON ENTITY " + externalEntityTargeted.getName() + " @ " + externalEntityTargeted.getPosition());
     }
 
+    public static long getFlightLifetime(Bullet bullet) {
+        return (long) bullet.burnTime + (bullet.despawnTime != 0 ? bullet.despawnTime : 200);
+    }
+
+    public static double getFlightAcceleration(Bullet bullet, double initialVelocity) {
+        return bullet.accelerationTime > 0 ? (bullet.maxVelocity / 20D - initialVelocity) / bullet.accelerationTime : 0;
+    }
+
+    /**Applies the flight forces for a tick numbered from 1, before movement and collision checks.**/
+    public static void applyFlightForces(Bullet bullet, long flightTick, Point3D motion, RotationMatrix orientation, double acceleration, Point3D accelerationMotion) {
+        if (flightTick > bullet.burnTime || flightTick < bullet.accelerationDelay) {
+            if (bullet.slowdownSpeed > 0) {
+                motion.add(motion.copy().normalize().scale(-bullet.slowdownSpeed));
+            }
+            motion.y -= bullet.gravitationalVelocity;
+        }
+        if (acceleration != 0 && flightTick >= bullet.accelerationDelay && flightTick - bullet.accelerationDelay < bullet.accelerationTime) {
+            motion.add(accelerationMotion.set(0, 0, acceleration).rotate(orientation));
+        }
+    }
+
+    /**Updates the orientation used by the next tick's thrust and by impact effects.**/
+    public static void alignFlightOrientation(Bullet bullet, long flightTick, boolean isBomb, Point3D motion, RotationMatrix orientation) {
+        if (!isBomb && (bullet.accelerationDelay == 0 || flightTick > bullet.accelerationDelay)) {
+            orientation.setToVector(motion, true);
+        }
+    }
+
     @Override
     public void update() {
         super.update();
@@ -158,7 +182,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         }
 
         //Check to make sure we haven't gone too many ticks.
-        if (ticksExisted > definition.bullet.burnTime + despawnTime) {
+        if (ticksExisted > flightLifetime) {
             if (definition.bullet.isLongRange ^ world.isClient()) {
                 displayDebugMessage("TIMEOUT");
             }
@@ -180,24 +204,11 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 distanceTraveled += velocity;
             }
 
-            //Add gravity and slowdown forces, if we don't have a burning motor.
-            if (ticksExisted > definition.bullet.burnTime || ticksExisted < definition.bullet.accelerationDelay) {
-                if (definition.bullet.slowdownSpeed > 0) {
-                    motion.add(motion.copy().normalize().scale(-definition.bullet.slowdownSpeed));
-                }
-                motion.y -= definition.bullet.gravitationalVelocity;
-            }
-
-            //Add motion requested watch tick we are accelerating.
-            boolean notAcceleratingYet = definition.bullet.accelerationDelay != 0 && ticksExisted < definition.bullet.accelerationDelay;
-            if (velocityToAddEachTick != 0 && !notAcceleratingYet && ticksExisted - definition.bullet.accelerationDelay < definition.bullet.accelerationTime) {
-                motionToAddEachTick.set(0, 0, velocityToAddEachTick).rotate(orientation);
-                motion.add(motionToAddEachTick);
-            }
+            applyFlightForces(definition.bullet, ticksExisted, motion, orientation, velocityToAddEachTick, motionToAddEachTick);
 
             //Guidance code for missiles
             //First check to see if it can move yet
-            if (definition.bullet.turnRate > 0 && !notAcceleratingYet) {
+            if (definition.bullet.turnRate > 0 && ticksExisted >= definition.bullet.accelerationDelay) {
                 //First, get target positions based on guidance method.
                 switch (definition.bullet.guidanceType) {
                     //Bullet will track whatever the gun was locked to, but if it can't see it,
@@ -312,9 +323,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             }
 
             //Set the angles to match the current motion before collision checks so impact orientation is current.
-            if (!isBomb && (definition.bullet.accelerationDelay == 0 || ticksExisted > definition.bullet.accelerationDelay)) {
-                orientation.setToVector(motion, true);
-            }
+            alignFlightOrientation(definition.bullet, ticksExisted, isBomb, motion, orientation);
 
             //Long-range bullets and those fired by NPCs do checks on server only, all others do so on clients.
             //We only do client checks on the primary client, not all clients.
