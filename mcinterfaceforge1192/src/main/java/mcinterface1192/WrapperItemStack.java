@@ -132,12 +132,12 @@ public class WrapperItemStack implements IWrapperItemStack {
             if (!player.isSneaking()) {
                 //Item can provide fluid.  Check if the tank can accept it.
                 FluidStack drainedStack = handler.drain(Integer.MAX_VALUE, FluidAction.SIMULATE);
-                if (drainedStack != null) {
+                if (drainedStack != null && !drainedStack.isEmpty()) {
                     //Able to take fluid from item, attempt to do so.
                     ResourceLocation fluidLocation = ForgeRegistries.FLUIDS.getKey(drainedStack.getFluid());
                     int amountToDrain = (int) tank.fill(fluidLocation.getPath(), fluidLocation.getNamespace(), drainedStack.getAmount(), false);
                     drainedStack = handler.drain(amountToDrain, player.isCreative() ? FluidAction.SIMULATE : FluidAction.EXECUTE);
-                    if (drainedStack != null) {
+                    if (drainedStack != null && !drainedStack.isEmpty()) {
                         //Was able to provide liquid from item.  Fill the tank.
                         tank.fill(fluidLocation.getPath(), fluidLocation.getNamespace(), drainedStack.getAmount(), true);
                         player.setHeldStack(new WrapperItemStack(handler.getContainer()));
