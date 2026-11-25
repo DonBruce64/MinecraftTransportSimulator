@@ -334,7 +334,7 @@ public class PartGun extends APart {
         if (currentBullet != null && !currentBullet.isValid) {
             currentBullet = null;
         }
-        if (isActiveVar.isActive && !isSpare) {
+        if (isActiveVar.isActive && !isSpareVar.isActive) {
             //Check if we have a controller.
             //We aren't making sentry turrets here.... yet.
             currentController = getGunController();

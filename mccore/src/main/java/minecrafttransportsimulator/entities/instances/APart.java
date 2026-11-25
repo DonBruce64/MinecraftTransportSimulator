@@ -73,12 +73,12 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public boolean isPermanent = false;
     public final boolean isMoveable;
     public final boolean turnsWithSteer;
-    public final boolean isSpare;
     public final boolean isMirrored;
     private boolean requestedForcedCamera;
     private final ComputedVariable newlyAddedVar;
     public final ComputedVariable isExteriorVar;
     public final ComputedVariable isActiveVar;
+    public final ComputedVariable isSpareVar;
 
     /**
      * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
@@ -159,14 +159,28 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         this.isMoveable = placementMovementSwitchbox != null || internalMovementSwitchbox != null;
         this.turnsWithSteer = placementDefinition.turnsWithSteer || (partOn != null && partOn.turnsWithSteer);
-        this.isSpare = placementDefinition.isSpare || (partOn != null && partOn.isSpare);
         this.isMirrored = placementDefinition.isMirrored || (partOn != null && partOn.isMirrored);
 
         addVariable(this.newlyAddedVar = new ComputedVariable(this, "newlyAdded", data));
         addVariable(this.isExteriorVar = new ComputedVariable(this, "part_isExterior", data));
         addVariable(this.isActiveVar = new ComputedVariable(this, "part_active", data));
+        addVariable(this.isSpareVar = new ComputedVariable(this, "part_isSpare"));
+        isSpareVar.setActive(placementDefinition.isSpare || (partOn != null && partOn.isSpareVar.isActive), false);
         if (placingPlayer != null) {
             newlyAddedVar.setActive(true, false);
+        }
+    }
+
+    @Override
+    public void addPartsPostAddition(IWrapperPlayer placingPlayer, IWrapperNBT data) {
+        super.addPartsPostAddition(placingPlayer, data);
+        //Apply own variable modifiers early so they can update variables before sub-parts are added.
+        if (definition.variableModifiers != null) {
+            try {
+                updateVariableModifiers();
+            } catch (Exception ignored) {
+                //Ignore failures during early VM application
+            }
         }
     }
 
@@ -635,8 +649,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                         return new ComputedVariable(isMirrored);
                     case ("part_isonfront"):
                         return new ComputedVariable(placementDefinition.pos.z > 0);
-                    case ("part_isspare"):
-                        return new ComputedVariable(isSpare);
                     case ("part_onvehicle"):
                         return new ComputedVariable(vehicleOn != null);
                     case ("part_added_vehicle"):
