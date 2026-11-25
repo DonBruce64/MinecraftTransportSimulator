@@ -607,6 +607,7 @@ public class PartEngine extends APart {
             //This is used later in force calculations.
             wheelFriction = 0;
             if (definition.engine.jetPowerFactor == 0 && !drivenWheels.isEmpty()) {
+                boolean skidSteerDrive = isDrivingSkidSteer();
                 lowestWheelVelocity = 999F;
                 desiredWheelVelocity = -999F;
                 engineTargetRPM = !electricStarterVar.isActive ? vehicleOn.throttleVar.currentValue * (maxRPMVar.currentValue - idleRPMVar.currentValue) / (1 + hoursVar.currentValue / 1500) + idleRPMVar.currentValue : startRPMVar.currentValue;
@@ -618,7 +619,8 @@ public class PartEngine extends APart {
                     if (vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(wheel)) {
                         wheelFriction += wheel.motiveFrictionVar.currentValue;
                         lowestWheelVelocity = Math.min(wheel.angularVelocity, lowestWheelVelocity);
-                        desiredWheelVelocity = Math.max(wheel.getDesiredAngularVelocity(), desiredWheelVelocity);
+                        double targetWheelVelocity = wheel.getDesiredAngularVelocity();
+                        desiredWheelVelocity = Math.max(skidSteerDrive ? Math.abs(targetWheelVelocity) : targetWheelVelocity, desiredWheelVelocity);
                     }
                 }
 
@@ -626,7 +628,17 @@ public class PartEngine extends APart {
                 if (gearRatioVar.currentValue != 0 && starterLevel == 0) {
                     //Don't adjust it down to stall the engine, that can only be done via backfire.
                     if (wheelFriction > 0) {
-                        double desiredRPM = lowestWheelVelocity * 1200F * gearRatioVar.currentValue * vehicleOn.axleRatioVar.currentValue;
+                        double desiredRPM;
+                        if (skidSteerDrive) {
+                            //Counter-rotating wheels increase engine speed in either direction.
+                            double wheelRPM = desiredWheelVelocity * 1200D * Math.abs(gearRatioVar.currentValue * vehicleOn.axleRatioVar.currentValue);
+                            double rpmLimit = revLimitRPMVar.currentValue == -1
+                                    ? maxSafeRPMVar.currentValue
+                                    : Math.min(maxSafeRPMVar.currentValue, revLimitRPMVar.currentValue);
+                            desiredRPM = Math.min(idleRPMVar.currentValue + wheelRPM, rpmLimit);
+                        } else {
+                            desiredRPM = lowestWheelVelocity * 1200F * gearRatioVar.currentValue * vehicleOn.axleRatioVar.currentValue;
+                        }
                         rpm += (desiredRPM - rpm) / revResistanceVar.currentValue;
                         if (rpm < (idleRPMVar.currentValue - ((idleRPMVar.currentValue - stallRPMVar.currentValue) * 0.5)) && running) {
                             rpm = idleRPMVar.currentValue - ((idleRPMVar.currentValue - stallRPMVar.currentValue) * 0.5);
@@ -1158,14 +1170,26 @@ public class PartEngine extends APart {
         return partialTicks != 0 ? prevDriveshaftRotation + (driveshaftRotation - prevDriveshaftRotation) * partialTicks : driveshaftRotation;
     }
 
+    private boolean isDrivingSkidSteer() {
+        //Shared propeller drives would produce thrust from the extra RPM.
+        return vehicleOn.skidSteerActive && !vehicleOn.definition.motorized.hasPermanentSkidSteer
+                && running && currentGearVar.currentValue != 0 && !vehicleOn.throttleVar.isActive && linkedPropellers.isEmpty();
+    }
+
     public double addToForceOutput(Point3D force, Point3D torque) {
         engineForce.set(0D, 0D, 0D);
         engineForceValue = 0;
         //First get wheel forces, if we have friction to do so.
         if (!jetPowerFactorVar.isActive && wheelFriction != 0) {
             double wheelForce;
-            //If running, use the friction of the wheels to determine the new speed.
-            if (running || electricStarterVar.isActive) {
+            if (isDrivingSkidSteer()) {
+                //The sides pull in opposite directions during a pivot.
+                wheelForce = 0;
+                for (PartGroundDevice wheel : drivenWheels) {
+                    wheel.skipAngularCalcs = false;
+                }
+            } else if (running || electricStarterVar.isActive) {
+                //If running, use the friction of the wheels to determine the new speed.
                 if (rpm > revLimitRPMVar.currentValue && revLimitRPMVar.currentValue != -1) {
                     wheelForce = -rpm / maxRPMVar.currentValue * Math.signum(currentGearVar.currentValue) * 60;
                 } else {

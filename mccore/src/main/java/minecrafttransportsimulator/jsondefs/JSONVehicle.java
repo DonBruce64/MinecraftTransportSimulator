@@ -58,10 +58,10 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("If set, this vehicle will not have a radio.  Defaults to all vehicles having a radio since most vehicles should.")
         public boolean hasNoRadio;
 
-        @JSONDescription("Set this to true if you want the vehicle to have skidSteer functionality.  This allows the vehicle to turn in-place when stopped in neutral.  This will also automatically invert the rotation of the wheels and treads to match the steering orientation, so no need to mess with JSON bits.  Do keep in mind, however, that variables tied to the driveshaft won't work, as these use the engine's current gear, which will be 0!")
+        @JSONDescription("Set this to true to let the vehicle turn in place when nearly stopped with a running engine in a forward or reverse gear.  The wheels and treads on opposite sides automatically rotate in opposite directions to match the steering input.")
         public boolean hasSkidSteer;
 
-        @JSONDescription("Like hasSkidSteer, but in this case it's always active.  Used for things that don't have a wheelbase, like mechs and hovercraft.")
+        @JSONDescription("Enables skid-steer with a running engine in neutral, regardless of speed or wheelbase.  Used for vehicles that don't have a wheelbase, like mechs and hovercraft.")
         public boolean hasPermanentSkidSteer;
 
         @JSONDescription("Set this to true if you want the vehicle to have incremental throttle.  This is only active for vehicles that are not aircraft, and will give the vehicle an aircraft-like throttle that increments in 1/100 units when the gas is pressed, and decrements in 1/100 units when the brake is pressed.  Mainly for boats and other constant-throttle vehicles.")
