@@ -94,16 +94,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private final Point3D serverDeltaM;
     private final Point3D serverDeltaR;
     private double serverDeltaP;
-    private final Point3D serverDeltaMApplied = new Point3D();
-    private final Point3D serverDeltaRApplied = new Point3D();
-    private double serverDeltaPApplied;
 
     private final Point3D clientDeltaM;
     private final Point3D clientDeltaR;
     private double clientDeltaP;
     private final Point3D clientDeltaMApplied = new Point3D();
     private final Point3D clientDeltaRApplied = new Point3D();
-    private double clientDeltaPApplied;
 
     private final Point3D roadMotion = new Point3D();
     private final Point3D roadRotation = new Point3D();
@@ -412,6 +408,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         //Stop all ground devices from turning on a mounted connection.
         towedVehicle.groundDeviceCollective.groundedGroundDevices.clear();
         if (connection.hitchConnection.mounted) {
+            towedVehicle.lastCollidedEntity = null;
             for (APart part : towedVehicle.allParts) {
                 if (part instanceof PartGroundDevice) {
                     PartGroundDevice ground = (PartGroundDevice) part;
@@ -426,10 +423,37 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     @Override
     public void disconnectTrailer(int connectionIndex) {
         TowingConnection connection = towingConnections.get(connectionIndex);
-        if (connection.towedVehicle.definition.motorized.isTrailer) {
-            connection.towedVehicle.parkingBrakeVar.setTo(1, false);
+        AEntityVehicleD_Moving towedVehicle = connection.towedVehicle;
+        if (connection.hitchConnection.mounted) {
+            towedVehicle.resetMovementDeltas();
+        }
+        if (towedVehicle.definition.motorized.isTrailer) {
+            towedVehicle.parkingBrakeVar.setTo(1, false);
         }
         super.disconnectTrailer(connectionIndex);
+    }
+
+    private void resetMovementDeltas() {
+        //Start independent movement from the pose at which the mounted vehicle was released.
+        serverDeltaM.set(0, 0, 0);
+        serverDeltaR.set(0, 0, 0);
+        serverDeltaP = 0;
+        clientDeltaM.set(0, 0, 0);
+        clientDeltaR.set(0, 0, 0);
+        clientDeltaP = 0;
+        prevTotalPathDelta = totalPathDelta;
+    }
+
+    /**
+     * Applies the server's pose and motion before the client removes the mounted connection.
+     */
+    public void applyMountedDisconnectState(Point3D position, Point3D angles, Point3D motion) {
+        this.position.set(position);
+        prevPosition.set(position);
+        orientation.setToAngles(angles);
+        prevOrientation.set(orientation);
+        this.motion.set(motion);
+        prevMotion.set(motion);
     }
 
     /**
@@ -1046,7 +1070,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 }
 
                 clientDeltaP += pathingApplied;
-                clientDeltaPApplied = serverDeltaP - clientDeltaP;
+                double clientDeltaPApplied = serverDeltaP - clientDeltaP;
                 if (clientDeltaPApplied != 0) {
                     clientDeltaPApplied *= Math.abs(clientDeltaPApplied);
                     clientDeltaPApplied *= 1D / 25D;
@@ -1062,25 +1086,13 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 addToServerDeltas(null, null, 0);
             }
         } else {
-            //Mounted vehicles don't do most motions, only a sub-set of them.
+            //Mounted vehicles follow the hitch without recording independent movement deltas.
             world.beginProfiling("ApplyMotions", true);
             motionApplied.set(motion).scale(speedFactor);
             position.add(motionApplied);
 
             //Rotation for mounted connections aligns using orientation, not angle-deltas.
             orientation.set(rotation).convertToAngles();
-
-            //For syncing, just add our deltas.  We don't actually do syncing operations here.
-            AEntityVehicleD_Moving towingVehicle = towedByConnection.towingVehicle;
-            if (world.isClient()) {
-                clientDeltaM.add(towingVehicle.clientDeltaMApplied);
-                clientDeltaR.add(towingVehicle.clientDeltaRApplied);
-                clientDeltaP += towingVehicle.clientDeltaPApplied;
-            } else {
-                serverDeltaM.add(towingVehicle.serverDeltaMApplied);
-                serverDeltaR.add(towingVehicle.serverDeltaRApplied);
-                serverDeltaP += towingVehicle.serverDeltaPApplied;
-            }
         }
         world.endProfiling();
     }
@@ -1223,17 +1235,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             //(like levelling while hovering) and rubber-band back towards the old angle.
             boolean rotated = !orientation.angles.equals(prevOrientation.angles);
             if (!motionApplied.isZero() || rotated) {
-                serverDeltaMApplied.set(motionApplied);
                 serverDeltaM.add(motionApplied);
                 if (rotated) {
                     rotationApplied.angles.set(orientation.angles).subtract(prevOrientation.angles).clamp180();
-                    serverDeltaRApplied.set(rotationApplied.angles);
                     serverDeltaR.add(rotationApplied.angles);
                 } else {
                     //Don't send a stale rotation the client would add but we didn't.
                     rotationApplied.angles.set(0, 0, 0);
                 }
-                serverDeltaPApplied += pathingApplied;
                 serverDeltaP += pathingApplied;
                 InterfaceManager.packetInterface.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied.angles, pathingApplied));
             }

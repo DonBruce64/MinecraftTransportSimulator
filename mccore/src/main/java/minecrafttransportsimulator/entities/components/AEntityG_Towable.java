@@ -568,7 +568,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         connection.towedVehicle.parkingBrakeVar.setTo(1, false);
 
         if (!world.isClient()) {
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityTowingChange(this, connectionIndex));
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityTowingChange(this, connectionIndex, connection));
         } else if (AGUIBase.activeInputGUI instanceof GUIPanel) {
             ((GUIPanel) AGUIBase.activeInputGUI).handleConnectionChange(connection);
         }
