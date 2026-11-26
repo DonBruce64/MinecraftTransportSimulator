@@ -46,6 +46,8 @@ public class VehicleGroundDeviceBox {
     public boolean isAbleToDoGroundOperations;
     public boolean isUsingLiquidBoxes;
     public double collisionDepth;
+    //Distance in blocks from the projected box to the surface found by either solid-ground probe.
+    double groundClearance = Double.POSITIVE_INFINITY;
     /**
      * The point where this box contacts the world, in local coords to the vehicle it is on
      **/
@@ -220,7 +222,7 @@ public class VehicleGroundDeviceBox {
      * Updates this boxes' collision properties to take into account its new position.
      * If the passed-in list is non-null, all grounded ground devices will be added to it.
      */
-    public void updateCollisionStatuses(Set<PartGroundDevice> groundedGroundDevices, boolean updateGroundDeviceTreadPosition) {
+    void updateCollisionStatuses(Set<PartGroundDevice> groundedGroundDevices, boolean updateGroundDeviceTreadPosition, double groundBoost) {
         //Initialize all values.
         isBlockedVertically = false;
         isAirborne = true;
@@ -229,14 +231,15 @@ public class VehicleGroundDeviceBox {
         isAbleToDoGroundOperations = false;
         isUsingLiquidBoxes = false;
         collisionDepth = 0;
+        groundClearance = Double.POSITIVE_INFINITY;
 
         Point3D vehicleMotionOffset = vehicle.motion.copy().scale(vehicle.speedFactor);
+        vehicleMotionOffset.y += groundBoost;
         if (vehicleMotionOffset.y == 0 && vehicle.towedByConnection != null && !vehicle.towedByConnection.hookupConnection.mounted) {
             //Need to add a super-small amount of -y motion here.
             //If we don't, then we won't do trailer physics right as those always need to check for blocks below them.
             vehicleMotionOffset.y = -0.00001;
         }
-        Point3D groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundDetectionOffset);
         if (!groundDevices.isEmpty()) {
             if (updateGroundDeviceTreadPosition && isLongTread) {
                 //If we are over an air block, move the collision towards the center to account for this.
@@ -251,13 +254,10 @@ public class VehicleGroundDeviceBox {
                 treadZCurrentOffset = solidBoxNormalPos.z;
                 treadZBestOffset = solidBoxNormalPos.z;
 
-                boolean foundCollidingBlock = false;
                 for (int currentStep = 0; currentStep <= treadSteps; ++currentStep) {
                     solidBox.localCenter.set(solidBoxNormalPos);
                     solidBox.localCenter.z = treadZCurrentOffset;
-                    contactPoint.set(solidBox.localCenter);
-                    contactPoint.add(0D, -solidBox.heightRadius, 0D);
-                    solidBox.globalCenter.set(solidBox.localCenter).rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).add(vehicleMotionOffset);
+                    solidBox.globalCenter.set(solidBox.localCenter).rotate(vehicle.rotation).rotate(vehicle.orientation).add(vehicle.position).add(vehicleMotionOffset);
 
                     //Check for air at position and below.  We might not be colliding with any blocks, but might have air below some.
                     //We need to not be either in or on top of air blocks to function properly.
@@ -271,10 +271,8 @@ public class VehicleGroundDeviceBox {
                     }
                     if (!airAtPosition) {
                         //Check the collisions at this solid block area to see if it's more collided than others.
-                        //Use a debounce of 0.02 here to prevent small collisions from changing the boxes constantly.
                         vehicle.world.updateBoundingBoxCollisions(solidBox, vehicleMotionOffset, false);
                         if (-solidBox.currentCollisionDepth.y > collisionDepth) {
-                            foundCollidingBlock = true;
                             collisionDepth = -solidBox.currentCollisionDepth.y;
                             treadZBestOffset = treadZCurrentOffset;
                         }
@@ -283,39 +281,21 @@ public class VehicleGroundDeviceBox {
                     //Adjust offset and try again, if applicable.
                     treadZCurrentOffset -= solidBoxNormalPos.z / treadSteps;
                 }
-
-                //If we never found a colliding block to have a good offset, re-do some calculations since these won't have been done before.
-                if (!foundCollidingBlock) {
-                    solidBox.localCenter.set(solidBoxNormalPos);
-                    solidBox.localCenter.z = treadZBestOffset;
-                    contactPoint.set(solidBox.localCenter);
-                    contactPoint.add(0D, -solidBox.heightRadius, 0D);
-                    solidBox.globalCenter.set(solidBox.localCenter).rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).add(vehicleMotionOffset);
-                    vehicle.world.updateBoundingBoxCollisions(solidBox, vehicleMotionOffset, false);
-                }
-
-                //Always check for entities here since we don't in the above loop.
-                contactedEntity = checkEntityCollisions(vehicleMotionOffset);
-                isCollided = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
-                if (contactedEntity) {
-                    //Need to check only if we contacted an entity, as if we didn't we want to use our current depth as found in the above loop.
-                    collisionDepth = -solidBox.currentCollisionDepth.y;
-                }
-            } else {
-                //Just use current best offset.  For wheels, this will just be 0 and won't matter.
-                solidBox.localCenter.set(solidBoxNormalPos);
-                solidBox.localCenter.z = treadZBestOffset;
-                contactPoint.set(solidBox.localCenter);
-                contactPoint.add(0D, -solidBox.heightRadius, 0D);
-                solidBox.globalCenter.set(solidBox.localCenter).rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).add(vehicleMotionOffset);
-                vehicle.world.updateBoundingBoxCollisions(solidBox, vehicleMotionOffset, false);
-                contactedEntity = checkEntityCollisions(vehicleMotionOffset);
-                isCollided = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
-                collisionDepth = -solidBox.currentCollisionDepth.y;
             }
+
+            //Use the selected tread contact for both collision depth and the pivot point.
+            solidBox.localCenter.set(solidBoxNormalPos);
+            solidBox.localCenter.z = treadZBestOffset;
+            contactPoint.set(solidBox.localCenter).add(0D, -solidBox.heightRadius, 0D);
+            solidBox.globalCenter.set(solidBox.localCenter).rotate(vehicle.rotation).rotate(vehicle.orientation).add(vehicle.position).add(vehicleMotionOffset);
+            vehicle.world.updateBoundingBoxCollisions(solidBox, vehicleMotionOffset, false);
+            contactedEntity = checkEntityCollisions(vehicleMotionOffset);
+            isCollided = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
+            collisionDepth = -solidBox.currentCollisionDepth.y;
 
             //If we are collided, do other things now to handle collision.
             if (isCollided) {
+                groundClearance = 0;
                 isGrounded = true;
                 isAirborne = false;
                 isBlockedVertically = true;
@@ -342,29 +322,21 @@ public class VehicleGroundDeviceBox {
                     }
                 }
             } else {
-                solidBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
-                vehicle.world.updateBoundingBoxCollisions(solidBox, groundCollisionOffset, false);
-                contactedEntity = checkEntityCollisions(groundCollisionOffset);
-                solidBox.globalCenter.subtract(PartGroundDevice.groundDetectionOffset);
-                isGrounded = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
+                isGrounded = probeSolidGround(PartGroundDevice.groundDetectionOffset);
             }
 
             if (isGrounded) {
                 isAbleToDoGroundOperations = true;
                 isAirborne = false;
             } else {
-                groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundOperationOffset);
-                solidBox.globalCenter.add(PartGroundDevice.groundOperationOffset);
-                vehicle.world.updateBoundingBoxCollisions(solidBox, groundCollisionOffset, false);
-                contactedEntity = checkEntityCollisions(groundCollisionOffset);
-                solidBox.globalCenter.subtract(PartGroundDevice.groundOperationOffset);
-                isAbleToDoGroundOperations = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
+                isAbleToDoGroundOperations = probeSolidGround(PartGroundDevice.groundOperationOffset);
             }
         }
 
         //Try liquids if we don't have the solid boxes on the ground.
         if (!isAbleToDoGroundOperations && (!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty())) {
-            liquidBox.globalCenter.set(liquidBox.localCenter).rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).add(vehicleMotionOffset);
+            Point3D groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundDetectionOffset);
+            liquidBox.globalCenter.set(liquidBox.localCenter).rotate(vehicle.rotation).rotate(vehicle.orientation).add(vehicle.position).add(vehicleMotionOffset);
             vehicle.world.updateBoundingBoxCollisions(liquidBox, vehicleMotionOffset, false);
             isCollided = !liquidBox.collidingBlockPositions.isEmpty();
             collisionDepth = -liquidBox.currentCollisionDepth.y;
@@ -403,22 +375,33 @@ public class VehicleGroundDeviceBox {
         }
     }
 
+    private boolean probeSolidGround(Point3D offset) {
+        solidBox.globalCenter.add(offset);
+        vehicle.world.updateBoundingBoxCollisions(solidBox, offset, false);
+        contactedEntity = checkEntityCollisions(offset);
+        solidBox.globalCenter.subtract(offset);
+        boolean foundGround = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
+        if (foundGround) {
+            groundClearance = contactedEntity ? 0 : Math.max(0, solidBox.currentCollisionDepth.y - offset.y);
+        }
+        return foundGround;
+    }
+
     /**
-     * Returns true if this box if it collides with any boxes using the passed-in transformation.
-     * This transformation is a local transform to the vehicle the box is on.  Does not change any state-flags
-     * of this box.
+     * Checks whether this ground device box can occupy the proposed vehicle position and rotation.
      */
-    public boolean collidedWithTransform(TransformationMatrix transform, Point3D groundMotion) {
-        //Transform operates off contact points, so get the world-based transform delta the transform will apply to our contact point.
-        Point3D vehicleMotionOffset = contactPoint.copy().transform(transform).subtract(contactPoint).rotate(vehicle.orientation).rotate(vehicle.rotation).addScaled(vehicle.motion, vehicle.speedFactor).add(groundMotion);
+    boolean canApplyGroundRotation(RotationMatrix rotation, Point3D position) {
+        Point3D offset = new Point3D();
         if (!groundDevices.isEmpty()) {
-            if (vehicle.world.checkForCollisions(solidBox, vehicleMotionOffset, false, false)) {
+            offset.set(solidBox.localCenter).rotate(rotation).rotate(vehicle.orientation).add(position).subtract(solidBox.globalCenter);
+            if (vehicle.world.checkForCollisions(solidBox, offset, true, false)) {
                 return false;
             }
         }
 
         if (!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()) {
-            return !vehicle.world.checkForCollisions(liquidBox, vehicleMotionOffset, false, false);
+            offset.set(liquidBox.localCenter).rotate(rotation).rotate(vehicle.orientation).add(position).subtract(liquidBox.globalCenter);
+            return !vehicle.world.checkForCollisions(liquidBox, offset, true, false);
         }
         return true;
     }

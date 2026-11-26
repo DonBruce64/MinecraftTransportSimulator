@@ -52,6 +52,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 	public final ComputedVariable parkingBrakeVar;
     public final ComputedVariable lockedVar;
     public static final double MAX_BRAKE = 1D;
+    private static final double LOW_SPEED_GRIP_THRESHOLD = 0.01D;
+    private static final double STOPPED_POSITION_TOLERANCE = 0.25D; // Blocks
     public UUID keyUUID;
 
     //Internal states.
@@ -92,16 +94,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private final Point3D serverDeltaM;
     private final Point3D serverDeltaR;
     private double serverDeltaP;
-    private final Point3D serverDeltaMApplied = new Point3D();
-    private final Point3D serverDeltaRApplied = new Point3D();
-    private double serverDeltaPApplied;
 
     private final Point3D clientDeltaM;
     private final Point3D clientDeltaR;
     private double clientDeltaP;
     private final Point3D clientDeltaMApplied = new Point3D();
     private final Point3D clientDeltaRApplied = new Point3D();
-    private double clientDeltaPApplied;
 
     private final Point3D roadMotion = new Point3D();
     private final Point3D roadRotation = new Point3D();
@@ -410,6 +408,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         //Stop all ground devices from turning on a mounted connection.
         towedVehicle.groundDeviceCollective.groundedGroundDevices.clear();
         if (connection.hitchConnection.mounted) {
+            towedVehicle.lastCollidedEntity = null;
             for (APart part : towedVehicle.allParts) {
                 if (part instanceof PartGroundDevice) {
                     PartGroundDevice ground = (PartGroundDevice) part;
@@ -424,10 +423,37 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     @Override
     public void disconnectTrailer(int connectionIndex) {
         TowingConnection connection = towingConnections.get(connectionIndex);
-        if (connection.towedVehicle.definition.motorized.isTrailer) {
-            connection.towedVehicle.parkingBrakeVar.setTo(1, false);
+        AEntityVehicleD_Moving towedVehicle = connection.towedVehicle;
+        if (connection.hitchConnection.mounted) {
+            towedVehicle.resetMovementDeltas();
+        }
+        if (towedVehicle.definition.motorized.isTrailer) {
+            towedVehicle.parkingBrakeVar.setTo(1, false);
         }
         super.disconnectTrailer(connectionIndex);
+    }
+
+    private void resetMovementDeltas() {
+        //Start independent movement from the pose at which the mounted vehicle was released.
+        serverDeltaM.set(0, 0, 0);
+        serverDeltaR.set(0, 0, 0);
+        serverDeltaP = 0;
+        clientDeltaM.set(0, 0, 0);
+        clientDeltaR.set(0, 0, 0);
+        clientDeltaP = 0;
+        prevTotalPathDelta = totalPathDelta;
+    }
+
+    /**
+     * Applies the server's pose and motion before the client removes the mounted connection.
+     */
+    public void applyMountedDisconnectState(Point3D position, Point3D angles, Point3D motion) {
+        this.position.set(position);
+        prevPosition.set(position);
+        orientation.setToAngles(angles);
+        prevOrientation.set(orientation);
+        this.motion.set(motion);
+        prevMotion.set(motion);
     }
 
     /**
@@ -478,23 +504,38 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         double brakingFactor = towedByConnection == null ? getBrakingForce() * brakingFactorVar.currentValue : 0;
         if (brakingFactor > 0) {
             double brakingForce = 20F * brakingFactor / currentMass;
-            if (brakingForce > velocity) {
+            double horizontalSpeed = Math.hypot(motion.x, motion.z);
+            if (brakingForce >= horizontalSpeed) {
                 motion.x = 0;
                 motion.z = 0;
                 rotation.angles.y = 0;
             } else {
-                motion.x -= brakingForce * motion.x / velocity;
-                motion.z -= brakingForce * motion.z / velocity;
+                double brakingScale = 1D - brakingForce / horizontalSpeed;
+                motion.x *= brakingScale;
+                motion.z *= brakingScale;
             }
+        }
+
+        normalizedGroundHeadingVector.set(headingVector.x, 0D, headingVector.z).normalize();
+        normalizedGroundVelocityVector.set(motion.x, 0D, motion.z);
+        groundVelocity = normalizedGroundVelocityVector.length();
+        float skiddingFactor = getSkiddingForce();
+        //At a crawl, keep only the rolling motion so residual sideways speed cannot persist.
+        if (groundVelocity > 0 && groundVelocity <= LOW_SPEED_GRIP_THRESHOLD && skiddingFactor > 0
+                && towedByConnection == null && groundDeviceCollective.hasGroundedWheelsOrTreads()) {
+            double rollingSpeed = motion.dotProduct(normalizedGroundHeadingVector, false);
+            if (Math.abs(rollingSpeed) < 1.0E-8D) {
+                rollingSpeed = 0;
+            }
+            motion.x = rollingSpeed * normalizedGroundHeadingVector.x;
+            motion.z = rollingSpeed * normalizedGroundHeadingVector.z;
+            normalizedGroundVelocityVector.set(motion.x, 0D, motion.z);
+            groundVelocity = normalizedGroundVelocityVector.length();
         }
 
         //Add rotation based on our turning factor, and then re-set ground states.
         //For turning, we keep turning momentum if the wheels are turned.
-        normalizedGroundVelocityVector.set(motion.x, 0D, motion.z);
-        groundVelocity = normalizedGroundVelocityVector.length();
         normalizedGroundVelocityVector.normalize();
-        normalizedGroundHeadingVector.set(headingVector.x, 0D, headingVector.z);
-        normalizedGroundHeadingVector.normalize();
         double turningForce = getTurningForce();
         double dotProduct = normalizedGroundVelocityVector.dotProduct(normalizedGroundHeadingVector, true);
         //TODO having velocity in the formula here has the potential to lead to hang-ups. Use packets perhaps?
@@ -510,9 +551,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         if (turningForce != 0) {
             rotation.angles.y += goingInReverse ? -turningForce : turningForce;
         }
-        //Check how much grip the wheels have.
-        float skiddingFactor = getSkiddingForce();
-        if (skiddingFactor != 0 && groundVelocity > 0.01) {
+        if (skiddingFactor > 0 && groundVelocity > LOW_SPEED_GRIP_THRESHOLD) {
             //Have enough grip, get angle delta between heading and motion.
             Point3D crossProduct = normalizedGroundVelocityVector.crossProduct(normalizedGroundHeadingVector);
             double vectorDelta = Math.toDegrees(Math.atan2(crossProduct.y, dotProduct));
@@ -857,13 +896,13 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     //Having negative motion.y is okay if we don't boost above, as this just means we are falling to the ground via gravity.
                     //In this case, we use our boost, but set it to 0 as we want to just attenuate the negative motion, not remove it.
                     if (motion.y <= 0 && motion.y + groundMotion.y > 0) {
-                        groundMotion.y += motion.y;
+                        groundMotion.y = (groundMotion.y + motion.y) * speedFactor;
                         motion.y = 0;
                     } else {
                         motion.y += groundMotion.y;
                         groundMotion.y = 0;
                     }
-                    groundDeviceCollective.updateCollisions(false);
+                    groundDeviceCollective.updateCollisions(false, groundMotion.y);
                 }
 
                 //After checking the ground devices to ensure we aren't shoving ourselves into the ground, we try to move the vehicle.
@@ -888,7 +927,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                         world.endProfiling();
                         return;
                     }
-                    groundDeviceCollective.updateCollisions(false);
+                    groundDeviceCollective.updateCollisions(false, groundMotion.y);
                 }
                 if (!groundDeviceCollective.isBlockedVertically() && (fallingDown || towedByConnection != null)) {
                     world.beginProfiling("GroundHandlingPitch", false);
@@ -984,17 +1023,28 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 
             //Now adjust our movement to sync with the server.
             if (world.isClient()) {
-                //Get the delta difference, and square it.  Then divide it by 25.
-                //This gives us a good "rubberbanding correction" formula for deltas.
-                //We add this correction motion to the existing motion applied.
-                //We need to keep the sign after squaring, however, as that tells us what direction to apply the deltas in.
+                //Ease the difference between client and server movement, preserving the sign of the correction.
                 clientDeltaM.add(motionApplied);
                 clientDeltaMApplied.set(serverDeltaM).subtract(clientDeltaM);
                 if (!clientDeltaMApplied.isZero()) {
-                    clientDeltaMApplied.x *= Math.abs(clientDeltaMApplied.x);
-                    clientDeltaMApplied.y *= Math.abs(clientDeltaMApplied.y);
-                    clientDeltaMApplied.z *= Math.abs(clientDeltaMApplied.z);
-                    clientDeltaMApplied.scale(1D / 25D).clamp(5);
+                    double horizontalError = Math.hypot(clientDeltaMApplied.x, clientDeltaMApplied.z);
+                    double horizontalSpeed = Math.hypot(motion.x, motion.z);
+                    if (horizontalError > 0 && towedByConnection == null && !lockedOnRoad && lastCollidedEntity == null
+                            && (brakeVar.isActive || parkingBrakeVar.isActive || horizontalSpeed <= LOW_SPEED_GRIP_THRESHOLD)
+                            && groundDeviceCollective.hasGroundedWheelsOrTreads()) {
+                        //Absorb small errors during travel and carry any remainder into the next movement.
+                        double movingCorrection = Math.min(horizontalSpeed * speedFactor, horizontalError) / 4D;
+                        double excessError = Math.max(0, horizontalError - STOPPED_POSITION_TOLERANCE);
+                        double excessCorrection = Math.min(excessError, horizontalError * horizontalError / 25D);
+                        double correctionScale = Math.max(movingCorrection, excessCorrection) / horizontalError;
+                        clientDeltaMApplied.x *= correctionScale;
+                        clientDeltaMApplied.z *= correctionScale;
+                    } else {
+                        clientDeltaMApplied.x *= Math.abs(clientDeltaMApplied.x) / 25D;
+                        clientDeltaMApplied.z *= Math.abs(clientDeltaMApplied.z) / 25D;
+                    }
+                    clientDeltaMApplied.y *= Math.abs(clientDeltaMApplied.y) / 25D;
+                    clientDeltaMApplied.clamp(5);
                     clientDeltaM.add(clientDeltaMApplied);
                     position.add(clientDeltaMApplied);
                 }
@@ -1020,7 +1070,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 }
 
                 clientDeltaP += pathingApplied;
-                clientDeltaPApplied = serverDeltaP - clientDeltaP;
+                double clientDeltaPApplied = serverDeltaP - clientDeltaP;
                 if (clientDeltaPApplied != 0) {
                     clientDeltaPApplied *= Math.abs(clientDeltaPApplied);
                     clientDeltaPApplied *= 1D / 25D;
@@ -1036,25 +1086,13 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 addToServerDeltas(null, null, 0);
             }
         } else {
-            //Mounted vehicles don't do most motions, only a sub-set of them.
+            //Mounted vehicles follow the hitch without recording independent movement deltas.
             world.beginProfiling("ApplyMotions", true);
             motionApplied.set(motion).scale(speedFactor);
             position.add(motionApplied);
 
             //Rotation for mounted connections aligns using orientation, not angle-deltas.
             orientation.set(rotation).convertToAngles();
-
-            //For syncing, just add our deltas.  We don't actually do syncing operations here.
-            AEntityVehicleD_Moving towingVehicle = towedByConnection.towingVehicle;
-            if (world.isClient()) {
-                clientDeltaM.add(towingVehicle.clientDeltaMApplied);
-                clientDeltaR.add(towingVehicle.clientDeltaRApplied);
-                clientDeltaP += towingVehicle.clientDeltaPApplied;
-            } else {
-                serverDeltaM.add(towingVehicle.serverDeltaMApplied);
-                serverDeltaR.add(towingVehicle.serverDeltaRApplied);
-                serverDeltaP += towingVehicle.serverDeltaPApplied;
-            }
         }
         world.endProfiling();
     }
@@ -1197,17 +1235,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             //(like levelling while hovering) and rubber-band back towards the old angle.
             boolean rotated = !orientation.angles.equals(prevOrientation.angles);
             if (!motionApplied.isZero() || rotated) {
-                serverDeltaMApplied.set(motionApplied);
                 serverDeltaM.add(motionApplied);
                 if (rotated) {
                     rotationApplied.angles.set(orientation.angles).subtract(prevOrientation.angles).clamp180();
-                    serverDeltaRApplied.set(rotationApplied.angles);
                     serverDeltaR.add(rotationApplied.angles);
                 } else {
                     //Don't send a stale rotation the client would add but we didn't.
                     rotationApplied.angles.set(0, 0, 0);
                 }
-                serverDeltaPApplied += pathingApplied;
                 serverDeltaP += pathingApplied;
                 InterfaceManager.packetInterface.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied.angles, pathingApplied));
             }
