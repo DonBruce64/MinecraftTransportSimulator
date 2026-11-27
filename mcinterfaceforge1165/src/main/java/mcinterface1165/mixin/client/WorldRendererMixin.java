@@ -1,5 +1,7 @@
 package mcinterface1165.mixin.client;
 
+import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.culling.ClippingHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,12 +18,6 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ActiveRenderInfo;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.RenderTypeBuffers;
-import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.vector.Matrix4f;
@@ -34,6 +30,8 @@ import net.minecraft.world.gen.Heightmap;
 public abstract class WorldRendererMixin {
     @Shadow
     private RenderTypeBuffers renderBuffers;
+    @Shadow
+    private ClippingHelper capturedFrustum;
 
     /**
      * Need this to grab variables used in the level rendering routine for the rendering routine.
@@ -41,6 +39,7 @@ public abstract class WorldRendererMixin {
     @Inject(method = "renderLevel", at = @At(value = "HEAD"))
     public void inject_renderLevelDataGetter(MatrixStack pMatrixStack, float pPartialTicks, long pFinishTimeNano, boolean pDrawBlockOutline, ActiveRenderInfo pActiveRenderInfo, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pProjection, CallbackInfo ci) {
         InterfaceRender.projectionMatrix = pProjection;
+        InterfaceRender.capturedFrustum = capturedFrustum;
         InterfaceRender.startDynamicLightFrame();
     }
 

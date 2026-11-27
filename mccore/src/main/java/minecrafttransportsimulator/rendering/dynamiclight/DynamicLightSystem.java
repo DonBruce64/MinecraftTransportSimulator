@@ -94,6 +94,7 @@ public final class DynamicLightSystem {
     private static AWrapperWorld lastWorld;
     /** Whether the field's lamps are in the world's meshes, read by mesher threads. */
     private static volatile boolean fieldActive;
+    private static boolean active;
 
     private static boolean irisResolved;
     private static Object irisApi;
@@ -135,6 +136,10 @@ public final class DynamicLightSystem {
         return mode != Mode.OFF || shaderPack;
     }
 
+    public static boolean isActive() {
+        return active;
+    }
+
     /** Counts frames; an owner drawn in the current frame carries this number. */
     public static long getFrameNumber() {
         return frameNumber;
@@ -163,6 +168,7 @@ public final class DynamicLightSystem {
                 owners.clear();
                 voxels.reset();
                 releaseField();
+                active = false;
             }
             shaderPack = world != null && isShaderPackActive();
             Mode newMode = world == null ? Mode.OFF : computeMode();
@@ -172,8 +178,23 @@ public final class DynamicLightSystem {
             mode = newMode;
             frame.clear(Math.min(DynamicLightFrame.CAPACITY, Math.max(0, ConfigSystem.client.renderingSettings.DynL_MaxLights.value)));
             if (newMode == Mode.OFF) {
+                active = false;
                 return;
             }
+
+            for (Iterator<DynamicLightOwner> iterator = owners.values().iterator(); iterator.hasNext();) {
+                DynamicLightOwner owner = iterator.next();
+                if (!owner.entity.isValid || owner.entity.world != world) {
+                    owner.removed = true;
+                    iterator.remove();
+                }
+            }
+            active = !owners.isEmpty() || !particleLights.isEmpty();
+            if (!active) {
+                releaseField();
+                return;
+            }
+
             frame.cameraX = cameraX;
             frame.cameraY = cameraY;
             frame.cameraZ = cameraZ;
@@ -188,11 +209,9 @@ public final class DynamicLightSystem {
 
             submitted.clear();
             field.beginFrame();
-            for (Iterator<DynamicLightOwner> iterator = owners.values().iterator(); iterator.hasNext();) {
-                DynamicLightOwner owner = iterator.next();
+            for (DynamicLightOwner owner : owners.values()) {
                 if (!owner.entity.isValid || owner.entity.world != world) {
                     owner.removed = true;
-                    iterator.remove();
                     continue;
                 }
                 if (owner.renderedFrame != frameNumber) {

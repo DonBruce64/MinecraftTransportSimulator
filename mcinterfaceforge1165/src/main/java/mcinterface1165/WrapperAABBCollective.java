@@ -57,7 +57,13 @@ public class WrapperAABBCollective extends AxisAlignedBB {
     @Override
     public boolean intersects(double otherMinX, double otherMinY, double otherMinZ, double otherMaxX, double otherMaxY, double otherMaxZ) {
         //CHeck super first, as that's the encompassing box.
-        if (super.intersects(otherMinX, otherMinY, otherMinZ, otherMaxX, otherMaxY, otherMaxZ)) {
+        BoundingBox encompassingBox = interactable.encompassingBox;
+        if (otherMaxX > encompassingBox.globalCenter.x - encompassingBox.widthRadius
+                && otherMinX < encompassingBox.globalCenter.x + encompassingBox.widthRadius
+                && otherMaxY > encompassingBox.globalCenter.y - encompassingBox.heightRadius
+                && otherMinY < encompassingBox.globalCenter.y + encompassingBox.heightRadius
+                && otherMaxZ > encompassingBox.globalCenter.z - encompassingBox.depthRadius
+                && otherMinZ < encompassingBox.globalCenter.z + encompassingBox.depthRadius) {
             for (BoundingBox testBox : getBoxes()) {
                 if (otherMaxX > testBox.globalCenter.x - testBox.widthRadius && otherMinX < testBox.globalCenter.x + testBox.widthRadius && otherMaxY > testBox.globalCenter.y - testBox.heightRadius && otherMinY < testBox.globalCenter.y + testBox.heightRadius && otherMaxZ > testBox.globalCenter.z - testBox.depthRadius && otherMinZ < testBox.globalCenter.z + testBox.depthRadius) {
                     return true;

@@ -51,7 +51,9 @@ public class VehicleGroundDeviceBox {
      **/
     public final Point3D contactPoint = new Point3D();
 
-    private static final Point3D testOffset = new Point3D();
+
+    /** Not static because in single-player it's on separate threads for client and server*/
+    private final Point3D testOffset = new Point3D();
     private static final double MAX_DELTA_FROM_ZERO = 0.00001;
 
     public VehicleGroundDeviceBox(EntityVehicleF_Physics vehicle, boolean isFront, boolean isLeft) {
@@ -428,8 +430,8 @@ public class VehicleGroundDeviceBox {
      */
     private boolean checkEntityCollisions(Point3D collisionMotion) {
         boolean didCollision = false;
-        for (AEntityF_Multipart<?> otherEntity : vehicle.world.getEntitiesExtendingType(AEntityF_Multipart.class)) {
-            if (!otherEntity.equals(vehicle) && vehicle.canCollideWith(otherEntity) && !otherEntity.collidedEntities.contains(vehicle) && otherEntity.encompassingBox.intersects(solidBox)) {
+        for (AEntityF_Multipart<?> otherEntity : vehicle.getNearbyMultiparts()) {
+            if (otherEntity != vehicle && otherEntity.encompassingBox.intersects(solidBox) && vehicle.canCollideWith(otherEntity) && !otherEntity.collidedEntities.contains(vehicle)) {
                 //We know we could have hit this entity.  Check if we actually did.
                 BoundingBox collidingBox = null;
                 double boxCollisionDepth;

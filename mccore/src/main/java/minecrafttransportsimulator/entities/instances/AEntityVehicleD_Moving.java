@@ -10,6 +10,7 @@ import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
@@ -19,13 +20,13 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -118,6 +119,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public final List<BoundingBox> allBlockCollisionBoxes = new ArrayList<>(); //Public so we can add ground device boxes to this set.
     private AEntityE_Interactable<?> lastCollidedEntity;
     public VehicleGroundDeviceCollection groundDeviceCollective;
+
+    public final VehicleEntityCarrier entityCarrier = new VehicleEntityCarrier(this);
+    private final List<AEntityF_Multipart<?>> nearbyMultiparts = new ArrayList<>();
+    private long nearbyMultipartsTick = -1;
 
     public AEntityVehicleD_Moving(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);
@@ -253,92 +258,118 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public void doPostUpdateLogic() {
         super.doPostUpdateLogic();
 
-        //Keep entities supported even when only ground corrections or animations move the collision boxes.
-        if (!allCollisionBoxes.isEmpty()) {
-            world.beginProfiling("MoveAlongEntities", true);
-            encompassingBox.heightRadius += 1.0;
-            List<IWrapperEntity> nearbyEntities = world.getEntitiesWithin(encompassingBox);
-            encompassingBox.heightRadius -= 1.0;
-            for (IWrapperEntity entity : nearbyEntities) {
-                //Only move Vanilla entities not riding things.  We don't want to move other things as we handle our inter-entity movement in each class.
-                if (entity.getEntityRiding() == null && (!(entity instanceof IWrapperPlayer) || !((IWrapperPlayer) entity).isSpectator())) {
-                    //Choose the highest support so stepping across boxes cannot snap us back to a lower one.
-                    BoundingBox entityBounds = entity.getBounds();
-                    entityBounds.heightRadius += 0.25;
-                    BoundingBox supportingBox = null;
-                    Point3D entityVelocity = entity.getVelocity();
-                    for (BoundingBox box : allCollisionBoxes) {
-                        if (box.collisionTypes.contains(CollisionType.ENTITY) && entityBounds.intersects(box)) {
-                            //If the entity is within 0.5 units of the top of the box, we can move them.
-                            //If not, they are just colliding and not on top of the entity and we should leave them be.
-                            double entityBottomDelta = box.globalCenter.y + box.heightRadius - entity.getPosition().y;
-                            if (entityBottomDelta >= -0.5 && entityBottomDelta <= 0.5) {
-                                //Only move the entity if it's going slow or in the delta.  Don't move if it's going fast as they might have jumped.
-                                double entityTopDelta = entity.getPosition().y + (entityBounds.heightRadius - 0.25) * 2 - (box.globalCenter.y - box.heightRadius);
-                                //An upward-moving entity near the underside must not be lifted onto the box.
-                                if (entityVelocity.y <= 0 || (entityVelocity.y < entityBottomDelta && entityBottomDelta <= entityTopDelta)) {
-                                    if (supportingBox == null || box.globalCenter.y + box.heightRadius > supportingBox.globalCenter.y + supportingBox.heightRadius) {
-                                        supportingBox = box;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (supportingBox != null) {
-                        //Get how much the entity moved the collision box the entity collided with so we know how much to move the entity.
-                        //This lets entities "move along" with entities when touching a collision box.
-                        Point3D entityPositionVector = entity.getPosition().copy().subtract(position);
-                        Point3D startingAngles = entityPositionVector.copy().getAngles(true);
-                        Point3D entityPositionDelta = entityPositionVector.copy();
-                        entityPositionDelta.rotate(orientation).reOrigin(prevOrientation);
-                        Point3D entityAngleDelta = entityPositionDelta.copy().getAngles(true).subtract(startingAngles);
+        entityCarrier.update();
 
-                        entityPositionDelta.add(position).subtract(prevPosition);
-                        entityPositionDelta.subtract(entityPositionVector).add(entity.getPosition());
-                        //The box is already at its new height, so do not add vertical vehicle motion again.
-                        entityPositionDelta.y = supportingBox.globalCenter.y + supportingBox.heightRadius;
-                        //Keep downward motion so vanilla detects floor contact and preserves its grounded camera state.
-                        entity.setPosition(entityPositionDelta, true);
-                        entity.setYaw(entity.getYaw() + entityAngleDelta.y);
-                        entity.setBodyYaw(entity.getBodyYaw() + entityAngleDelta.y);
-                    }
+//        //Keep entities supported even when only ground corrections or animations move the collision boxes.
+//        if (!allCollisionBoxes.isEmpty()) {
+//            world.beginProfiling("MoveAlongEntities", true);
+//            encompassingBox.heightRadius += 1.0;
+//            List<IWrapperEntity> nearbyEntities = world.getEntitiesWithin(encompassingBox);
+//            encompassingBox.heightRadius -= 1.0;
+//            for (IWrapperEntity entity : nearbyEntities) {
+//                //Only move Vanilla entities not riding things.  We don't want to move other things as we handle our inter-entity movement in each class.
+//                if (entity.getEntityRiding() == null && (!(entity instanceof IWrapperPlayer) || !((IWrapperPlayer) entity).isSpectator())) {
+//                    //Choose the highest support so stepping across boxes cannot snap us back to a lower one.
+//                    BoundingBox entityBounds = entity.getBounds();
+//                    entityBounds.heightRadius += 0.25;
+//                    BoundingBox supportingBox = null;
+//                    Point3D entityVelocity = entity.getVelocity();
+//                    for (BoundingBox box : allCollisionBoxes) {
+//                        if (box.collisionTypes.contains(CollisionType.ENTITY) && entityBounds.intersects(box)) {
+//                            //If the entity is within 0.5 units of the top of the box, we can move them.
+//                            //If not, they are just colliding and not on top of the entity and we should leave them be.
+//                            double entityBottomDelta = box.globalCenter.y + box.heightRadius - entity.getPosition().y;
+//                            if (entityBottomDelta >= -0.5 && entityBottomDelta <= 0.5) {
+//                                //Only move the entity if it's going slow or in the delta.  Don't move if it's going fast as they might have jumped.
+//                                double entityTopDelta = entity.getPosition().y + (entityBounds.heightRadius - 0.25) * 2 - (box.globalCenter.y - box.heightRadius);
+//                                //An upward-moving entity near the underside must not be lifted onto the box.
+//                                if (entityVelocity.y <= 0 || (entityVelocity.y < entityBottomDelta && entityBottomDelta <= entityTopDelta)) {
+//                                    if (supportingBox == null || box.globalCenter.y + box.heightRadius > supportingBox.globalCenter.y + supportingBox.heightRadius) {
+//                                        supportingBox = box;
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                    if (supportingBox != null) {
+//                        //Get how much the entity moved the collision box the entity collided with so we know how much to move the entity.
+//                        //This lets entities "move along" with entities when touching a collision box.
+//                        Point3D entityPositionVector = entity.getPosition().copy().subtract(position);
+//                        Point3D startingAngles = entityPositionVector.copy().getAngles(true);
+//                        Point3D entityPositionDelta = entityPositionVector.copy();
+//                        entityPositionDelta.rotate(orientation).reOrigin(prevOrientation);
+//                        Point3D entityAngleDelta = entityPositionDelta.copy().getAngles(true).subtract(startingAngles);
+//
+//                        entityPositionDelta.add(position).subtract(prevPosition);
+//                        entityPositionDelta.subtract(entityPositionVector).add(entity.getPosition());
+//                        //The box is already at its new height, so do not add vertical vehicle motion again.
+//                        entityPositionDelta.y = supportingBox.globalCenter.y + supportingBox.heightRadius;
+//                        //Keep downward motion so vanilla detects floor contact and preserves its grounded camera state.
+//                        entity.setPosition(entityPositionDelta, true);
+//                        entity.setYaw(entity.getYaw() + entityAngleDelta.y);
+//                        entity.setBodyYaw(entity.getBodyYaw() + entityAngleDelta.y);
+//                    }
+//
+//                    //Use the actual bounds after carrying, so a floor contact does not skip adjacent walls or ceilings.
+//                    entityBounds = entity.getBounds();
+//                    boolean movingUp = entity.getVelocity().y > 0;
+//                    for (BoundingBox box : allCollisionBoxes) {
+//                        if (box.collisionTypes.contains(CollisionType.ENTITY) && entityBounds.intersects(box)) {
+//                            Point3D entityPosition = entity.getPosition();
+//                            double topDepth = box.globalCenter.y + box.heightRadius - entityPosition.y;
+//                            double bottomDepth = entityPosition.y + entityBounds.heightRadius * 2 - (box.globalCenter.y - box.heightRadius);
+//                            //Upward underside contacts also apply to short poses within the top support band.
+//                            if (topDepth > 0.5 || movingUp) {
+//                                double correctedX = entityPosition.x < box.globalCenter.x ? box.globalCenter.x - box.widthRadius - entityBounds.widthRadius : box.globalCenter.x + box.widthRadius + entityBounds.widthRadius;
+//                                double correctedZ = entityPosition.z < box.globalCenter.z ? box.globalCenter.z - box.depthRadius - entityBounds.depthRadius : box.globalCenter.z + box.depthRadius + entityBounds.depthRadius;
+//                                double depthX = Math.abs(correctedX - entityPosition.x);
+//                                double depthZ = Math.abs(correctedZ - entityPosition.z);
+//                                double horizontalDepth = Math.min(depthX, depthZ);
+//                                //Recover underside contacts only during upward travel, preserving horizontal motion.
+//                                if (movingUp && bottomDepth > 0 && bottomDepth <= 0.5 && bottomDepth < topDepth && bottomDepth <= horizontalDepth) {
+//                                    entity.correctCeilingPosition(Math.nextDown(box.globalCenter.y - box.heightRadius - entityBounds.heightRadius * 2));
+//                                    entityBounds = entity.getBounds();
+//                                } else if (topDepth > 0.5 && horizontalDepth <= 0.5 && horizontalDepth < bottomDepth) {
+//                                    //Recover small side overlaps before vanilla collision checks treat us as inside the box.
+//                                    if (depthX <= depthZ) {
+//                                        entityPosition.x = correctedX < entityPosition.x ? Math.nextDown(correctedX) : Math.nextUp(correctedX);
+//                                    } else {
+//                                        entityPosition.z = correctedZ < entityPosition.z ? Math.nextDown(correctedZ) : Math.nextUp(correctedZ);
+//                                    }
+//                                    entity.correctHorizontalPosition(entityPosition);
+//                                    entityBounds = entity.getBounds();
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            world.endProfiling();
+//        }
+    }
 
-                    //Use the actual bounds after carrying, so a floor contact does not skip adjacent walls or ceilings.
-                    entityBounds = entity.getBounds();
-                    boolean movingUp = entity.getVelocity().y > 0;
-                    for (BoundingBox box : allCollisionBoxes) {
-                        if (box.collisionTypes.contains(CollisionType.ENTITY) && entityBounds.intersects(box)) {
-                            Point3D entityPosition = entity.getPosition();
-                            double topDepth = box.globalCenter.y + box.heightRadius - entityPosition.y;
-                            double bottomDepth = entityPosition.y + entityBounds.heightRadius * 2 - (box.globalCenter.y - box.heightRadius);
-                            //Upward underside contacts also apply to short poses within the top support band.
-                            if (topDepth > 0.5 || movingUp) {
-                                double correctedX = entityPosition.x < box.globalCenter.x ? box.globalCenter.x - box.widthRadius - entityBounds.widthRadius : box.globalCenter.x + box.widthRadius + entityBounds.widthRadius;
-                                double correctedZ = entityPosition.z < box.globalCenter.z ? box.globalCenter.z - box.depthRadius - entityBounds.depthRadius : box.globalCenter.z + box.depthRadius + entityBounds.depthRadius;
-                                double depthX = Math.abs(correctedX - entityPosition.x);
-                                double depthZ = Math.abs(correctedZ - entityPosition.z);
-                                double horizontalDepth = Math.min(depthX, depthZ);
-                                //Recover underside contacts only during upward travel, preserving horizontal motion.
-                                if (movingUp && bottomDepth > 0 && bottomDepth <= 0.5 && bottomDepth < topDepth && bottomDepth <= horizontalDepth) {
-                                    entity.correctCeilingPosition(Math.nextDown(box.globalCenter.y - box.heightRadius - entityBounds.heightRadius * 2));
-                                    entityBounds = entity.getBounds();
-                                } else if (topDepth > 0.5 && horizontalDepth <= 0.5 && horizontalDepth < bottomDepth) {
-                                    //Recover small side overlaps before vanilla collision checks treat us as inside the box.
-                                    if (depthX <= depthZ) {
-                                        entityPosition.x = correctedX < entityPosition.x ? Math.nextDown(correctedX) : Math.nextUp(correctedX);
-                                    } else {
-                                        entityPosition.z = correctedZ < entityPosition.z ? Math.nextDown(correctedZ) : Math.nextUp(correctedZ);
-                                    }
-                                    entity.correctHorizontalPosition(entityPosition);
-                                    entityBounds = entity.getBounds();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            world.endProfiling();
+    @Override
+    protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
+        if (!blendingEnabled) {
+            entityCarrier.updateFrame(partialTicks);
         }
+        super.renderModel(transform, blendingEnabled, partialTicks);
+    }
+
+    public List<AEntityF_Multipart<?>> getNearbyMultiparts() {
+        if (nearbyMultipartsTick != ticksExisted) {
+            nearbyMultipartsTick = ticksExisted;
+            nearbyMultiparts.clear();
+            double reach = motion.length() * speedFactor + 2.0;
+            encompassingBox.widthRadius += reach;
+            encompassingBox.heightRadius += reach;
+            encompassingBox.depthRadius += reach;
+            world.populateWithEntitiesInBounds(nearbyMultiparts, encompassingBox);
+            encompassingBox.widthRadius -= reach;
+            encompassingBox.heightRadius -= reach;
+            encompassingBox.depthRadius -= reach;
+        }
+        return nearbyMultiparts;
     }
 
     @Override

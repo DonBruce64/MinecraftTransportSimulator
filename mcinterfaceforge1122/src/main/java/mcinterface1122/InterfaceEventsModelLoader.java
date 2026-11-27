@@ -14,6 +14,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.util.math.AxisAlignedBB;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
@@ -55,6 +62,8 @@ import net.minecraftforge.fml.relauncher.Side;
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceEventsModelLoader {
     private static boolean enableDebug = true;
+    public static Frustum cullingFrustum;
+    private static final double CULLING_MARGIN = 1.0;
 
     /**
      * Event that's called to register models.  We register our render wrapper
@@ -76,6 +85,29 @@ public class InterfaceEventsModelLoader {
                 return true;
             }
 
+            private boolean shouldRenderEntity(AEntityC_Renderable entity) {
+                AEntityC_Renderable cullEntity = entity instanceof APart ? ((APart) entity).masterEntity : entity;
+                if (!(cullEntity instanceof AEntityE_Interactable<?>)) {
+                    return true;
+                }
+                BoundingBox box = ((AEntityE_Interactable<?>) cullEntity).encompassingBox;
+                double widthRadius = box.widthRadius + CULLING_MARGIN;
+                double heightRadius = box.heightRadius + CULLING_MARGIN;
+                double depthRadius = box.depthRadius + CULLING_MARGIN;
+                double maxDistance = (widthRadius + heightRadius + depthRadius) * 2D / 3D * 64D * Entity.getRenderDistanceWeight();
+                Entity cameraEntity = Minecraft.getMinecraft().getRenderViewEntity();
+                if (box.globalCenter.distanceTo(new Point3D(cameraEntity.posX, cameraEntity.posY, cameraEntity.posZ)) > maxDistance) {
+                    return false;
+                }
+                return cullingFrustum == null || cullingFrustum.isBoundingBoxInFrustum(new AxisAlignedBB(
+                        box.globalCenter.x - widthRadius,
+                        box.globalCenter.y - heightRadius,
+                        box.globalCenter.z - depthRadius,
+                        box.globalCenter.x + widthRadius,
+                        box.globalCenter.y + heightRadius,
+                        box.globalCenter.z + depthRadius));
+            }
+
             @Override
             public void doRender(BuilderEntityRenderForwarder builder, double x, double y, double z, float entityYaw, float partialTicks) {
                 //Get all entities in the world, and render them manually for this one builder.
@@ -90,7 +122,7 @@ public class InterfaceEventsModelLoader {
 
                         //Dynamic lights go over the finished world and the solid models, under the blended pass.
                         //The solid models are also the bodies the light pass casts shadows from.
-                        if (blendingEnabled) {
+                        if (blendingEnabled && DynamicLightSystem.isActive()) {
                             InterfaceRender.renderDynamicLightFrame(partialTicks);
                         } else {
                             InterfaceRender.setCapturingBodies(true);
@@ -111,11 +143,15 @@ public class InterfaceEventsModelLoader {
                         for (AEntityC_Renderable entity : allEntities) {
                             //Rendering system expects coordinates to be at center of entity when called, translate us so that's the case.
                             world.beginProfiling("MTSRendering", true);
-                            GL11.glPushMatrix();
-                            GL11.glTranslated(entity.position.x - (cameraEntity.lastTickPosX + (cameraEntity.posX - cameraEntity.lastTickPosX) * partialTicks), entity.position.y - (cameraEntity.lastTickPosY + (cameraEntity.posY - cameraEntity.lastTickPosY) * partialTicks), entity.position.z - (cameraEntity.lastTickPosZ + (cameraEntity.posZ - cameraEntity.lastTickPosZ) * partialTicks));
-                            entity.render(blendingEnabled, partialTicks);
-                            GL11.glPopMatrix();
-                            world.endProfiling();
+                            if (shouldRenderEntity(entity)) {
+                                GL11.glPushMatrix();
+                                GL11.glTranslated(entity.position.x - (cameraEntity.lastTickPosX + (cameraEntity.posX - cameraEntity.lastTickPosX) * partialTicks), entity.position.y - (cameraEntity.lastTickPosY + (cameraEntity.posY - cameraEntity.lastTickPosY) * partialTicks), entity.position.z - (cameraEntity.lastTickPosZ + (cameraEntity.posZ - cameraEntity.lastTickPosZ) * partialTicks));
+                                entity.render(blendingEnabled, partialTicks);
+                                GL11.glPopMatrix();
+                                world.endProfiling();
+                            } else if (!blendingEnabled && entity.ticksExisted > 0) {
+                                entity.updateSounds(partialTicks);
+                            }
                         }
 
                         InterfaceRender.setCapturingBodies(false);

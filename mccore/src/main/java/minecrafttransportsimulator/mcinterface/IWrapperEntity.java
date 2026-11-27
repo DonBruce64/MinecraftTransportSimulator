@@ -121,6 +121,17 @@ public interface IWrapperEntity {
     void setPosition(Point3D position, boolean onGround);
 
     /**
+     * List {@link #setPosition(Point3D, boolean)}, but for moving an entity on a vehicle it's on.
+     * This never teleports, so it works on any speed. Client teleports don't move the entity and server teleports rubber-band them.
+     */
+    void carryPosition(Point3D position, boolean onGround);
+
+    /**
+     * Add to prior position the entity is rendered moving from, without moving it.
+     */
+    void addToPriorPosition(Point3D offset);
+
+    /**
      * Corrects the entity's X/Z position and stops horizontal velocity directed into the corrected faces.
      * Preserves its Y position, vertical velocity, ground state, and fall distance.
      */

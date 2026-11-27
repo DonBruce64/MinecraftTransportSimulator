@@ -95,7 +95,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     public Point3D riderCameraLastAngles;
     public boolean isRiderCameraInputActive;
     private static final Point3D riderTempPoint = new Point3D();
-    private static final RotationMatrix riderTempMatrix = new RotationMatrix();
+    /**Not static because in single-player it's on separate threads for client and server*/
+    private final RotationMatrix riderTempMatrix = new RotationMatrix();
 
     //Camera variables.
     public int zoomLevel;
