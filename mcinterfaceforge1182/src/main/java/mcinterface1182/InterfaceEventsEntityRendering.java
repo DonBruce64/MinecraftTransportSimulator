@@ -45,9 +45,7 @@ public class InterfaceEventsEntityRendering {
     public static final Point3D cameraAdjustedPosition = new Point3D();
     public static final RotationMatrix cameraAdjustedOrientation = new RotationMatrix();
     private static final RotationMatrix cameraShakeRotation = new RotationMatrix();
-    public static final RotationMatrix cameraShakeProjectionRotation = new RotationMatrix();
     public static boolean adjustedCamera;
-    public static boolean cameraShakeActive;
     private static Player mcPlayer;
 
     private static int lastScreenWidth;
@@ -58,7 +56,6 @@ public class InterfaceEventsEntityRendering {
      */
     @SubscribeEvent
     public static void onIVCameraSetup(CameraSetup event) {
-        cameraShakeActive = false;
         Camera camera = event.getCamera();
         if (camera.getEntity() instanceof Player) {
             mcPlayer = (Player) camera.getEntity();
@@ -89,8 +86,7 @@ public class InterfaceEventsEntityRendering {
                 adjustedCamera = true;
             }
             cameraShakeRotation.setToZero();
-            cameraShakeActive = CameraSystem.applyCameraShake(cameraShakeRotation);
-            if (cameraShakeActive) {
+            if (CameraSystem.applyCameraShake(cameraShakeRotation)) {
                 cameraShakeRotation.convertToAngles();
                 if (InterfaceManager.clientInterface.getCameraMode() == CameraMode.THIRD_PERSON_INVERTED) {
                     event.setRoll((float) (event.getRoll() - cameraShakeRotation.angles.z));
@@ -100,8 +96,6 @@ public class InterfaceEventsEntityRendering {
                     event.setPitch((float) (event.getPitch() + cameraShakeRotation.angles.x));
                 }
                 event.setYaw((float) (event.getYaw() - cameraShakeRotation.angles.y));
-                cameraShakeProjectionRotation.angles.set(event.getPitch(), -event.getYaw(), event.getRoll());
-                cameraShakeProjectionRotation.updateToAngles();
             }
         }
     }

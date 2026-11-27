@@ -93,6 +93,7 @@ public class InterfaceEventsModelLoader {
                         if (blendingEnabled) {
                             InterfaceRender.renderDynamicLightFrame(partialTicks);
                         } else {
+                            InterfaceClient.captureWorldProjection(partialTicks);
                             InterfaceRender.setCapturingBodies(true);
                         }
 

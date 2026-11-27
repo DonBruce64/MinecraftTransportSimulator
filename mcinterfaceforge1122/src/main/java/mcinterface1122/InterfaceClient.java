@@ -208,14 +208,29 @@ public class InterfaceClient implements IInterfaceClient {
     private static final Point3D projectionRenderOrigin = new Point3D();
     private static final Point3D screenProjectionResult = new Point3D();
     private static Entity projectionViewEntity;
+    private static ScaledResolution projectionResolution;
+
+    static void resetWorldProjection() {
+        projectionViewEntity = null;
+    }
+
+    static void finishWorldProjection(float partialTicks) {
+        //Fall back to the world camera when the solid pass did not record it.
+        //Anaglyph draws the overlay once after both eye passes.
+        if (projectionViewEntity == null || Minecraft.getMinecraft().gameSettings.anaglyph) {
+            captureWorldProjection(partialTicks);
+        }
+    }
 
     static void captureWorldProjection(float partialTicks) {
-        projectionViewEntity = Minecraft.getMinecraft().getRenderViewEntity();
+        Minecraft minecraft = Minecraft.getMinecraft();
+        projectionViewEntity = minecraft.getRenderViewEntity();
         if (projectionViewEntity == null) {
             return;
         }
 
-        //Capture the world camera, including camera shake, before the hand and GUI replace its matrices.
+        //Capture the camera matrices used to draw the vehicles.
+        projectionResolution = new ScaledResolution(minecraft);
         worldModelViewMatrix.clear();
         worldProjectionMatrix.clear();
         GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, worldModelViewMatrix);
@@ -256,9 +271,12 @@ public class InterfaceClient implements IInterfaceClient {
             return null;
         }
 
+        //Vanilla's HUD projection uses the unrounded scaled resolution.
+        double guiWidth = screenWidth == projectionResolution.getScaledWidth() ? projectionResolution.getScaledWidth_double() : screenWidth;
+        double guiHeight = screenHeight == projectionResolution.getScaledHeight() ? projectionResolution.getScaledHeight_double() : screenHeight;
         screenProjectionResult.set(
-                (ndcX + 1.0D) / 2.0D * screenWidth,
-                (1.0D - ndcY) / 2.0D * screenHeight,
+                (ndcX + 1.0D) / 2.0D * guiWidth,
+                (1.0D - ndcY) / 2.0D * guiHeight,
                 -viewZ);
         return screenProjectionResult;
     }

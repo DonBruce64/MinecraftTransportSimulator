@@ -5,10 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.nio.FloatBuffer;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
@@ -24,16 +22,21 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraft.block.SoundType;
+import net.minecraft.client.MainWindow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.ChatScreen;
+import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.settings.PointOfView;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.Entity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.math.vector.Vector4f;
 import net.minecraft.util.text.Color;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
@@ -183,91 +186,55 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     private static final Point3D mutablePosition = new Point3D();
-    private static final RotationMatrix cameraProjectionOrientation = new RotationMatrix();
-    private static final FloatBuffer projectionMatrixBuffer = FloatBuffer.allocate(16);
+    private static final Vector4f projectionVector = new Vector4f();
+    private static final Point3D screenProjectionResult = new Point3D();
+    private static Matrix4f worldToClipMatrix;
+    private static Vector3d projectionCameraPosition;
+    private static Entity projectionViewEntity;
+
+    public static void captureWorldProjection(ActiveRenderInfo camera, Matrix4f viewMatrix, Matrix4f projectionMatrix) {
+        //The world matrices already include the camera's roll, view bobbing, and current FOV.
+        worldToClipMatrix = projectionMatrix.copy();
+        worldToClipMatrix.multiply(viewMatrix);
+        projectionCameraPosition = camera.getPosition();
+        projectionViewEntity = camera.getEntity();
+    }
 
     @Override
     public Point3D projectToScreen(Point3D worldPos, int screenWidth, int screenHeight) {
-        double camX, camY, camZ;
-        double fwdX, fwdY, fwdZ;
-        double upX, upY, upZ;
-        double rgtX, rgtY, rgtZ;
-
-        if (InterfaceEventsEntityRendering.adjustedCamera) {
-            camX = InterfaceEventsEntityRendering.cameraAdjustedPosition.x;
-            camY = InterfaceEventsEntityRendering.cameraAdjustedPosition.y;
-            camZ = InterfaceEventsEntityRendering.cameraAdjustedPosition.z;
-            RotationMatrix ori = getCameraProjectionOrientation(InterfaceEventsEntityRendering.cameraAdjustedOrientation);
-            fwdX = ori.m02; fwdY = ori.m12; fwdZ = ori.m22;
-            upX  = ori.m01; upY  = ori.m11; upZ  = ori.m21;
-            // MTS (1,0,0) rotated = camera LEFT (not right); negate to get camera right.
-            rgtX = -ori.m00; rgtY = -ori.m10; rgtZ = -ori.m20;
-        } else {
-            net.minecraft.client.renderer.ActiveRenderInfo camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-            net.minecraft.util.math.vector.Vector3d camPos = camera.getPosition();
-            camX = camPos.x; camY = camPos.y; camZ = camPos.z;
-            net.minecraft.util.math.vector.Vector3f look = camera.getLookVector();
-            net.minecraft.util.math.vector.Vector3f up = camera.getUpVector();
-            fwdX = look.x(); fwdY = look.y(); fwdZ = look.z();
-            upX  = up.x();   upY  = up.y();   upZ  = up.z();
-            // getLeftVector() does not exist in 1.16.5; compute right = up × look manually.
-            rgtX = upY * fwdZ - upZ * fwdY;
-            rgtY = upZ * fwdX - upX * fwdZ;
-            rgtZ = upX * fwdY - upY * fwdX;
-        }
-        if (InterfaceEventsEntityRendering.cameraShakeActive) {
-            RotationMatrix ori = InterfaceEventsEntityRendering.cameraShakeProjectionRotation;
-            fwdX = ori.m02; fwdY = ori.m12; fwdZ = ori.m22;
-            upX  = ori.m01; upY  = ori.m11; upZ  = ori.m21;
-            rgtX = -ori.m00; rgtY = -ori.m10; rgtZ = -ori.m20;
+        Minecraft minecraft = Minecraft.getInstance();
+        if (projectionViewEntity == null || projectionViewEntity != minecraft.getCameraEntity()
+                || screenWidth <= 0 || screenHeight <= 0) {
+            return null;
         }
 
-        double dx = worldPos.x - camX;
-        double dy = worldPos.y - camY;
-        double dz = worldPos.z - camZ;
-
-        double depth = dx * fwdX + dy * fwdY + dz * fwdZ;
-        if (depth <= 0.001) return null;
-
-        double xView = dx * rgtX + dy * rgtY + dz * rgtZ;
-        double yView = dx * upX  + dy * upY  + dz * upZ;
-
-        double fovRad = Math.toRadians(getFOV());
-        double tanHalfFov = Math.tan(fovRad / 2.0);
-        double aspect = (double) screenWidth / screenHeight;
-        double ndcX = xView / (depth * tanHalfFov * aspect);
-        double ndcY = yView / (depth * tanHalfFov);
-        if (InterfaceRender.projectionMatrix != null) {
-            projectionMatrixBuffer.clear();
-            InterfaceRender.projectionMatrix.store(projectionMatrixBuffer);
-            double projectionScaleX = Math.abs(projectionMatrixBuffer.get(0));
-            double projectionScaleY = Math.abs(projectionMatrixBuffer.get(5));
-            if (projectionScaleX > 0 && projectionScaleY > 0) {
-                ndcX = xView * projectionScaleX / depth;
-                ndcY = yView * projectionScaleY / depth;
-            }
+        projectionVector.set(
+                (float) (worldPos.x - projectionCameraPosition.x),
+                (float) (worldPos.y - projectionCameraPosition.y),
+                (float) (worldPos.z - projectionCameraPosition.z),
+                1.0F);
+        projectionVector.transform(worldToClipMatrix);
+        double depth = projectionVector.w();
+        if (depth <= 0.001D) {
+            return null;
         }
 
-        if (ndcX < -1.1 || ndcX > 1.1 || ndcY < -1.1 || ndcY > 1.1) return null;
+        double ndcX = projectionVector.x() / depth;
+        double ndcY = projectionVector.y() / depth;
+        if (ndcX < -1.1D || ndcX > 1.1D || ndcY < -1.1D || ndcY > 1.1D) {
+            return null;
+        }
 
+        MainWindow window = minecraft.getWindow();
+        //Vanilla's HUD projection uses the unrounded scaled resolution.
+        double guiWidth = screenWidth == window.getGuiScaledWidth() ? window.getWidth() / window.getGuiScale() : screenWidth;
+        double guiHeight = screenHeight == window.getGuiScaledHeight() ? window.getHeight() / window.getGuiScale() : screenHeight;
         screenProjectionResult.set(
-                (ndcX + 1.0) / 2.0 * screenWidth,
-                (1.0 - ndcY) / 2.0 * screenHeight,
+                (ndcX + 1.0D) / 2.0D * guiWidth,
+                (1.0D - ndcY) / 2.0D * guiHeight,
                 depth);
         return screenProjectionResult;
     }
-
-    private static RotationMatrix getCameraProjectionOrientation(RotationMatrix cameraOrientation) {
-        if (actualCameraMode == CameraMode.THIRD_PERSON_INVERTED) {
-            cameraProjectionOrientation.angles.set(-cameraOrientation.angles.x, cameraOrientation.angles.y - 180, -cameraOrientation.angles.z);
-            cameraProjectionOrientation.updateToAngles();
-            return cameraProjectionOrientation;
-        } else {
-            return cameraOrientation;
-        }
-    }
-
-    private static final Point3D screenProjectionResult = new Point3D();
 
     @Override
     public void playBlockBreakSound(Point3D position) {

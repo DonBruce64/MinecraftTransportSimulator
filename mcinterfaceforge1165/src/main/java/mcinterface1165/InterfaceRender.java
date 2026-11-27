@@ -119,7 +119,6 @@ public class InterfaceRender implements IInterfaceRender {
     private static RenderState.TextureState MISSING_STATE;
     private static RenderState.TextureState BLOCK_STATE;
     private static MatrixStack matrixStack;
-    public static Matrix4f projectionMatrix;
     private static IRenderTypeBuffer renderBuffer;
     public static Point3D renderCameraOffset = new Point3D();
     private static boolean renderingGUI;

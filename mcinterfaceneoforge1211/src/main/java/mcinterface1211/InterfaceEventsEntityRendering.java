@@ -43,9 +43,7 @@ public class InterfaceEventsEntityRendering {
     public static final Point3D cameraAdjustedPosition = new Point3D();
     public static final RotationMatrix cameraAdjustedOrientation = new RotationMatrix();
     private static final RotationMatrix cameraShakeRotation = new RotationMatrix();
-    public static final RotationMatrix cameraShakeProjectionRotation = new RotationMatrix();
     public static boolean adjustedCamera;
-    public static boolean cameraShakeActive;
     private static Player mcPlayer;
 
     private static int lastScreenWidth;
@@ -55,7 +53,6 @@ public class InterfaceEventsEntityRendering {
      */
     @SubscribeEvent
     public static void onIVCameraSetup(ComputeCameraAngles event) {
-        cameraShakeActive = false;
         Camera camera = event.getCamera();
         if (camera.getEntity() instanceof Player) {
             mcPlayer = (Player) camera.getEntity();
@@ -80,18 +77,11 @@ public class InterfaceEventsEntityRendering {
                 adjustedCamera = true;
             }
             cameraShakeRotation.setToZero();
-            cameraShakeActive = CameraSystem.applyCameraShake(cameraShakeRotation);
-            if (cameraShakeActive) {
+            if (CameraSystem.applyCameraShake(cameraShakeRotation)) {
                 cameraShakeRotation.convertToAngles();
                 event.setRoll((float) (event.getRoll() + cameraShakeRotation.angles.z));
                 event.setPitch((float) (event.getPitch() + cameraShakeRotation.angles.x));
                 event.setYaw((float) (event.getYaw() - cameraShakeRotation.angles.y));
-                if (InterfaceManager.clientInterface.getCameraMode() == CameraMode.THIRD_PERSON_INVERTED) {
-                    cameraShakeProjectionRotation.angles.set(-event.getPitch(), -event.getYaw() - 180, -event.getRoll());
-                } else {
-                    cameraShakeProjectionRotation.angles.set(event.getPitch(), -event.getYaw(), event.getRoll());
-                }
-                cameraShakeProjectionRotation.updateToAngles();
             }
         }
     }

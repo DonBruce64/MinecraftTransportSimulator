@@ -10,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
+import mcinterface1165.InterfaceClient;
 import mcinterface1165.InterfaceRender;
 import mcinterface1165.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -40,7 +41,7 @@ public abstract class WorldRendererMixin {
      */
     @Inject(method = "renderLevel", at = @At(value = "HEAD"))
     public void inject_renderLevelDataGetter(MatrixStack pMatrixStack, float pPartialTicks, long pFinishTimeNano, boolean pDrawBlockOutline, ActiveRenderInfo pActiveRenderInfo, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pProjection, CallbackInfo ci) {
-        InterfaceRender.projectionMatrix = pProjection;
+        InterfaceClient.captureWorldProjection(pActiveRenderInfo, pMatrixStack.last().pose(), pProjection);
         InterfaceRender.startDynamicLightFrame();
     }
 
@@ -50,7 +51,6 @@ public abstract class WorldRendererMixin {
      */
     @Inject(method = "renderLevel", at = @At(value = "TAIL"))
     public void inject_renderLevelBlended(MatrixStack pMatrixStack, float pPartialTicks, long pFinishTimeNano, boolean pDrawBlockOutline, ActiveRenderInfo pActiveRenderInfo, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pProjection, CallbackInfo ci) {
-        InterfaceRender.projectionMatrix = pProjection;
         IRenderTypeBuffer.Impl irendertypebuffer$impl = renderBuffers.bufferSource();
         //Set camera offset point for later.
         Vector3d position = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
