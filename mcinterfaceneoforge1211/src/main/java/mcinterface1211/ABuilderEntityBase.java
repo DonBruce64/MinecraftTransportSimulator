@@ -110,8 +110,8 @@ public abstract class ABuilderEntityBase extends Entity {
         }
     }
 
-    //@Override - signature changed in 1.21.1
-    public void lerpTo(double pX, double pY, double pZ, float pYRot, float pXRot, int pLerpSteps, boolean pTeleport) {
+    @Override
+    public void lerpTo(double x, double y, double z, float yRot, float xRot, int steps) {
         //Overridden due to stupid tracker behavior.
     }
 

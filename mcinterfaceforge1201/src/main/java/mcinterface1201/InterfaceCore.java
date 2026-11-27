@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -21,12 +21,18 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.registries.ForgeRegistries;
 
 class InterfaceCore implements IInterfaceCore {
     protected static final Map<String, List<BuilderItem>> taggedItems = new HashMap<>();
+
+    /**
+     * Cache that remembers which lookup strategy succeeded for a given resource path.
+     * This avoids repeated failed classloader lookups (up to 5 per call) on the render thread.
+     * Values: 0=not cached, 1-5=strategy index that worked, -1=resource not found.
+     */
+    private static final ConcurrentHashMap<String, Integer> resourceLookupCache = new ConcurrentHashMap<>();
 
     @Override
     public boolean isGameFlattened() {
@@ -58,19 +64,91 @@ class InterfaceCore implements IInterfaceCore {
         int assetsIndexEnd = resource.indexOf("assets/") + "assets/".length();
         int modIDEnd = resource.indexOf("/", assetsIndexEnd + 1);
         String modID = resource.substring(assetsIndexEnd, modIDEnd);
-        Optional<? extends ModContainer> optional = ModList.get().getModContainerById(modID);
-        if (optional.isPresent()) {
-            InputStream stream = optional.get().getMod().getClass().getResourceAsStream(resource);
+        //Strip leading slash for classloader lookup (ClassLoader.getResourceAsStream doesn't use leading slash).
+        String cleanResource = resource.startsWith("/") ? resource.substring(1) : resource;
+        String absoluteResource = resource.startsWith("/") ? resource : "/" + resource;
+
+        //Check if we already know which lookup strategy works for this resource.
+        Integer cachedStrategy = resourceLookupCache.get(resource);
+        if (cachedStrategy != null) {
+            if (cachedStrategy == -1) {
+                return null; //Known missing resource.
+            }
+            InputStream stream = getResourceByStrategy(cachedStrategy, cleanResource, absoluteResource, resource);
             if (stream != null) {
                 return stream;
-            } else if (modID.equals(InterfaceLoader.MODID)) {
+            }
+            //Cache was stale (shouldn't happen), fall through to full lookup.
+        }
+
+        //Full lookup — try each strategy and cache the one that works.
+        //In NeoForge 1.21.1, mods are loaded via JPMS ModuleLayer. ModContainer no longer has getMod().
+        //Use InterfaceLoader's classloader which sees all fat-jar'd resources (including pack assets).
+        //This works because all pack resources are embedded in the same JAR as InterfaceLoader.
+        InterfaceLoader.LOGGER.error("Looking up mod " + modID);
+        if (ModList.get().isLoaded(modID)) {
+            InterfaceLoader.LOGGER.error("found mod " + modID);
+            InputStream stream = InterfaceLoader.class.getClassLoader().getResourceAsStream(cleanResource);
+            if (stream != null) {
+                resourceLookupCache.put(resource, 1);
+                InterfaceLoader.LOGGER.error("lookup 1 " + resource);
+                return stream;
+            }
+            //Also try with leading slash via Class.getResourceAsStream (absolute path lookup).
+            stream = InterfaceLoader.class.getResourceAsStream(absoluteResource);
+            if (stream != null) {
+                resourceLookupCache.put(resource, 2);
+                InterfaceLoader.LOGGER.error("lookup 2 " + resource);
+                return stream;
+            }
+            if (modID.equals(InterfaceLoader.MODID)) {
                 //For dev builds, the core files aren't in the main jar yet and are in their own compiled one.
                 //This requires us to check a class of that jar vs the mod jar for the resource.
-                return InterfaceManager.class.getResourceAsStream(resource);
+                stream = InterfaceManager.class.getResourceAsStream(resource);
+                if (stream != null) {
+                    resourceLookupCache.put(resource, 3);
+                    InterfaceLoader.LOGGER.error("lookup 3 " + resource);
+                    return stream;
+                }
+                stream = InterfaceManager.class.getClassLoader().getResourceAsStream(cleanResource);
+                if (stream != null) {
+                    resourceLookupCache.put(resource, 4);
+                    InterfaceLoader.LOGGER.error("lookup 4 " + resource);
+                    return stream;
+                }
             }
         }
+        //Mod not found by ID, try the InterfaceLoader's own classloader (covers fat-jar'd pack resources).
+        InputStream stream = InterfaceLoader.class.getClassLoader().getResourceAsStream(cleanResource);
+        if (stream != null) {
+            resourceLookupCache.put(resource, 5);
+            InterfaceLoader.LOGGER.error("lookup 5 " + resource);
+            return stream;
+        }
         //Try to get a Minecraft texture, we use the classloader of the block class, since it's common to servers and clients.
-        return Blocks.AIR.getClass().getResourceAsStream(resource);
+        stream = Blocks.AIR.getClass().getResourceAsStream(resource);
+        if (stream != null) {
+            resourceLookupCache.put(resource, 6);
+            InterfaceLoader.LOGGER.error("lookup 6 " + resource);
+            return stream;
+        }
+        resourceLookupCache.put(resource, -1);
+        InterfaceLoader.LOGGER.error("lookup -1 " + resource);
+        return null;
+    }
+
+    /**Fast path: directly call the classloader strategy that previously succeeded for this resource.*/
+    private static InputStream getResourceByStrategy(int strategy, String cleanResource, String absoluteResource, String originalResource) {
+        InterfaceLoader.LOGGER.error("Using classloader strategy " + strategy + " for resource " + originalResource);
+        switch (strategy) {
+            case 1: return InterfaceLoader.class.getClassLoader().getResourceAsStream(cleanResource);
+            case 2: return InterfaceLoader.class.getResourceAsStream(absoluteResource);
+            case 3: return InterfaceManager.class.getResourceAsStream(originalResource);
+            case 4: return InterfaceManager.class.getClassLoader().getResourceAsStream(cleanResource);
+            case 5: return InterfaceLoader.class.getClassLoader().getResourceAsStream(cleanResource);
+            case 6: return Blocks.AIR.getClass().getResourceAsStream(originalResource);
+            default: return null;
+        }
     }
 
     @Override

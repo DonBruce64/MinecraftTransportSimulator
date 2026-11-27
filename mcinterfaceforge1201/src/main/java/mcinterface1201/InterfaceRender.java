@@ -19,6 +19,10 @@ import javax.imageio.ImageIO;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.instances.APart;
+import net.minecraft.world.entity.Entity;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -121,7 +125,10 @@ public class InterfaceRender implements IInterfaceRender {
     public static Matrix4f projectionMatrix;
     public static MultiBufferSource renderBuffer;
     public static Point3D renderCameraOffset = new Point3D();
+    public static Frustum cullingFrustum;
     private static boolean renderingGUI;
+
+    private static final double CULLING_MARGIN = 1.0;
 
     private static ShaderInstance entityLightsShader;
     private static ShaderInstance entityCutoutNoshadowsShader;
@@ -345,17 +352,21 @@ public class InterfaceRender implements IInterfaceRender {
         ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
         if (allEntities != null) {
             world.beginProfiling("MTSRendering_Setup", true);
-            boolean captureBodies = !blendingEnabled && DynamicLightSystem.getMode() == DynamicLightSystem.Mode.DEFERRED && ConfigSystem.client.renderingSettings.DynL_shadows.value;
+            boolean captureBodies = !blendingEnabled && DynamicLightSystem.getMode() == DynamicLightSystem.Mode.DEFERRED && DynamicLightSystem.isActive() && ConfigSystem.client.renderingSettings.DynL_shadows.value;
 
             //NOTE: this operation occurs on a ConcurrentLinkedQueue.  Therefore, updates will
             //not occur one after another.  Sanitize your inputs!
             //The Slow mode draws its vertices here, without buffers: dynamic light shadows copy them as they go.
             DynamicLightShadowAtlas.setCapturing(captureBodies && ConfigSystem.client.renderingSettings.renderingMode.value == 2);
             for (AEntityC_Renderable entity : allEntities) {
-                matrixStack.pushPose();
-                matrixStack.translate(entity.position.x - renderCameraOffset.x, entity.position.y - renderCameraOffset.y, entity.position.z - renderCameraOffset.z);
-                entity.render(blendingEnabled, partialTicks);
-                matrixStack.popPose();
+                if (shouldRender(entity)) {
+                    matrixStack.pushPose();
+                    matrixStack.translate(entity.position.x - renderCameraOffset.x, entity.position.y - renderCameraOffset.y, entity.position.z - renderCameraOffset.z);
+                    entity.render(blendingEnabled, partialTicks);
+                    matrixStack.popPose();
+                } else if (!blendingEnabled && entity.ticksExisted > 0) {
+                    entity.updateSounds(partialTicks);
+                }
             }
             DynamicLightShadowAtlas.setCapturing(false);
 
@@ -368,6 +379,28 @@ public class InterfaceRender implements IInterfaceRender {
                 world.endProfiling();
             }
         }
+    }
+
+    private static boolean shouldRender(AEntityC_Renderable entity) {
+        AEntityC_Renderable cullEntity = entity instanceof APart ? ((APart) entity).masterEntity : entity;
+        if (!(cullEntity instanceof AEntityE_Interactable<?>)) {
+            return true;
+        }
+        BoundingBox box = ((AEntityE_Interactable<?>) cullEntity).encompassingBox;
+        double widthRadius = box.widthRadius + CULLING_MARGIN;
+        double heightRadius = box.heightRadius + CULLING_MARGIN;
+        double depthRadius = box.depthRadius + CULLING_MARGIN;
+        double maxDistance = (widthRadius + heightRadius + depthRadius) * 2D / 3D * 64D * Entity.getViewScale();
+        if (box.globalCenter.distanceTo(renderCameraOffset) > maxDistance) {
+            return false;
+        }
+        return cullingFrustum == null || cullingFrustum.isVisible(new AABB(
+                box.globalCenter.x - widthRadius,
+                box.globalCenter.y - heightRadius,
+                box.globalCenter.z - depthRadius,
+                box.globalCenter.x + widthRadius,
+                box.globalCenter.y + heightRadius,
+                box.globalCenter.z + depthRadius));
     }
 
     /**

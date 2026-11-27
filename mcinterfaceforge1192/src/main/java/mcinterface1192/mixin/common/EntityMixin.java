@@ -3,7 +3,12 @@ package mcinterface1192.mixin.common;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -56,20 +61,12 @@ public abstract class EntityMixin {
         Entity entity = (Entity) ((Object) this);
         AABB pCollisionBox = entity.getBoundingBox().expandTowards(pVec);
         List<VoxelShape> vehicleCollisions = null;
-        for (BuilderEntityExisting builder : entity.level.getEntitiesOfClass(BuilderEntityExisting.class, pCollisionBox)) {
-            if (builder.collisionBoxes != null) {
-                if (builder.collisionBoxes.intersects(pCollisionBox)) {
-                    for (BoundingBox box : builder.collisionBoxes.getBoxes()) {
-                        AABB convertedBox = WrapperWorld.convert(box);
-                        if (convertedBox.intersects(pCollisionBox)) {
-                            if (vehicleCollisions == null) {
-                                vehicleCollisions = new ArrayList<>();
-                            }
-                            vehicleCollisions.add(Shapes.create(convertedBox));
-                        }
-                    }
-                }
-            }
+        WrapperWorld world = WrapperWorld.getWrapperFor(entity.level());
+        for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
+            vehicleCollisions = addCollisions(vehicle, pCollisionBox, vehicleCollisions);
+        }
+        for (EntityPlacedPart placedPart : world.getEntitiesOfType(EntityPlacedPart.class)) {
+            vehicleCollisions = addCollisions(placedPart, pCollisionBox, vehicleCollisions);
         }
         if (vehicleCollisions != null) {
             if (!existingCollisions.isEmpty()) {
@@ -84,5 +81,29 @@ public abstract class EntityMixin {
         } else {
             return existingCollisions;
         }
+    }
+
+    @Unique
+    private static List<VoxelShape> addCollisions(AEntityF_Multipart<?> multipart, AABB pCollisionBox, List<VoxelShape> collisions) {
+        BoundingBox encompassingBox = multipart.encompassingBox;
+        if (pCollisionBox.maxX > encompassingBox.globalCenter.x - encompassingBox.widthRadius
+                && pCollisionBox.minX < encompassingBox.globalCenter.x + encompassingBox.widthRadius
+                && pCollisionBox.maxY > encompassingBox.globalCenter.y - encompassingBox.heightRadius
+                && pCollisionBox.minY < encompassingBox.globalCenter.y + encompassingBox.heightRadius
+                && pCollisionBox.maxZ > encompassingBox.globalCenter.z - encompassingBox.depthRadius
+                && pCollisionBox.minZ < encompassingBox.globalCenter.z + encompassingBox.depthRadius) {
+            for (BoundingBox box : multipart.allCollisionBoxes) {
+                if (box.collisionTypes.contains(JSONCollisionGroup.CollisionType.ENTITY)) {
+                    AABB convertedBox = WrapperWorld.convert(box);
+                    if (pCollisionBox.intersects(pCollisionBox)) {
+                        if (collisions == null) {
+                            collisions = new ArrayList<>();
+                        }
+                        collisions.add(Shapes.create(convertedBox));
+                    }
+                }
+            }
+        }
+        return collisions;
     }
 }

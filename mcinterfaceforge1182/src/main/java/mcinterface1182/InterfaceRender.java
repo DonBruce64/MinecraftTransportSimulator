@@ -34,10 +34,12 @@ import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import com.mojang.math.Matrix3f;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
-
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -74,6 +76,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Block;
@@ -98,6 +101,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
  *
  * @author don_bruce
  */
+@SuppressWarnings("removal")
 @EventBusSubscriber(value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
 public class InterfaceRender implements IInterfaceRender {
     private static final Map<String, ResourceLocation> onlineTextures = new HashMap<>();
@@ -123,8 +127,11 @@ public class InterfaceRender implements IInterfaceRender {
     public static Matrix4f projectionMatrix;
     public static MultiBufferSource renderBuffer;
     public static Point3D renderCameraOffset = new Point3D();
+    public static Frustum cullingFrustum;
     private static boolean renderingGUI;
     private static float[] matrixConvertArray = new float[16];
+
+    private static final double CULLING_MARGIN = 1.0;
 
     private static ShaderInstance entityLightsShader;
     private static ShaderInstance entityCutoutNoshadowsShader;
@@ -349,17 +356,21 @@ public class InterfaceRender implements IInterfaceRender {
         ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
         if (allEntities != null) {
             world.beginProfiling("MTSRendering_Setup", true);
-            boolean captureBodies = !blendingEnabled && DynamicLightSystem.getMode() == DynamicLightSystem.Mode.DEFERRED && ConfigSystem.client.renderingSettings.DynL_shadows.value;
+            boolean captureBodies = !blendingEnabled && DynamicLightSystem.getMode() == DynamicLightSystem.Mode.DEFERRED && DynamicLightSystem.isActive() && ConfigSystem.client.renderingSettings.DynL_shadows.value;
 
             //NOTE: this operation occurs on a ConcurrentLinkedQueue.  Therefore, updates will
             //not occur one after another.  Sanitize your inputs!
             //The Slow mode draws its vertices here, without buffers: dynamic light shadows copy them as they go.
             DynamicLightShadowAtlas.setCapturing(captureBodies && ConfigSystem.client.renderingSettings.renderingMode.value == 2);
             for (AEntityC_Renderable entity : allEntities) {
-                matrixStack.pushPose();
-                matrixStack.translate(entity.position.x - renderCameraOffset.x, entity.position.y - renderCameraOffset.y, entity.position.z - renderCameraOffset.z);
-                entity.render(blendingEnabled, partialTicks);
-                matrixStack.popPose();
+                if (shouldRender(entity)) {
+                    matrixStack.pushPose();
+                    matrixStack.translate(entity.position.x - renderCameraOffset.x, entity.position.y - renderCameraOffset.y, entity.position.z - renderCameraOffset.z);
+                    entity.render(blendingEnabled, partialTicks);
+                    matrixStack.popPose();
+                } else if (!blendingEnabled && entity.ticksExisted > 0) {
+                    entity.updateSounds(partialTicks);
+                }
             }
             DynamicLightShadowAtlas.setCapturing(false);
 
@@ -372,6 +383,28 @@ public class InterfaceRender implements IInterfaceRender {
                 world.endProfiling();
             }
         }
+    }
+
+    private static boolean shouldRender(AEntityC_Renderable entity) {
+        AEntityC_Renderable cullEntity = entity instanceof APart ? ((APart) entity).masterEntity : entity;
+        if (!(cullEntity instanceof AEntityE_Interactable<?>)) {
+            return true;
+        }
+        BoundingBox box = ((AEntityE_Interactable<?>) cullEntity).encompassingBox;
+        double widthRadius = box.widthRadius + CULLING_MARGIN;
+        double heightRadius = box.heightRadius + CULLING_MARGIN;
+        double depthRadius = box.depthRadius + CULLING_MARGIN;
+        double maxDistance = (widthRadius + heightRadius + depthRadius) * 2D / 3D * 64D * Entity.getViewScale();
+        if (box.globalCenter.distanceTo(renderCameraOffset) > maxDistance) {
+            return false;
+        }
+        return cullingFrustum == null || cullingFrustum.isVisible(new AABB(
+                box.globalCenter.x - widthRadius,
+                box.globalCenter.y - heightRadius,
+                box.globalCenter.z - depthRadius,
+                box.globalCenter.x + widthRadius,
+                box.globalCenter.y + heightRadius,
+                box.globalCenter.z + depthRadius));
     }
 
     /**

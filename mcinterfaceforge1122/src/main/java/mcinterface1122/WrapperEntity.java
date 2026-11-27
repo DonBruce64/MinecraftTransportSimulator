@@ -231,6 +231,24 @@ public class WrapperEntity implements IWrapperEntity {
     }
 
     @Override
+    public void carryPosition(Point3D position, boolean onGround) {
+        entity.setPosition(position.x, position.y, position.z);
+        // 0 to prevent fall damage
+        entity.fallDistance = 0;
+        entity.onGround = onGround;
+    }
+
+    @Override
+    public void addToPriorPosition(Point3D offset) {
+        entity.lastTickPosX += offset.x;
+        entity.lastTickPosY += offset.y;
+        entity.lastTickPosZ += offset.z;
+        entity.prevPosX += offset.x;
+        entity.prevPosY += offset.y;
+        entity.prevPosZ += offset.z;
+    }
+
+    @Override
     public void correctHorizontalPosition(Point3D position) {
         double deltaX = position.x - entity.posX;
         double deltaZ = position.z - entity.posZ;

@@ -378,10 +378,30 @@ public class RotationMatrix {
      * this matrix to reflect those changes.
      */
     public RotationMatrix updateToAngles() {
-        setToZero();
-        rotateY(angles.y);
-        rotateX(angles.x);
-        rotateZ(angles.z);
+        double sinX = Math.sin(Math.toRadians(angles.x));
+        double cosX = Math.cos(Math.toRadians(angles.x));
+        double sinY = Math.sin(Math.toRadians(angles.y));
+        double cosY = Math.cos(Math.toRadians(angles.y));
+        double sinZ = Math.sin(Math.toRadians(angles.z));
+        double cosZ = Math.cos(Math.toRadians(angles.z));
+        double t00 = sinX * sinY * sinZ + cosY * cosZ;
+        double t01 = sinX * sinY * cosZ - cosY * sinZ;
+        double t02 = cosX * sinY;
+        double t10 = cosX * sinZ;
+        double t11 = cosX * cosZ;
+        double t12 = -sinX;
+        double t20 = sinX * cosY * sinZ - sinY * cosZ;
+        double t21 = sinX * cosY * cosZ + sinY * sinZ;
+        double t22 = cosX * cosY;
+        m00 = t00;
+        m01 = t01;
+        m02 = t02;
+        m10 = t10;
+        m11 = t11;
+        m12 = t12;
+        m20 = t20;
+        m21 = t21;
+        m22 = t22;
         lastAngles.set(angles);
         return this;
     }

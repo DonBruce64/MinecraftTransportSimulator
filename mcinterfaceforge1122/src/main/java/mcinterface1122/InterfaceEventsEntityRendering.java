@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import minecrafttransportsimulator.entities.instances.VehicleEntityCarrier;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
@@ -73,6 +74,7 @@ public class InterfaceEventsEntityRendering {
     /**Saved camera world-space position and orientation for use by {@link InterfaceClient#projectToScreen}.
      * These are captured BEFORE the in-place transpose/subtraction that the GL pipeline requires.**/
     public static boolean adjustedCamera;
+    public static float[] listenerTransform;
     public static boolean cameraShakeActive;
     public static final Point3D projectionCameraPosition = new Point3D();
     public static final RotationMatrix projectionCameraOrientation = new RotationMatrix();
@@ -94,6 +96,10 @@ public class InterfaceEventsEntityRendering {
             IWrapperPlayer player = WrapperPlayer.getWrapperFor((EntityPlayer) event.getEntity());
             cameraAdjustedPosition.set(0, 0, 0);
             cameraAdjustedOrientation.setToZero();
+            double carriedYaw = VehicleEntityCarrier.updateClientPlayerFrame((float) event.getRenderPartialTicks());
+            if (carriedYaw != 0) {
+                event.setYaw((float) (event.getYaw() - carriedYaw));
+            }
             if (CameraSystem.adjustCamera(player, cameraAdjustedPosition, cameraAdjustedOrientation, (float) event.getRenderPartialTicks())) {
                 //Set helper to the current camera position.
                 EntityPlayer mcPlayer = ((WrapperPlayer) player).player;
@@ -134,6 +140,17 @@ public class InterfaceEventsEntityRendering {
                 event.setPitch(0);
                 event.setRoll(0);
             }
+            listenerTransform = adjustedCamera ? new float[] {
+                    (float) cameraAdjustedPosition.x,
+                    (float) cameraAdjustedPosition.y,
+                    (float) cameraAdjustedPosition.z,
+                    (float) cameraAdjustedOrientation.m02,
+                    (float) cameraAdjustedOrientation.m12,
+                    (float) cameraAdjustedOrientation.m22,
+                    (float) cameraAdjustedOrientation.m01,
+                    (float) cameraAdjustedOrientation.m11,
+                    (float) cameraAdjustedOrientation.m21,
+            } : null;
             cameraShakeRotation.setToZero();
             cameraShakeActive = CameraSystem.applyCameraShake(cameraShakeRotation);
             if (cameraShakeActive) {

@@ -48,6 +48,7 @@ public abstract class LevelRendererMixin {
     public void inject_renderLevelDataGetter(DeltaTracker pDeltaTracker, boolean pDrawBlockOutline, Camera pCamera, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pModelViewMatrix, Matrix4f pProjection, CallbackInfo ci) {
         InterfaceRender.projectionMatrix = pProjection;
         InterfaceRender.viewMatrix = new Matrix4f(pModelViewMatrix);
+        InterfaceRender.cullingFrustum = cullingFrustum;
         InterfaceRender.startDynamicLightFrame();
     }
 

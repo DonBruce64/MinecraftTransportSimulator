@@ -1,5 +1,6 @@
 package mcinterface1182;
 
+import minecrafttransportsimulator.entities.instances.VehicleEntityCarrier;
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.platform.Window;
@@ -47,6 +48,7 @@ public class InterfaceEventsEntityRendering {
     private static final RotationMatrix cameraShakeRotation = new RotationMatrix();
     public static final RotationMatrix cameraShakeProjectionRotation = new RotationMatrix();
     public static boolean adjustedCamera;
+    public static float[] listenerTransform;
     public static boolean cameraShakeActive;
     private static Player mcPlayer;
 
@@ -67,6 +69,10 @@ public class InterfaceEventsEntityRendering {
             cameraAdjustedOrientation.setToZero();
             float partialTicks = (float) event.getPartialTicks();
             adjustedCamera = false;
+            double carriedYaw = VehicleEntityCarrier.updateClientPlayerFrame(partialTicks);
+            if (carriedYaw != 0) {
+                event.setYaw((float) (event.getYaw() - carriedYaw));
+            }
             if (CameraSystem.adjustCamera(player, cameraAdjustedPosition, cameraAdjustedOrientation, partialTicks)) {
                 //Camera adjustments occur backwards here.  Reverse order in the matrix.
                 //Also need to reverse sign of Y, since that's backwards in MC.
@@ -88,6 +94,17 @@ public class InterfaceEventsEntityRendering {
                 ((CameraMixin) camera).invoke_setPosition(cameraAdjustedPosition.x, cameraAdjustedPosition.y, cameraAdjustedPosition.z);
                 adjustedCamera = true;
             }
+            listenerTransform = adjustedCamera ? new float[] {
+                    (float) cameraAdjustedPosition.x,
+                    (float) cameraAdjustedPosition.y,
+                    (float) cameraAdjustedPosition.z,
+                    (float) cameraAdjustedOrientation.m02,
+                    (float) cameraAdjustedOrientation.m12,
+                    (float) cameraAdjustedOrientation.m22,
+                    (float) cameraAdjustedOrientation.m01,
+                    (float) cameraAdjustedOrientation.m11,
+                    (float) cameraAdjustedOrientation.m21,
+            } : null;
             cameraShakeRotation.setToZero();
             cameraShakeActive = CameraSystem.applyCameraShake(cameraShakeRotation);
             if (cameraShakeActive) {

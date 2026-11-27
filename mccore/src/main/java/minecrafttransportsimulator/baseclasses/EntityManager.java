@@ -235,6 +235,13 @@ public abstract class EntityManager {
                     doTick(entity);
                 }
             });
+
+            // Vehicles place entities on them after all is updated.
+            if (world.isClient()) {
+                for (EntityVehicleF_Physics vehicle : getEntitiesOfType(EntityVehicleF_Physics.class)) {
+                    vehicle.entityCarrier.updateAfterPlayers();
+                }
+            }
         }
         world.endProfiling();
     }
