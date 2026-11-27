@@ -1,6 +1,7 @@
 package mcinterface1165.mixin.client;
 
 import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.culling.ClippingHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -30,7 +31,7 @@ public abstract class WorldRendererMixin {
     @Shadow
     private RenderTypeBuffers renderBuffers;
     @Shadow
-    private ViewFrustum viewArea;
+    private ClippingHelper capturedFrustum;
 
     /**
      * Need this to grab variables used in the level rendering routine for the rendering routine.
@@ -38,7 +39,7 @@ public abstract class WorldRendererMixin {
     @Inject(method = "renderLevel", at = @At(value = "HEAD"))
     public void inject_renderLevelDataGetter(MatrixStack pMatrixStack, float pPartialTicks, long pFinishTimeNano, boolean pDrawBlockOutline, ActiveRenderInfo pActiveRenderInfo, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pProjection, CallbackInfo ci) {
         InterfaceRender.projectionMatrix = pProjection;
-        InterfaceRender.cullingFrustum = viewArea;
+        InterfaceRender.capturedFrustum = capturedFrustum;
         InterfaceRender.startDynamicLightFrame();
     }
 

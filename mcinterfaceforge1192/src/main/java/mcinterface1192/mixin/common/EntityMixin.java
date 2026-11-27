@@ -61,7 +61,7 @@ public abstract class EntityMixin {
         Entity entity = (Entity) ((Object) this);
         AABB pCollisionBox = entity.getBoundingBox().expandTowards(pVec);
         List<VoxelShape> vehicleCollisions = null;
-        WrapperWorld world = WrapperWorld.getWrapperFor(entity.level());
+        WrapperWorld world = WrapperWorld.getWrapperFor(entity.level);
         for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
             vehicleCollisions = addCollisions(vehicle, pCollisionBox, vehicleCollisions);
         }

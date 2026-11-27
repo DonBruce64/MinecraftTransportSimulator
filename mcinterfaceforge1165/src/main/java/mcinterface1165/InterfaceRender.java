@@ -19,6 +19,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import net.minecraft.client.renderer.*;
+import net.minecraft.entity.Entity;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
@@ -118,7 +119,7 @@ public class InterfaceRender implements IInterfaceRender {
     public static Matrix4f projectionMatrix;
     private static IRenderTypeBuffer renderBuffer;
     public static Point3D renderCameraOffset = new Point3D();
-    public static ViewFrustum cullingFrustum;
+    public static ClippingHelper capturedFrustum;
     private static boolean renderingGUI;
     private static float[] matrixConvertArray = new float[16];
 
@@ -752,6 +753,28 @@ public class InterfaceRender implements IInterfaceRender {
             capturingBodies = false;
             world.endProfiling();
         }
+    }
+
+    private static boolean shouldRender(AEntityC_Renderable entity) {
+        AEntityC_Renderable cullEntity = entity instanceof APart ? ((APart) entity).masterEntity : entity;
+        if (!(cullEntity instanceof AEntityE_Interactable<?>)) {
+            return true;
+        }
+        BoundingBox box = ((AEntityE_Interactable<?>) cullEntity).encompassingBox;
+        double widthRadius = box.widthRadius + CULLING_MARGIN;
+        double heightRadius = box.heightRadius + CULLING_MARGIN;
+        double depthRadius = box.depthRadius + CULLING_MARGIN;
+        double maxDistance = (widthRadius + heightRadius + depthRadius) * 2D / 3D * 64D * Entity.getViewScale();
+        if (box.globalCenter.distanceTo(renderCameraOffset) > maxDistance) {
+            return false;
+        }
+        return capturedFrustum == null || capturedFrustum.isVisible(new AxisAlignedBB(
+                box.globalCenter.x - widthRadius,
+                box.globalCenter.y - heightRadius,
+                box.globalCenter.z - depthRadius,
+                box.globalCenter.x + widthRadius,
+                box.globalCenter.y + heightRadius,
+                box.globalCenter.z + depthRadius));
     }
 
     /**
